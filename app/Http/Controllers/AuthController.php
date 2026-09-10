@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -59,12 +60,22 @@ class AuthController extends Controller
 
         $customerRole = Role::where('code', 'CUSTOMER')->firstOrFail();
 
-        User::create([
-            'role_id' => $customerRole->id,
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => $validated['password'],
-        ]);
+        DB::transaction(function () use ($validated, $customerRole) {
+
+            // Tạo tài khoản người dùng
+            $user = User::create([
+                'role_id' => $customerRole->id,
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => $validated['password'],
+            ]);
+
+            // Tự động tạo hồ sơ khách hàng
+            $user->customer()->create([
+                'full_name' => $validated['name'],
+                'email' => $validated['email'],
+            ]);
+        });
 
         return redirect()
             ->route('login')
@@ -107,6 +118,8 @@ class AuthController extends Controller
         );
 
         if (Auth::attempt($credentials)) {
+
+            // Tạo lại session ID sau khi đăng nhập
             $request->session()->regenerate();
 
             return redirect()
