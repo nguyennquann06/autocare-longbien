@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\VehicleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,6 +14,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('home');
 })->name('home');
+
+
+// =========================
+// AUTH
+// =========================
 
 // Đăng ký
 Route::get('/register', [AuthController::class, 'showRegisterForm'])
@@ -27,3 +33,23 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])
 
 Route::post('/login', [AuthController::class, 'login'])
     ->name('login.submit');
+
+
+// =========================
+// VEHICLES
+// =========================
+
+// Trang thêm phương tiện
+Route::get('/vehicles/create', [VehicleController::class, 'create'])
+    ->middleware('auth')
+    ->name('vehicles.create');
+
+// Lưu phương tiện
+Route::post('/vehicles', [VehicleController::class, 'store'])
+    ->middleware('auth')
+    ->name('vehicles.store');
+
+// Lấy dòng xe theo hãng
+Route::get('/vehicle-models/{brandId}', [VehicleController::class, 'getModels'])
+    ->middleware('auth')
+    ->name('vehicles.models');
