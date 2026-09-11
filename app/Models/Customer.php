@@ -12,7 +12,7 @@ class Customer extends Model
     use HasFactory;
 
     /**
-     * Các trường được phép gán hàng loạt.
+     * Các trường được phép gán dữ liệu hàng loạt.
      */
     protected $fillable = [
         'user_id',
@@ -36,18 +36,35 @@ class Customer extends Model
     }
 
     /**
-     * Mỗi hồ sơ khách hàng có thể thuộc một tài khoản người dùng.
+     * Hồ sơ khách hàng có thể thuộc một tài khoản.
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(
+            User::class,
+            'user_id'
+        );
     }
 
     /**
-     * Một khách hàng có thể sở hữu nhiều xe.
+     * Một khách hàng có nhiều phương tiện.
      */
     public function vehicles(): HasMany
     {
-        return $this->hasMany(Vehicle::class);
+        return $this->hasMany(
+            Vehicle::class,
+            'customer_id'
+        );
+    }
+
+    /**
+     * Một khách hàng có nhiều lịch hẹn.
+     */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(
+            Appointment::class,
+            'customer_id'
+        );
     }
 }

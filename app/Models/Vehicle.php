@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vehicle extends Model
 {
     use HasFactory;
 
     /**
-     * Các thuộc tính được phép gán hàng loạt.
+     * Các trường được phép gán dữ liệu hàng loạt.
      */
     protected $fillable = [
         'customer_id',
@@ -33,6 +34,7 @@ class Vehicle extends Model
     {
         return [
             'manufacture_year' => 'integer',
+
             'current_mileage' => 'integer',
         ];
     }
@@ -42,7 +44,10 @@ class Vehicle extends Model
      */
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(
+            Customer::class,
+            'customer_id'
+        );
     }
 
     /**
@@ -50,7 +55,10 @@ class Vehicle extends Model
      */
     public function brand(): BelongsTo
     {
-        return $this->belongsTo(VehicleBrand::class, 'brand_id');
+        return $this->belongsTo(
+            VehicleBrand::class,
+            'brand_id'
+        );
     }
 
     /**
@@ -58,6 +66,20 @@ class Vehicle extends Model
      */
     public function vehicleModel(): BelongsTo
     {
-        return $this->belongsTo(VehicleModel::class, 'model_id');
+        return $this->belongsTo(
+            VehicleModel::class,
+            'model_id'
+        );
+    }
+
+    /**
+     * Một xe có thể có nhiều lịch hẹn.
+     */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(
+            Appointment::class,
+            'vehicle_id'
+        );
     }
 }
