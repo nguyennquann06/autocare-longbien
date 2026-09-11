@@ -12,33 +12,52 @@ use Illuminate\Validation\Rule;
 class VehicleController extends Controller
 {
     /**
+     * Hiển thị danh sách xe của khách hàng đang đăng nhập.
+     */
+    public function index()
+    {
+        $user = Auth::user();
+
+        if (!$user || !$user->customer) {
+            abort(403, 'Không tìm thấy hồ sơ khách hàng.');
+        }
+
+        $vehicles = Vehicle::with([
+            'brand',
+            'vehicleModel',
+        ])
+            ->where(
+                'customer_id',
+                $user->customer->id
+            )
+            ->latest()
+            ->get();
+
+        return view(
+            'vehicles.index',
+            compact('vehicles')
+        );
+    }
+
+
+    /**
      * Hiển thị form thêm phương tiện.
      */
     public function create()
     {
-        $brands = VehicleBrand::where('is_active', true)
+        $brands = VehicleBrand::where(
+            'is_active',
+            true
+        )
             ->orderBy('name')
             ->get();
 
-        return view('vehicles.create', compact('brands'));
+        return view(
+            'vehicles.create',
+            compact('brands')
+        );
     }
 
-    /**
-     * Lấy danh sách dòng xe theo hãng.
-     */
-    public function getModels($brandId)
-    {
-        $models = VehicleModel::where('brand_id', $brandId)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get([
-                'id',
-                'name',
-                'vehicle_type',
-            ]);
-
-        return response()->json($models);
-    }
 
     /**
      * Lưu phương tiện mới.
@@ -50,12 +69,298 @@ class VehicleController extends Controller
         if (!$user || !$user->customer) {
             return back()
                 ->withErrors([
-                    'customer' => 'Không tìm thấy hồ sơ khách hàng của tài khoản.',
+                    'customer' =>
+                        'Không tìm thấy hồ sơ khách hàng của tài khoản.',
                 ])
                 ->withInput();
         }
 
-        $validated = $request->validate(
+        $validated = $this->validateVehicle(
+            $request
+        );
+
+        Vehicle::create([
+            'customer_id' =>
+                $user->customer->id,
+
+            'brand_id' =>
+                $validated['brand_id'],
+
+            'model_id' =>
+                $validated['model_id'],
+
+            'license_plate' =>
+                strtoupper(
+                    trim(
+                        $validated['license_plate']
+                    )
+                ),
+
+            'vin' =>
+                !empty($validated['vin'])
+                    ? strtoupper(
+                        trim($validated['vin'])
+                    )
+                    : null,
+
+            'manufacture_year' =>
+                $validated['manufacture_year']
+                ?? null,
+
+            'color' =>
+                $validated['color']
+                ?? null,
+
+            'fuel_type' =>
+                $validated['fuel_type']
+                ?? null,
+
+            'current_mileage' =>
+                $validated['current_mileage'],
+
+            'note' =>
+                $validated['note']
+                ?? null,
+        ]);
+
+        return redirect()
+            ->route('vehicles.index')
+            ->with(
+                'success',
+                'Thêm phương tiện thành công.'
+            );
+    }
+
+
+    /**
+     * Hiển thị chi tiết phương tiện.
+     */
+    public function show(Vehicle $vehicle)
+    {
+        $this->authorizeVehicleOwner(
+            $vehicle
+        );
+
+        $vehicle->load([
+            'brand',
+            'vehicleModel',
+        ]);
+
+        return view(
+            'vehicles.show',
+            compact('vehicle')
+        );
+    }
+
+
+    /**
+     * Hiển thị form chỉnh sửa phương tiện.
+     */
+    public function edit(Vehicle $vehicle)
+    {
+        $this->authorizeVehicleOwner(
+            $vehicle
+        );
+
+        $brands = VehicleBrand::where(
+            'is_active',
+            true
+        )
+            ->orderBy('name')
+            ->get();
+
+        $vehicle->load([
+            'brand',
+            'vehicleModel',
+        ]);
+
+        return view(
+            'vehicles.edit',
+            compact(
+                'vehicle',
+                'brands'
+            )
+        );
+    }
+
+
+    /**
+     * Cập nhật thông tin phương tiện.
+     */
+    public function update(
+        Request $request,
+        Vehicle $vehicle
+    ) {
+        $this->authorizeVehicleOwner(
+            $vehicle
+        );
+
+        $validated = $this->validateVehicle(
+            $request,
+            $vehicle
+        );
+
+        $vehicle->update([
+            'brand_id' =>
+                $validated['brand_id'],
+
+            'model_id' =>
+                $validated['model_id'],
+
+            'license_plate' =>
+                strtoupper(
+                    trim(
+                        $validated['license_plate']
+                    )
+                ),
+
+            'vin' =>
+                !empty($validated['vin'])
+                    ? strtoupper(
+                        trim($validated['vin'])
+                    )
+                    : null,
+
+            'manufacture_year' =>
+                $validated['manufacture_year']
+                ?? null,
+
+            'color' =>
+                $validated['color']
+                ?? null,
+
+            'fuel_type' =>
+                $validated['fuel_type']
+                ?? null,
+
+            'current_mileage' =>
+                $validated['current_mileage'],
+
+            'note' =>
+                $validated['note']
+                ?? null,
+        ]);
+
+        return redirect()
+            ->route(
+                'vehicles.show',
+                $vehicle->id
+            )
+            ->with(
+                'success',
+                'Cập nhật phương tiện thành công.'
+            );
+    }
+
+
+    /**
+     * Xóa phương tiện.
+     */
+    public function destroy(Vehicle $vehicle)
+    {
+        /**
+         * Kiểm tra xe có thuộc
+         * khách hàng hiện tại không.
+         */
+        $this->authorizeVehicleOwner(
+            $vehicle
+        );
+
+        /**
+         * Lưu biển số trước khi xóa
+         * để dùng cho thông báo.
+         */
+        $licensePlate =
+            $vehicle->license_plate;
+
+        /**
+         * Xóa phương tiện.
+         */
+        $vehicle->delete();
+
+        return redirect()
+            ->route('vehicles.index')
+            ->with(
+                'success',
+                'Đã xóa phương tiện '
+                . $licensePlate
+                . ' thành công.'
+            );
+    }
+
+
+    /**
+     * API lấy danh sách dòng xe theo hãng.
+     */
+    public function getModels($brandId)
+    {
+        $models = VehicleModel::where(
+            'brand_id',
+            $brandId
+        )
+            ->where(
+                'is_active',
+                true
+            )
+            ->orderBy('name')
+            ->get([
+                'id',
+                'name',
+                'vehicle_type',
+            ]);
+
+        return response()->json(
+            $models
+        );
+    }
+
+
+    /**
+     * Kiểm tra quyền sở hữu phương tiện.
+     */
+    private function authorizeVehicleOwner(
+        Vehicle $vehicle
+    ): void {
+        $user = Auth::user();
+
+        if (
+            !$user ||
+            !$user->customer
+        ) {
+            abort(
+                403,
+                'Không tìm thấy hồ sơ khách hàng.'
+            );
+        }
+
+        /**
+         * Ngăn khách hàng truy cập,
+         * sửa hoặc xóa xe của người khác.
+         */
+        if (
+            (int) $vehicle->customer_id !==
+            (int) $user->customer->id
+        ) {
+            abort(
+                403,
+                'Bạn không có quyền thao tác với phương tiện này.'
+            );
+        }
+    }
+
+
+    /**
+     * Validate dữ liệu phương tiện.
+     *
+     * Dùng chung cho:
+     * - Thêm xe
+     * - Chỉnh sửa xe
+     */
+    private function validateVehicle(
+        Request $request,
+        ?Vehicle $vehicle = null
+    ): array {
+        return $request->validate(
             [
                 'brand_id' => [
                     'required',
@@ -64,24 +369,45 @@ class VehicleController extends Controller
 
                 'model_id' => [
                     'required',
-                    Rule::exists('vehicle_models', 'id')
-                        ->where(function ($query) use ($request) {
-                            $query->where('brand_id', $request->brand_id);
-                        }),
+
+                    Rule::exists(
+                        'vehicle_models',
+                        'id'
+                    )->where(
+                        function ($query)
+                        use ($request) {
+                            $query->where(
+                                'brand_id',
+                                $request->brand_id
+                            );
+                        }
+                    ),
                 ],
 
                 'license_plate' => [
                     'required',
                     'string',
                     'max:20',
-                    'unique:vehicles,license_plate',
+
+                    Rule::unique(
+                        'vehicles',
+                        'license_plate'
+                    )->ignore(
+                        $vehicle?->id
+                    ),
                 ],
 
                 'vin' => [
                     'nullable',
                     'string',
                     'max:50',
-                    'unique:vehicles,vin',
+
+                    Rule::unique(
+                        'vehicles',
+                        'vin'
+                    )->ignore(
+                        $vehicle?->id
+                    ),
                 ],
 
                 'manufacture_year' => [
@@ -116,44 +442,45 @@ class VehicleController extends Controller
                 ],
             ],
             [
-                'brand_id.required' => 'Vui lòng chọn hãng xe.',
-                'brand_id.exists' => 'Hãng xe không hợp lệ.',
+                'brand_id.required' =>
+                    'Vui lòng chọn hãng xe.',
 
-                'model_id.required' => 'Vui lòng chọn dòng xe.',
-                'model_id.exists' => 'Dòng xe không hợp lệ hoặc không thuộc hãng đã chọn.',
+                'brand_id.exists' =>
+                    'Hãng xe không hợp lệ.',
 
-                'license_plate.required' => 'Vui lòng nhập biển số xe.',
-                'license_plate.unique' => 'Biển số xe này đã tồn tại trong hệ thống.',
+                'model_id.required' =>
+                    'Vui lòng chọn dòng xe.',
 
-                'vin.unique' => 'Số VIN này đã tồn tại trong hệ thống.',
+                'model_id.exists' =>
+                    'Dòng xe không hợp lệ hoặc không thuộc hãng đã chọn.',
 
-                'manufacture_year.integer' => 'Năm sản xuất phải là số.',
-                'manufacture_year.min' => 'Năm sản xuất không hợp lệ.',
-                'manufacture_year.max' => 'Năm sản xuất không hợp lệ.',
+                'license_plate.required' =>
+                    'Vui lòng nhập biển số xe.',
 
-                'current_mileage.required' => 'Vui lòng nhập số km hiện tại.',
-                'current_mileage.integer' => 'Số km phải là số nguyên.',
-                'current_mileage.min' => 'Số km không được nhỏ hơn 0.',
+                'license_plate.unique' =>
+                    'Biển số xe này đã tồn tại trong hệ thống.',
+
+                'vin.unique' =>
+                    'Số VIN này đã tồn tại trong hệ thống.',
+
+                'manufacture_year.integer' =>
+                    'Năm sản xuất phải là số.',
+
+                'manufacture_year.min' =>
+                    'Năm sản xuất không hợp lệ.',
+
+                'manufacture_year.max' =>
+                    'Năm sản xuất không hợp lệ.',
+
+                'current_mileage.required' =>
+                    'Vui lòng nhập số km hiện tại.',
+
+                'current_mileage.integer' =>
+                    'Số km phải là số nguyên.',
+
+                'current_mileage.min' =>
+                    'Số km không được nhỏ hơn 0.',
             ]
         );
-
-        Vehicle::create([
-            'customer_id' => $user->customer->id,
-            'brand_id' => $validated['brand_id'],
-            'model_id' => $validated['model_id'],
-            'license_plate' => strtoupper(trim($validated['license_plate'])),
-            'vin' => !empty($validated['vin'])
-                ? strtoupper(trim($validated['vin']))
-                : null,
-            'manufacture_year' => $validated['manufacture_year'] ?? null,
-            'color' => $validated['color'] ?? null,
-            'fuel_type' => $validated['fuel_type'] ?? null,
-            'current_mileage' => $validated['current_mileage'],
-            'note' => $validated['note'] ?? null,
-        ]);
-
-        return redirect()
-            ->route('vehicles.create')
-            ->with('success', 'Thêm phương tiện thành công.');
     }
 }
