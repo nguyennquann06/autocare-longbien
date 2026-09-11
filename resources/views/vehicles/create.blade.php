@@ -1,434 +1,932 @@
-<!DOCTYPE html>
-<html lang="vi">
-
-<head>
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Thêm xe - AutoCare Long Biên</title>
-</head>
-
-<body>
-
-    <h1>Thêm phương tiện</h1>
+@extends('layouts.app')
 
 
-    {{-- Thông báo thành công --}}
+@section(
+    'title',
+    'Thêm xe - AutoCare Long Biên'
+)
+
+
+@push('styles')
+
+<style>
+    .vehicle-form-page {
+        max-width: 980px;
+    }
+
+    .vehicle-form-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 34px;
+        margin-bottom: 24px;
+        border-radius: 28px;
+        color: white;
+        background:
+            linear-gradient(
+                120deg,
+                #06101e 0%,
+                #0b2f6b 52%,
+                #1467df 100%
+            );
+        box-shadow:
+            0 28px 75px
+            rgba(20, 103, 223, 0.23);
+    }
+
+    .vehicle-form-hero::before {
+        content: "";
+        position: absolute;
+        width: 370px;
+        height: 370px;
+        top: -220px;
+        right: -100px;
+        border-radius: 50%;
+        background:
+            radial-gradient(
+                circle,
+                rgba(103, 232, 249, 0.42),
+                transparent 70%
+            );
+    }
+
+    .vehicle-form-hero::after {
+        content: "";
+        position: absolute;
+        width: 260px;
+        height: 260px;
+        left: 40%;
+        bottom: -215px;
+        border-radius: 50%;
+        background:
+            radial-gradient(
+                circle,
+                rgba(124, 58, 237, 0.34),
+                transparent 70%
+            );
+    }
+
+    .vehicle-form-hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .vehicle-form-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        margin-bottom: 16px;
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.16);
+        border-radius: 999px;
+        color: #dbeafe;
+        background:
+            rgba(255, 255, 255, 0.08);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+    }
+
+    .vehicle-form-chip i {
+        color: #67e8f9;
+    }
+
+    .vehicle-form-hero h1 {
+        margin: 0;
+        color: white;
+        font-size:
+            clamp(
+                2rem,
+                4vw,
+                3.4rem
+            );
+        font-weight: 900;
+        letter-spacing: -0.055em;
+    }
+
+    .vehicle-form-hero p {
+        max-width: 650px;
+        margin: 11px 0 0;
+        color: #cbd5e1;
+        line-height: 1.75;
+    }
+
+    .vehicle-form-card {
+        overflow: hidden;
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.88);
+        border-radius: 21px;
+        background:
+            rgba(255, 255, 255, 0.92);
+        box-shadow:
+            var(--ac-shadow);
+        backdrop-filter:
+            blur(16px);
+    }
+
+    .vehicle-form-body {
+        padding: 28px;
+    }
+
+    .vehicle-form-section {
+        margin-bottom: 28px;
+    }
+
+    .vehicle-form-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .vehicle-form-section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+        color: #0f172a;
+        font-size: 17px;
+        font-weight: 900;
+    }
+
+    .vehicle-form-section-icon {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        color: #2563eb;
+        background:
+            linear-gradient(
+                135deg,
+                #dbeafe,
+                #ecfeff
+            );
+    }
+
+    .vehicle-form-panel {
+        padding: 21px;
+        border:
+            1px solid #e5ecf4;
+        border-radius: 16px;
+        background:
+            linear-gradient(
+                135deg,
+                #f8fbff,
+                #f7faff
+            );
+    }
+
+    .vehicle-form-label {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 7px;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 850;
+    }
+
+    .vehicle-form-label i {
+        color: #2563eb;
+    }
+
+    .vehicle-form-control {
+        min-height: 48px;
+    }
+
+    .vehicle-submit {
+        min-height: 49px;
+        padding: 0 22px;
+        border: none;
+        border-radius: 13px;
+        color: white;
+        background:
+            linear-gradient(
+                135deg,
+                #1683ff,
+                #4f46e5
+            );
+        box-shadow:
+            0 10px 25px
+            rgba(37, 99, 235, 0.22);
+        font-size: 12px;
+        font-weight: 900;
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .vehicle-submit:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 14px 30px
+            rgba(37, 99, 235, 0.28);
+    }
+
+    .vehicle-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 20px;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .vehicle-model-loading {
+        color: #64748b;
+        font-size: 11px;
+    }
+
+    @media (max-width: 575px) {
+        .vehicle-form-hero {
+            padding: 25px;
+        }
+
+        .vehicle-form-body {
+            padding: 20px;
+        }
+
+        .vehicle-form-panel {
+            padding: 17px;
+        }
+    }
+</style>
+
+@endpush
+
+
+@section('content')
+
+<div class="container vehicle-form-page">
+
     @if (session('success'))
-        <div style="color: green; margin-bottom: 15px;">
+
+        <div class="alert alert-success">
+
+            <i class="bi bi-check-circle-fill me-2"></i>
+
             {{ session('success') }}
+
         </div>
+
     @endif
 
 
-    {{-- Hiển thị lỗi --}}
     @if ($errors->any())
-        <div style="color: red; margin-bottom: 15px;">
+
+        <div class="alert alert-danger">
 
             <strong>
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+
                 Vui lòng kiểm tra lại thông tin:
             </strong>
 
-            <ul>
+            <ul class="mb-0 mt-2">
+
                 @foreach ($errors->all() as $error)
+
                     <li>
                         {{ $error }}
                     </li>
+
                 @endforeach
+
             </ul>
 
         </div>
+
     @endif
 
 
-    <form method="POST"
-          action="{{ route('vehicles.store') }}">
+    <section
+        class="vehicle-form-hero"
+        data-reveal="zoom"
+    >
 
-        @csrf
+        <div class="vehicle-form-hero-content">
+
+            <div class="vehicle-form-chip">
+
+                <i class="bi bi-plus-circle"></i>
+
+                New Vehicle
+
+            </div>
 
 
-        {{-- Hãng xe --}}
-        <div style="margin-bottom: 15px;">
+            <h1>
+                Thêm phương tiện
+            </h1>
 
-            <label for="brand_id">
-                Hãng xe
-            </label>
 
-            <br>
+            <p>
 
-            <select
-                name="brand_id"
-                id="brand_id"
-                required
-            >
-                <option value="">
-                    -- Chọn hãng xe --
-                </option>
+                Đăng ký thông tin xe để sử dụng
+                các chức năng đặt lịch,
+                theo dõi lịch sử bảo dưỡng
+                và nhận gợi ý chăm sóc phù hợp.
 
-                @foreach ($brands as $brand)
-                    <option
-                        value="{{ $brand->id }}"
-                        {{ old('brand_id') == $brand->id ? 'selected' : '' }}
-                    >
-                        {{ $brand->name }}
-                    </option>
-                @endforeach
-            </select>
+            </p>
 
         </div>
 
+    </section>
 
-        {{-- Dòng xe --}}
-        <div style="margin-bottom: 15px;">
 
-            <label for="model_id">
-                Dòng xe
-            </label>
+    <article
+        class="vehicle-form-card"
+        data-reveal
+    >
 
-            <br>
+        <div class="vehicle-form-body">
 
-            <select
-                name="model_id"
-                id="model_id"
-                required
-                disabled
+            <form
+                method="POST"
+                action="{{ route('vehicles.store') }}"
             >
+
+                @csrf
+
+
+                <section class="vehicle-form-section">
+
+                    <div class="vehicle-form-section-title">
+
+                        <span class="vehicle-form-section-icon">
+
+                            <i class="bi bi-car-front-fill"></i>
+
+                        </span>
+
+                        Thông tin xe
+
+                    </div>
+
+
+                    <div class="vehicle-form-panel">
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+
+                                <label
+                                    for="brand_id"
+                                    class="vehicle-form-label"
+                                >
+
+                                    <i class="bi bi-building"></i>
+
+                                    Hãng xe *
+
+                                </label>
+
+
+                                <select
+                                    name="brand_id"
+                                    id="brand_id"
+                                    class="
+                                        form-select
+                                        vehicle-form-control
+                                    "
+                                    required
+                                >
+
+                                    <option value="">
+                                        -- Chọn hãng xe --
+                                    </option>
+
+
+                                    @foreach ($brands as $brand)
+
+                                        <option
+                                            value="{{ $brand->id }}"
+                                            {{
+                                                old('brand_id')
+                                                == $brand->id
+                                                    ? 'selected'
+                                                    : ''
+                                            }}
+                                        >
+                                            {{ $brand->name }}
+                                        </option>
+
+                                    @endforeach
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label
+                                    for="model_id"
+                                    class="vehicle-form-label"
+                                >
+
+                                    <i class="bi bi-car-front"></i>
+
+                                    Dòng xe *
+
+                                </label>
+
+
+                                <select
+                                    name="model_id"
+                                    id="model_id"
+                                    class="
+                                        form-select
+                                        vehicle-form-control
+                                    "
+                                    required
+                                    disabled
+                                >
+
+                                    <option value="">
+                                        -- Vui lòng chọn hãng xe trước --
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label
+                                    for="license_plate"
+                                    class="vehicle-form-label"
+                                >
+
+                                    <i class="bi bi-credit-card-2-front"></i>
+
+                                    Biển số xe *
+
+                                </label>
+
+
+                                <input
+                                    type="text"
+                                    id="license_plate"
+                                    name="license_plate"
+                                    class="
+                                        form-control
+                                        vehicle-form-control
+                                    "
+                                    value="{{ old('license_plate') }}"
+                                    placeholder="Ví dụ: 30H-123.45"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label
+                                    for="vin"
+                                    class="vehicle-form-label"
+                                >
+
+                                    <i class="bi bi-upc-scan"></i>
+
+                                    Số VIN
+
+                                </label>
+
+
+                                <input
+                                    type="text"
+                                    id="vin"
+                                    name="vin"
+                                    class="
+                                        form-control
+                                        vehicle-form-control
+                                    "
+                                    value="{{ old('vin') }}"
+                                    placeholder="Có thể để trống"
+                                >
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label
+                                    for="manufacture_year"
+                                    class="vehicle-form-label"
+                                >
+
+                                    <i class="bi bi-calendar3"></i>
+
+                                    Năm sản xuất
+
+                                </label>
+
+
+                                <input
+                                    type="number"
+                                    id="manufacture_year"
+                                    name="manufacture_year"
+                                    class="
+                                        form-control
+                                        vehicle-form-control
+                                    "
+                                    value="{{ old('manufacture_year') }}"
+                                    min="1980"
+                                    max="{{ date('Y') + 1 }}"
+                                    placeholder="Ví dụ: 2022"
+                                >
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label
+                                    for="color"
+                                    class="vehicle-form-label"
+                                >
+
+                                    <i class="bi bi-palette"></i>
+
+                                    Màu xe
+
+                                </label>
+
+
+                                <input
+                                    type="text"
+                                    id="color"
+                                    name="color"
+                                    class="
+                                        form-control
+                                        vehicle-form-control
+                                    "
+                                    value="{{ old('color') }}"
+                                    placeholder="Ví dụ: Trắng"
+                                >
+
+                            </div>
+
+
+                            <div class="col-md-4">
+
+                                <label
+                                    for="fuel_type"
+                                    class="vehicle-form-label"
+                                >
+
+                                    <i class="bi bi-fuel-pump"></i>
+
+                                    Loại nhiên liệu
+
+                                </label>
+
+
+                                <select
+                                    name="fuel_type"
+                                    id="fuel_type"
+                                    class="
+                                        form-select
+                                        vehicle-form-control
+                                    "
+                                >
+
+                                    <option value="">
+                                        -- Chọn loại nhiên liệu --
+                                    </option>
+
+                                    <option
+                                        value="Xăng"
+                                        {{
+                                            old('fuel_type') === 'Xăng'
+                                                ? 'selected'
+                                                : ''
+                                        }}
+                                    >
+                                        Xăng
+                                    </option>
+
+                                    <option
+                                        value="Dầu"
+                                        {{
+                                            old('fuel_type') === 'Dầu'
+                                                ? 'selected'
+                                                : ''
+                                        }}
+                                    >
+                                        Dầu
+                                    </option>
+
+                                    <option
+                                        value="Điện"
+                                        {{
+                                            old('fuel_type') === 'Điện'
+                                                ? 'selected'
+                                                : ''
+                                        }}
+                                    >
+                                        Điện
+                                    </option>
+
+                                    <option
+                                        value="Hybrid"
+                                        {{
+                                            old('fuel_type') === 'Hybrid'
+                                                ? 'selected'
+                                                : ''
+                                        }}
+                                    >
+                                        Hybrid
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label
+                                    for="current_mileage"
+                                    class="vehicle-form-label"
+                                >
+
+                                    <i class="bi bi-speedometer2"></i>
+
+                                    Số km hiện tại *
+
+                                </label>
+
+
+                                <div class="input-group">
+
+                                    <input
+                                        type="number"
+                                        id="current_mileage"
+                                        name="current_mileage"
+                                        class="
+                                            form-control
+                                            vehicle-form-control
+                                        "
+                                        value="{{ old(
+                                            'current_mileage',
+                                            0
+                                        ) }}"
+                                        min="0"
+                                        required
+                                    >
+
+                                    <span class="input-group-text">
+                                        km
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <section class="vehicle-form-section">
+
+                    <div class="vehicle-form-section-title">
+
+                        <span class="vehicle-form-section-icon">
+
+                            <i class="bi bi-chat-left-text"></i>
+
+                        </span>
+
+                        Thông tin bổ sung
+
+                    </div>
+
+
+                    <div class="vehicle-form-panel">
+
+                        <label
+                            for="note"
+                            class="vehicle-form-label"
+                        >
+
+                            <i class="bi bi-pencil"></i>
+
+                            Ghi chú
+
+                        </label>
+
+
+                        <textarea
+                            id="note"
+                            name="note"
+                            class="form-control"
+                            rows="5"
+                            maxlength="2000"
+                            placeholder="Thông tin bổ sung về phương tiện..."
+                        >{{ old('note') }}</textarea>
+
+                    </div>
+
+                </section>
+
+
+                <button
+                    type="submit"
+                    class="vehicle-submit"
+                >
+
+                    <i class="bi bi-plus-circle me-2"></i>
+
+                    Thêm phương tiện
+
+                </button>
+
+            </form>
+
+
+            <a
+                href="{{ route('vehicles.index') }}"
+                class="vehicle-back"
+            >
+
+                <i class="bi bi-arrow-left"></i>
+
+                Quay lại Xe của tôi
+
+            </a>
+
+        </div>
+
+    </article>
+
+</div>
+
+@endsection
+
+
+@push('scripts')
+
+<script>
+    const brandSelect =
+        document.getElementById(
+            'brand_id'
+        );
+
+    const modelSelect =
+        document.getElementById(
+            'model_id'
+        );
+
+    const oldBrandId =
+        @json(old('brand_id'));
+
+    const oldModelId =
+        @json(old('model_id'));
+
+
+    async function loadModels(
+        brandId,
+        selectedModelId = null
+    ) {
+        modelSelect.innerHTML = '';
+
+        if (!brandId) {
+            modelSelect.disabled = true;
+
+            modelSelect.innerHTML = `
                 <option value="">
                     -- Vui lòng chọn hãng xe trước --
                 </option>
-            </select>
+            `;
 
-        </div>
-
-
-        {{-- Biển số xe --}}
-        <div style="margin-bottom: 15px;">
-
-            <label for="license_plate">
-                Biển số xe
-            </label>
-
-            <br>
-
-            <input
-                type="text"
-                id="license_plate"
-                name="license_plate"
-                value="{{ old('license_plate') }}"
-                placeholder="Ví dụ: 30H-123.45"
-                required
-            >
-
-        </div>
+            return;
+        }
 
 
-        {{-- VIN --}}
-        <div style="margin-bottom: 15px;">
+        modelSelect.disabled = true;
 
-            <label for="vin">
-                Số VIN
-            </label>
-
-            <br>
-
-            <input
-                type="text"
-                id="vin"
-                name="vin"
-                value="{{ old('vin') }}"
-                placeholder="Có thể để trống"
-            >
-
-        </div>
+        modelSelect.innerHTML = `
+            <option value="">
+                Đang tải dòng xe...
+            </option>
+        `;
 
 
-        {{-- Năm sản xuất --}}
-        <div style="margin-bottom: 15px;">
+        try {
+            const response = await fetch(
+                `/vehicle-models/${brandId}`
+            );
 
-            <label for="manufacture_year">
-                Năm sản xuất
-            </label>
-
-            <br>
-
-            <input
-                type="number"
-                id="manufacture_year"
-                name="manufacture_year"
-                value="{{ old('manufacture_year') }}"
-                min="1980"
-                max="{{ date('Y') + 1 }}"
-                placeholder="Ví dụ: 2022"
-            >
-
-        </div>
+            if (!response.ok) {
+                throw new Error(
+                    'Không thể tải danh sách dòng xe.'
+                );
+            }
 
 
-        {{-- Màu xe --}}
-        <div style="margin-bottom: 15px;">
-
-            <label for="color">
-                Màu xe
-            </label>
-
-            <br>
-
-            <input
-                type="text"
-                id="color"
-                name="color"
-                value="{{ old('color') }}"
-                placeholder="Ví dụ: Trắng"
-            >
-
-        </div>
+            const models =
+                await response.json();
 
 
-        {{-- Loại nhiên liệu --}}
-        <div style="margin-bottom: 15px;">
-
-            <label for="fuel_type">
-                Loại nhiên liệu
-            </label>
-
-            <br>
-
-            <select
-                name="fuel_type"
-                id="fuel_type"
-            >
+            modelSelect.innerHTML = `
                 <option value="">
-                    -- Chọn loại nhiên liệu --
+                    -- Chọn dòng xe --
                 </option>
-
-                <option
-                    value="Xăng"
-                    {{ old('fuel_type') == 'Xăng' ? 'selected' : '' }}
-                >
-                    Xăng
-                </option>
-
-                <option
-                    value="Dầu"
-                    {{ old('fuel_type') == 'Dầu' ? 'selected' : '' }}
-                >
-                    Dầu
-                </option>
-
-                <option
-                    value="Điện"
-                    {{ old('fuel_type') == 'Điện' ? 'selected' : '' }}
-                >
-                    Điện
-                </option>
-
-                <option
-                    value="Hybrid"
-                    {{ old('fuel_type') == 'Hybrid' ? 'selected' : '' }}
-                >
-                    Hybrid
-                </option>
-
-            </select>
-
-        </div>
+            `;
 
 
-        {{-- Số km hiện tại --}}
-        <div style="margin-bottom: 15px;">
-
-            <label for="current_mileage">
-                Số km hiện tại
-            </label>
-
-            <br>
-
-            <input
-                type="number"
-                id="current_mileage"
-                name="current_mileage"
-                value="{{ old('current_mileage', 0) }}"
-                min="0"
-                required
-            >
-
-        </div>
-
-
-        {{-- Ghi chú --}}
-        <div style="margin-bottom: 15px;">
-
-            <label for="note">
-                Ghi chú
-            </label>
-
-            <br>
-
-            <textarea
-                id="note"
-                name="note"
-                rows="4"
-                cols="40"
-                placeholder="Thông tin bổ sung về phương tiện..."
-            >{{ old('note') }}</textarea>
-
-        </div>
-
-
-        <button type="submit">
-            Thêm xe
-        </button>
-
-    </form>
-
-
-    <br>
-
-    <p>
-        <a href="{{ route('home') }}">
-            ← Quay lại trang chủ
-        </a>
-    </p>
-
-
-    <script>
-        const brandSelect = document.getElementById('brand_id');
-        const modelSelect = document.getElementById('model_id');
-
-        const oldBrandId = @json(old('brand_id'));
-        const oldModelId = @json(old('model_id'));
-
-
-        /**
-         * Tải danh sách dòng xe theo hãng.
-         */
-        async function loadModels(brandId, selectedModelId = null) {
-
-            modelSelect.innerHTML = '';
-
-            if (!brandId) {
-
-                modelSelect.disabled = true;
-
+            if (models.length === 0) {
                 modelSelect.innerHTML = `
                     <option value="">
-                        -- Vui lòng chọn hãng xe trước --
+                        Chưa có dòng xe
                     </option>
                 `;
+
+                modelSelect.disabled = true;
 
                 return;
             }
 
 
-            modelSelect.disabled = true;
-
-            modelSelect.innerHTML = `
-                <option value="">
-                    Đang tải dòng xe...
-                </option>
-            `;
-
-
-            try {
-
-                const response = await fetch(
-                    `/vehicle-models/${brandId}`
-                );
-
-                if (!response.ok) {
-                    throw new Error('Không thể tải danh sách dòng xe.');
-                }
-
-                const models = await response.json();
+            models.forEach(
+                function (model) {
+                    const option =
+                        document.createElement(
+                            'option'
+                        );
 
 
-                modelSelect.innerHTML = `
-                    <option value="">
-                        -- Chọn dòng xe --
-                    </option>
-                `;
+                    option.value =
+                        model.id;
 
 
-                if (models.length === 0) {
-
-                    modelSelect.innerHTML = `
-                        <option value="">
-                            Chưa có dòng xe
-                        </option>
-                    `;
-
-                    modelSelect.disabled = true;
-
-                    return;
-                }
-
-
-                models.forEach(function (model) {
-
-                    const option = document.createElement('option');
-
-                    option.value = model.id;
-
-                    option.textContent = model.vehicle_type
-                        ? `${model.name} - ${model.vehicle_type}`
-                        : model.name;
+                    option.textContent =
+                        model.vehicle_type
+                            ? `${model.name} - ${model.vehicle_type}`
+                            : model.name;
 
 
                     if (
-                        selectedModelId &&
-                        String(selectedModelId) === String(model.id)
+                        selectedModelId
+                        &&
+                        String(selectedModelId)
+                        ===
+                        String(model.id)
                     ) {
                         option.selected = true;
                     }
 
 
-                    modelSelect.appendChild(option);
-                });
-
-
-                modelSelect.disabled = false;
-
-            } catch (error) {
-
-                console.error(error);
-
-                modelSelect.innerHTML = `
-                    <option value="">
-                        Không thể tải dữ liệu
-                    </option>
-                `;
-
-                modelSelect.disabled = true;
-            }
-        }
-
-
-        /**
-         * Khi thay đổi hãng xe.
-         */
-        brandSelect.addEventListener('change', function () {
-
-            loadModels(this.value);
-
-        });
-
-
-        /**
-         * Nếu form validate lỗi và Laravel redirect quay lại,
-         * tự tải lại dòng xe đã chọn trước đó.
-         */
-        if (oldBrandId) {
-
-            loadModels(
-                oldBrandId,
-                oldModelId
+                    modelSelect.appendChild(
+                        option
+                    );
+                }
             );
 
+
+            modelSelect.disabled = false;
         }
-    </script>
+        catch (error) {
+            console.error(error);
 
-</body>
+            modelSelect.innerHTML = `
+                <option value="">
+                    Không thể tải dữ liệu
+                </option>
+            `;
 
-</html>
+            modelSelect.disabled = true;
+        }
+    }
+
+
+    brandSelect.addEventListener(
+        'change',
+        function () {
+            loadModels(
+                this.value
+            );
+        }
+    );
+
+
+    if (oldBrandId) {
+        loadModels(
+            oldBrandId,
+            oldModelId
+        );
+    }
+</script>
+
+@endpush

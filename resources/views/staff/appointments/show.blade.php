@@ -1,730 +1,848 @@
-<!DOCTYPE html>
-<html lang="vi">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+@section(
+    'title',
+    'Xử lý lịch hẹn - AutoCare Long Biên'
+)
 
-    <title>
-        Xử lý lịch hẹn - AutoCare Long Biên
-    </title>
 
-    <style>
-        * {
-            box-sizing: border-box;
+@push('styles')
+
+<style>
+    .staff-appointment-detail {
+        max-width: 1100px;
+    }
+
+    .staff-detail-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 31px;
+        margin-bottom: 22px;
+        border-radius: 26px;
+        color: white;
+        background:
+            linear-gradient(
+                120deg,
+                #06101e,
+                #0c3474 52%,
+                #1677ff
+            );
+        box-shadow:
+            0 25px 70px
+            rgba(22, 119, 255, .22);
+    }
+
+    .staff-detail-hero::before {
+        content: "";
+        position: absolute;
+        width: 330px;
+        height: 330px;
+        right: -100px;
+        top: -200px;
+        border-radius: 50%;
+        background:
+            radial-gradient(
+                circle,
+                rgba(103, 232, 249, .4),
+                transparent 70%
+            );
+    }
+
+    .staff-detail-hero-inner {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .staff-code {
+        color: #bfdbfe;
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .staff-detail-hero h1 {
+        margin: 7px 0 0;
+        color: white;
+        font-size:
+            clamp(2rem, 4vw, 3.2rem);
+        font-weight: 900;
+        letter-spacing: -.055em;
+    }
+
+    .staff-detail-layout {
+        display: grid;
+        grid-template-columns:
+            minmax(0, 1.4fr)
+            minmax(290px, .6fr);
+        gap: 22px;
+        align-items: start;
+    }
+
+    .staff-card {
+        border:
+            1px solid
+            rgba(255, 255, 255, .88);
+        border-radius: 21px;
+        background:
+            rgba(255, 255, 255, .92);
+        box-shadow: var(--ac-shadow);
+        backdrop-filter: blur(16px);
+    }
+
+    .staff-card-body {
+        padding: 26px;
+    }
+
+    .staff-section {
+        padding: 24px 0;
+        border-bottom: 1px solid #edf1f6;
+    }
+
+    .staff-section:first-child {
+        padding-top: 0;
+    }
+
+    .staff-section:last-child {
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+
+    .staff-section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 17px;
+        color: #0f172a;
+        font-size: 17px;
+        font-weight: 900;
+    }
+
+    .staff-section-icon {
+        width: 37px;
+        height: 37px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        color: #2563eb;
+        background:
+            linear-gradient(
+                135deg,
+                #dbeafe,
+                #ecfeff
+            );
+    }
+
+    .staff-info-grid {
+        display: grid;
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .staff-info {
+        padding: 14px;
+        border: 1px solid #e7edf4;
+        border-radius: 14px;
+        background: #f8fbff;
+    }
+
+    .staff-info-label {
+        color: #64748b;
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .staff-info-value {
+        margin-top: 5px;
+        color: #0f172a;
+        font-size: 12px;
+        font-weight: 850;
+    }
+
+    .service-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 13px 0;
+        border-bottom: 1px solid #edf1f6;
+    }
+
+    .service-line:last-child {
+        border-bottom: none;
+    }
+
+    .service-name {
+        color: #0f172a;
+        font-size: 13px;
+        font-weight: 850;
+    }
+
+    .service-price {
+        color: #1d4ed8;
+        white-space: nowrap;
+        font-size: 13px;
+        font-weight: 900;
+    }
+
+    .staff-note {
+        padding: 15px;
+        border: 1px solid #e4ebf3;
+        border-radius: 14px;
+        color: #475569;
+        background: #f8fbff;
+        line-height: 1.7;
+        font-size: 12px;
+    }
+
+    .staff-form-box {
+        padding: 18px;
+        border: 1px solid #e5ecf4;
+        border-radius: 15px;
+        background: #f8fbff;
+    }
+
+    .workflow-card {
+        position: sticky;
+        top: 100px;
+        overflow: hidden;
+        padding: 23px;
+        border-radius: 21px;
+        color: white;
+        background:
+            linear-gradient(
+                145deg,
+                #06101e,
+                #0d2f69 56%,
+                #155bd1
+            );
+        box-shadow:
+            0 25px 60px
+            rgba(13, 47, 105, .26);
+    }
+
+    .workflow-title {
+        margin-bottom: 18px;
+        font-size: 17px;
+        font-weight: 900;
+    }
+
+    .workflow-box {
+        padding: 14px;
+        margin-bottom: 12px;
+        border:
+            1px solid
+            rgba(255, 255, 255, .1);
+        border-radius: 13px;
+        background:
+            rgba(255, 255, 255, .07);
+        color: #dbeafe;
+        font-size: 11px;
+        line-height: 1.65;
+    }
+
+    .workflow-button {
+        width: 100%;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 12px;
+        color: #07111f;
+        text-decoration: none;
+        background:
+            linear-gradient(
+                135deg,
+                #67e8f9,
+                #bfdbfe
+            );
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .workflow-button.green {
+        color: white;
+        background:
+            linear-gradient(
+                135deg,
+                #10b981,
+                #047857
+            );
+    }
+
+    .staff-back {
+        display: inline-flex;
+        gap: 7px;
+        margin-top: 20px;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    @media (max-width: 991px) {
+        .staff-detail-layout {
+            grid-template-columns: 1fr;
         }
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f6f8;
-            color: #1f2937;
+        .workflow-card {
+            position: static;
         }
+    }
 
-        .header {
-            background: #111827;
-            color: white;
-            padding: 20px 30px;
+    @media (max-width: 575px) {
+        .staff-info-grid {
+            grid-template-columns: 1fr;
         }
+    }
+</style>
 
-        .header-inner {
-            max-width: 950px;
-            margin: auto;
-            display: flex;
-            justify-content: space-between;
-        }
+@endpush
 
-        .logo {
-            font-size: 22px;
-            font-weight: bold;
-        }
 
-        .header a {
-            color: white;
-            text-decoration: none;
-        }
+@section('content')
 
-        .container {
-            max-width: 950px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
+<div class="container staff-appointment-detail">
 
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow:
-                0 2px 10px rgba(0, 0, 0, 0.07);
-        }
+    @php
+        $statusText = match (
+            $appointment->status
+        ) {
+            'PENDING' =>
+                'Chờ xác nhận',
 
-        .success {
-            background: #ecfdf5;
-            color: #065f46;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
+            'CONFIRMED' =>
+                'Đã xác nhận',
 
-        .error {
-            background: #fef2f2;
-            color: #991b1b;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
+            'IN_PROGRESS' =>
+                'Đang thực hiện',
 
-        .status {
-            display: inline-block;
-            padding: 8px 14px;
-            border-radius: 20px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
+            'COMPLETED' =>
+                'Hoàn thành',
 
-        .pending {
-            background: #fff7ed;
-            color: #c2410c;
-        }
+            'CANCELLED' =>
+                'Đã hủy',
 
-        .confirmed {
-            background: #eff6ff;
-            color: #1d4ed8;
-        }
+            default =>
+                $appointment->status,
+        };
 
-        .progress {
-            background: #f5f3ff;
-            color: #6d28d9;
-        }
+        $statusClass = match (
+            $appointment->status
+        ) {
+            'PENDING' =>
+                'status-pending',
 
-        .completed {
-            background: #ecfdf5;
-            color: #047857;
-        }
+            'CONFIRMED' =>
+                'status-confirmed',
 
-        .cancelled {
-            background: #fef2f2;
-            color: #b91c1c;
-        }
+            'IN_PROGRESS' =>
+                'status-progress',
 
-        .info-grid {
-            display: grid;
-            grid-template-columns:
-                repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 25px 0;
-        }
+            'COMPLETED' =>
+                'status-completed',
 
-        .info-box {
-            background: #f9fafb;
-            padding: 16px;
-            border-radius: 8px;
-        }
+            'CANCELLED' =>
+                'status-cancelled',
 
-        .label {
-            color: #6b7280;
-            font-size: 13px;
-            margin-bottom: 6px;
-        }
+            default =>
+                'status-pending',
+        };
+    @endphp
 
-        .value {
-            font-weight: bold;
-        }
 
-        .section {
-            margin-top: 30px;
-        }
+    @if (session('success'))
 
-        .service-item {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 12px 0;
-        }
-
-        .note {
-            background: #f9fafb;
-            padding: 15px;
-            border-radius: 8px;
-            line-height: 1.6;
-        }
-
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 7px;
-            min-height: 110px;
-            resize: vertical;
-        }
-
-        .action-form {
-            margin-top: 20px;
-            background: #f9fafb;
-            padding: 20px;
-            border-radius: 8px;
-        }
-
-        .button {
-            display: inline-block;
-            margin-top: 15px;
-            background: #111827;
-            color: white;
-            border: none;
-            text-decoration: none;
-            padding: 12px 18px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .service-order-button {
-            background: #1d4ed8;
-        }
-
-        .invoice-button {
-            background: #047857;
-        }
-
-        .back {
-            display: inline-block;
-            margin-top: 25px;
-            color: #111827;
-            text-decoration: none;
-        }
-    </style>
-</head>
-
-<body>
-
-    <header class="header">
-
-        <div class="header-inner">
-
-            <div class="logo">
-                AutoCare - Nhân viên
-            </div>
-
-            <a href="{{ route('staff.appointments.index') }}">
-                Danh sách lịch
-            </a>
-
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            {{ session('success') }}
         </div>
 
-    </header>
+    @endif
 
 
-    <main class="container">
+    @if (session('error'))
 
-        @php
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>
+            {{ session('error') }}
+        </div>
 
-            $statusText = match ($appointment->status) {
-                'PENDING' =>
-                    'Chờ xác nhận',
-
-                'CONFIRMED' =>
-                    'Đã xác nhận',
-
-                'IN_PROGRESS' =>
-                    'Đang thực hiện',
-
-                'COMPLETED' =>
-                    'Hoàn thành',
-
-                'CANCELLED' =>
-                    'Đã hủy',
-
-                default =>
-                    $appointment->status,
-            };
+    @endif
 
 
-            $statusClass = match ($appointment->status) {
-                'PENDING' =>
-                    'pending',
+    <section class="staff-detail-hero" data-reveal="zoom">
 
-                'CONFIRMED' =>
-                    'confirmed',
+        <div class="staff-detail-hero-inner">
 
-                'IN_PROGRESS' =>
-                    'progress',
+            <div>
 
-                'COMPLETED' =>
-                    'completed',
-
-                'CANCELLED' =>
-                    'cancelled',
-
-                default =>
-                    'pending',
-            };
-
-        @endphp
-
-
-        @if (session('success'))
-
-            <div class="success">
-                {{ session('success') }}
-            </div>
-
-        @endif
-
-
-        @if (session('error'))
-
-            <div class="error">
-                {{ session('error') }}
-            </div>
-
-        @endif
-
-
-        <article class="card">
-
-            <p>
-                Mã lịch:
-
-                <strong>
+                <div class="staff-code">
+                    <i class="bi bi-hash"></i>
                     {{ $appointment->appointment_code }}
-                </strong>
-            </p>
+                </div>
 
+                <h1>
+                    Xử lý lịch hẹn
+                </h1>
 
-            <h1>
-                Xử lý lịch hẹn
-            </h1>
+            </div>
 
 
             <span
-                class="status {{ $statusClass }}"
+                class="
+                    status-badge
+                    {{ $statusClass }}
+                "
             >
                 {{ $statusText }}
             </span>
 
+        </div>
 
-            <div class="info-grid">
-
-                <div class="info-box">
-
-                    <div class="label">
-                        Khách hàng
-                    </div>
-
-                    <div class="value">
-                        {{ $appointment->contact_name }}
-                    </div>
-
-                </div>
+    </section>
 
 
-                <div class="info-box">
+    <div class="staff-detail-layout">
 
-                    <div class="label">
-                        Điện thoại
-                    </div>
+        <article class="staff-card" data-reveal="left">
 
-                    <div class="value">
-                        {{ $appointment->contact_phone }}
-                    </div>
+            <div class="staff-card-body">
 
-                </div>
+                <section class="staff-section">
 
+                    <div class="staff-section-title">
 
-                <div class="info-box">
+                        <span class="staff-section-icon">
+                            <i class="bi bi-person-vcard"></i>
+                        </span>
 
-                    <div class="label">
-                        Phương tiện
-                    </div>
-
-                    <div class="value">
-
-                        {{ $appointment->vehicle->brand->name }}
-
-                        {{ $appointment->vehicle->vehicleModel->name }}
+                        Thông tin lịch hẹn
 
                     </div>
 
-                </div>
 
+                    <div class="staff-info-grid">
 
-                <div class="info-box">
+                        <div class="staff-info">
+                            <div class="staff-info-label">
+                                Khách hàng
+                            </div>
+                            <div class="staff-info-value">
+                                {{ $appointment->contact_name }}
+                            </div>
+                        </div>
 
-                    <div class="label">
-                        Biển số
+                        <div class="staff-info">
+                            <div class="staff-info-label">
+                                Điện thoại
+                            </div>
+                            <div class="staff-info-value">
+                                {{ $appointment->contact_phone }}
+                            </div>
+                        </div>
+
+                        <div class="staff-info">
+                            <div class="staff-info-label">
+                                Phương tiện
+                            </div>
+                            <div class="staff-info-value">
+
+                                {{ $appointment->vehicle->brand->name }}
+
+                                {{ $appointment->vehicle->vehicleModel->name }}
+
+                            </div>
+                        </div>
+
+                        <div class="staff-info">
+                            <div class="staff-info-label">
+                                Biển số
+                            </div>
+                            <div class="staff-info-value">
+                                {{ $appointment->vehicle->license_plate }}
+                            </div>
+                        </div>
+
+                        <div class="staff-info">
+                            <div class="staff-info-label">
+                                Ngày hẹn
+                            </div>
+                            <div class="staff-info-value">
+
+                                {{
+                                    $appointment
+                                        ->appointment_date
+                                        ->format('d/m/Y')
+                                }}
+
+                            </div>
+                        </div>
+
+                        <div class="staff-info">
+                            <div class="staff-info-label">
+                                Giờ
+                            </div>
+                            <div class="staff-info-value">
+
+                                {{
+                                    substr(
+                                        $appointment
+                                            ->appointment_time,
+                                        0,
+                                        5
+                                    )
+                                }}
+
+                            </div>
+                        </div>
+
                     </div>
 
-                    <div class="value">
-                        {{ $appointment->vehicle->license_plate }}
-                    </div>
-
-                </div>
+                </section>
 
 
-                <div class="info-box">
+                <section class="staff-section">
 
-                    <div class="label">
-                        Ngày hẹn
-                    </div>
+                    <div class="staff-section-title">
 
-                    <div class="value">
+                        <span class="staff-section-icon">
+                            <i class="bi bi-tools"></i>
+                        </span>
 
-                        {{
-                            $appointment
-                                ->appointment_date
-                                ->format('d/m/Y')
-                        }}
+                        Dịch vụ khách đã chọn
 
                     </div>
 
-                </div>
+
+                    @foreach ($appointment->services as $service)
+
+                        <div class="service-line">
+
+                            <span class="service-name">
+                                {{ $service->name }}
+                            </span>
+
+                            <span class="service-price">
+
+                                {{
+                                    number_format(
+                                        $service->pivot->price,
+                                        0,
+                                        ',',
+                                        '.'
+                                    )
+                                }} đ
+
+                            </span>
+
+                        </div>
+
+                    @endforeach
+
+                </section>
 
 
-                <div class="info-box">
+                @if ($appointment->customer_note)
 
-                    <div class="label">
-                        Giờ
-                    </div>
+                    <section class="staff-section">
 
-                    <div class="value">
+                        <div class="staff-section-title">
 
-                        {{
-                            substr(
-                                $appointment->appointment_time,
-                                0,
-                                5
-                            )
-                        }}
+                            <span class="staff-section-icon">
+                                <i class="bi bi-chat-left-text"></i>
+                            </span>
 
-                    </div>
+                            Ghi chú khách hàng
 
-                </div>
+                        </div>
+
+                        <div class="staff-note">
+                            {{ $appointment->customer_note }}
+                        </div>
+
+                    </section>
+
+                @endif
+
+
+                @if ($appointment->status === 'PENDING')
+
+                    <section class="staff-section">
+
+                        <div class="staff-section-title">
+
+                            <span class="staff-section-icon">
+                                <i class="bi bi-check2-square"></i>
+                            </span>
+
+                            Xác nhận lịch hẹn
+
+                        </div>
+
+
+                        <form
+                            method="POST"
+                            action="{{ route(
+                                'staff.appointments.updateStatus',
+                                $appointment->id
+                            ) }}"
+                            class="staff-form-box"
+                        >
+
+                            @csrf
+                            @method('PATCH')
+
+                            <input
+                                type="hidden"
+                                name="status"
+                                value="CONFIRMED"
+                            >
+
+
+                            <label
+                                for="staff_note"
+                                class="form-label fw-bold"
+                            >
+                                Ghi chú nhân viên
+                            </label>
+
+                            <textarea
+                                id="staff_note"
+                                name="staff_note"
+                                class="form-control"
+                                rows="4"
+                                maxlength="1000"
+                            >{{ old(
+                                'staff_note',
+                                $appointment->staff_note
+                            ) }}</textarea>
+
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary mt-3"
+                            >
+                                <i class="bi bi-check-circle me-2"></i>
+                                Xác nhận lịch hẹn
+                            </button>
+
+                        </form>
+
+                    </section>
+
+                @endif
+
+
+                @if ($appointment->staff_note)
+
+                    <section class="staff-section">
+
+                        <div class="staff-section-title">
+
+                            <span class="staff-section-icon">
+                                <i class="bi bi-chat-square-text"></i>
+                            </span>
+
+                            Ghi chú nhân viên
+
+                        </div>
+
+                        <div class="staff-note">
+                            {{ $appointment->staff_note }}
+                        </div>
+
+                    </section>
+
+                @endif
 
             </div>
 
-
-            <section class="section">
-
-                <h2>
-                    Dịch vụ khách đã chọn
-                </h2>
+        </article>
 
 
-                @foreach ($appointment->services as $service)
+        <aside class="workflow-card" data-reveal="right">
 
-                    <div class="service-item">
-
-                        <span>
-                            {{ $service->name }}
-                        </span>
-
-                        <strong>
-
-                            {{
-                                number_format(
-                                    $service->pivot->price,
-                                    0,
-                                    ',',
-                                    '.'
-                                )
-                            }} đ
-
-                        </strong>
-
-                    </div>
-
-                @endforeach
-
-            </section>
+            <div class="workflow-title">
+                <i class="bi bi-diagram-3 me-2"></i>
+                Quy trình xử lý
+            </div>
 
 
-            @if ($appointment->customer_note)
-
-                <section class="section">
-
-                    <h2>
-                        Ghi chú khách hàng
-                    </h2>
-
-                    <div class="note">
-                        {{ $appointment->customer_note }}
-                    </div>
-
-                </section>
-
-            @endif
-
-
-            {{-- =========================
-                PENDING
-            ========================== --}}
-            @if ($appointment->status === 'PENDING')
-
-                <section class="section">
-
-                    <h2>
-                        Xác nhận lịch hẹn
-                    </h2>
-
-
-                    <form
-                        method="POST"
-                        action="{{ route(
-                            'staff.appointments.updateStatus',
-                            $appointment->id
-                        ) }}"
-                        class="action-form"
-                    >
-
-                        @csrf
-                        @method('PATCH')
-
-
-                        <input
-                            type="hidden"
-                            name="status"
-                            value="CONFIRMED"
-                        >
-
-
-                        <label for="staff_note">
-
-                            <strong>
-                                Ghi chú nhân viên
-                            </strong>
-
-                        </label>
-
-                        <br><br>
-
-
-                        <textarea
-                            id="staff_note"
-                            name="staff_note"
-                            maxlength="1000"
-                        >{{ old(
-                            'staff_note',
-                            $appointment->staff_note
-                        ) }}</textarea>
-
-
-                        <button
-                            type="submit"
-                            class="button"
-                        >
-                            Xác nhận lịch hẹn
-                        </button>
-
-                    </form>
-
-                </section>
-
-            @endif
-
-
-            {{-- =========================
-                SERVICE ORDER
-            ========================== --}}
             @if ($appointment->serviceOrder)
 
-                <section class="section">
+                <div class="workflow-box">
 
-                    <h2>
-                        Phiếu bảo dưỡng
-                    </h2>
+                    Phiếu bảo dưỡng:
 
+                    <strong>
+                        {{ $appointment->serviceOrder->order_code }}
+                    </strong>
 
-                    <div class="note">
+                    <br>
 
-                        Mã phiếu:
+                    Trạng thái:
 
-                        <strong>
-                            {{ $appointment->serviceOrder->order_code }}
-                        </strong>
+                    <strong>
 
-                        <br><br>
+                        {{
+                            match (
+                                $appointment
+                                    ->serviceOrder
+                                    ->status
+                            ) {
+                                'RECEIVED' =>
+                                    'Đã tiếp nhận',
 
-                        Trạng thái:
+                                'IN_PROGRESS' =>
+                                    'Đang thực hiện',
 
-                        <strong>
+                                'COMPLETED' =>
+                                    'Hoàn thành',
 
-                            {{
-                                match (
+                                'CANCELLED' =>
+                                    'Đã hủy',
+
+                                default =>
                                     $appointment
                                         ->serviceOrder
-                                        ->status
-                                ) {
-                                    'RECEIVED' =>
-                                        'Đã tiếp nhận',
+                                        ->status,
+                            }
+                        }}
 
-                                    'IN_PROGRESS' =>
-                                        'Đang thực hiện',
+                    </strong>
 
-                                    'COMPLETED' =>
-                                        'Hoàn thành',
-
-                                    'CANCELLED' =>
-                                        'Đã hủy',
-
-                                    default =>
-                                        $appointment
-                                            ->serviceOrder
-                                            ->status,
-                                }
-                            }}
-
-                        </strong>
-
-                    </div>
+                </div>
 
 
-                    <a
-                        href="{{ route(
-                            'staff.service-orders.show',
-                            $appointment->serviceOrder->id
-                        ) }}"
-                        class="button service-order-button"
-                    >
-                        Xem phiếu bảo dưỡng
-                    </a>
+                <a
+                    href="{{ route(
+                        'staff.service-orders.show',
+                        $appointment->serviceOrder->id
+                    ) }}"
+                    class="workflow-button"
+                >
+                    <i class="bi bi-tools"></i>
+                    Xem phiếu bảo dưỡng
+                </a>
 
 
-                    {{-- =========================
-                        INVOICE
-                    ========================== --}}
+                @if (
+                    $appointment
+                        ->serviceOrder
+                        ->status
+                    === 'COMPLETED'
+                )
+
                     @if (
-                        $appointment->serviceOrder->status
-                        === 'COMPLETED'
+                        $appointment
+                            ->serviceOrder
+                            ->invoice
                     )
 
-                        @if (
-                            $appointment
-                                ->serviceOrder
-                                ->invoice
-                        )
+                        <a
+                            href="{{ route(
+                                'staff.invoices.show',
+                                $appointment
+                                    ->serviceOrder
+                                    ->invoice
+                                    ->id
+                            ) }}"
+                            class="workflow-button green"
+                        >
+                            <i class="bi bi-receipt"></i>
+                            Xem hóa đơn
+                        </a>
 
-                            <a
-                                href="{{ route(
-                                    'staff.invoices.show',
-                                    $appointment
-                                        ->serviceOrder
-                                        ->invoice
-                                        ->id
-                                ) }}"
-                                class="button invoice-button"
-                            >
-                                Xem hóa đơn
-                            </a>
+                    @else
 
-                        @else
-
-                            <a
-                                href="{{ route(
-                                    'staff.invoices.create',
-                                    $appointment->serviceOrder->id
-                                ) }}"
-                                class="button invoice-button"
-                            >
-                                Lập hóa đơn
-                            </a>
-
-                        @endif
+                        <a
+                            href="{{ route(
+                                'staff.invoices.create',
+                                $appointment
+                                    ->serviceOrder
+                                    ->id
+                            ) }}"
+                            class="workflow-button green"
+                        >
+                            <i class="bi bi-receipt-cutoff"></i>
+                            Lập hóa đơn
+                        </a>
 
                     @endif
 
-                </section>
+                @endif
 
 
-            {{-- =========================
-                CONFIRMED nhưng chưa có
-                Service Order
-            ========================== --}}
             @elseif (
                 $appointment->status
                 === 'CONFIRMED'
             )
 
-                <section class="section">
+                <div class="workflow-box">
 
-                    <h2>
-                        Phiếu bảo dưỡng
-                    </h2>
+                    Lịch đã được xác nhận.
 
+                    <br><br>
 
-                    <div class="note">
+                    Tiếp nhận xe và tạo
+                    phiếu bảo dưỡng để
+                    bắt đầu quy trình kỹ thuật.
 
-                        Lịch đã được xác nhận.
-
-                        Hãy tiếp nhận xe và tạo
-                        phiếu bảo dưỡng trước khi
-                        bắt đầu thực hiện.
-
-                    </div>
+                </div>
 
 
-                    <a
-                        href="{{ route(
-                            'staff.service-orders.create',
-                            $appointment->id
-                        ) }}"
-                        class="button service-order-button"
-                    >
-                        Tạo phiếu bảo dưỡng
-                    </a>
+                <a
+                    href="{{ route(
+                        'staff.service-orders.create',
+                        $appointment->id
+                    ) }}"
+                    class="workflow-button"
+                >
+                    <i class="bi bi-plus-circle"></i>
+                    Tạo phiếu bảo dưỡng
+                </a>
 
-                </section>
-
-            @endif
-
-
-            @if (
+            @elseif (
                 $appointment->status
                 === 'CANCELLED'
             )
 
-                <section class="section">
+                <div class="workflow-box">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Lịch hẹn đã bị khách hàng hủy.
+                </div>
 
-                    <div class="note">
-                        Lịch hẹn đã bị khách hàng hủy.
-                    </div>
+            @else
 
-                </section>
-
-            @endif
-
-
-            @if ($appointment->staff_note)
-
-                <section class="section">
-
-                    <h2>
-                        Ghi chú nhân viên
-                    </h2>
-
-                    <div class="note">
-                        {{ $appointment->staff_note }}
-                    </div>
-
-                </section>
+                <div class="workflow-box">
+                    Chưa có thao tác tiếp theo.
+                </div>
 
             @endif
 
+        </aside>
 
-            <a
-                href="{{ route('staff.appointments.index') }}"
-                class="back"
-            >
-                ← Quay lại danh sách lịch
-            </a>
+    </div>
 
-        </article>
 
-    </main>
+    <a
+        href="{{ route('staff.appointments.index') }}"
+        class="staff-back"
+    >
+        <i class="bi bi-arrow-left"></i>
+        Quay lại danh sách lịch
+    </a>
 
-</body>
+</div>
 
-</html>
+@endsection

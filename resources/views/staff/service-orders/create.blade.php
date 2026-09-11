@@ -1,239 +1,285 @@
-<!DOCTYPE html>
-<html lang="vi">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+@section(
+    'title',
+    'Tạo phiếu bảo dưỡng - AutoCare Long Biên'
+)
 
-    <title>
-        Tạo phiếu bảo dưỡng - AutoCare Long Biên
-    </title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+@push('styles')
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f6f8;
-            color: #1f2937;
-        }
+<style>
+    .service-order-create-page {
+        max-width: 1050px;
+    }
 
-        .header {
-            background: #111827;
-            color: white;
-            padding: 20px 30px;
-        }
+    .staff-form-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 31px;
+        margin-bottom: 23px;
+        border-radius: 26px;
+        color: white;
+        background:
+            linear-gradient(
+                120deg,
+                #06101e,
+                #0c3474 52%,
+                #1677ff
+            );
+        box-shadow:
+            0 25px 70px
+            rgba(22, 119, 255, .22);
+    }
 
-        .header-inner {
-            max-width: 950px;
-            margin: auto;
-            display: flex;
-            justify-content: space-between;
-        }
+    .staff-form-hero::before {
+        content: "";
+        position: absolute;
+        width: 340px;
+        height: 340px;
+        top: -200px;
+        right: -100px;
+        border-radius: 50%;
+        background:
+            radial-gradient(
+                circle,
+                rgba(103, 232, 249, .4),
+                transparent 70%
+            );
+    }
 
-        .header a {
-            color: white;
-            text-decoration: none;
-        }
+    .staff-form-hero-content {
+        position: relative;
+        z-index: 2;
+    }
 
-        .logo {
-            font-size: 22px;
-            font-weight: bold;
-        }
+    .staff-form-code {
+        color: #bfdbfe;
+        font-size: 11px;
+        font-weight: 800;
+    }
 
-        .container {
-            max-width: 950px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
+    .staff-form-hero h1 {
+        margin: 7px 0 0;
+        color: white;
+        font-size:
+            clamp(2rem, 4vw, 3.2rem);
+        font-weight: 900;
+        letter-spacing: -.055em;
+    }
 
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow:
-                0 2px 10px rgba(0, 0, 0, 0.07);
-        }
+    .staff-form-card {
+        border:
+            1px solid
+            rgba(255, 255, 255, .88);
+        border-radius: 21px;
+        background:
+            rgba(255, 255, 255, .92);
+        box-shadow: var(--ac-shadow);
+        backdrop-filter: blur(16px);
+    }
 
-        .errors {
-            background: #fef2f2;
-            color: #991b1b;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
+    .staff-form-body {
+        padding: 27px;
+    }
 
+    .info-grid {
+        display: grid;
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 27px;
+    }
+
+    .info-card {
+        padding: 15px;
+        border: 1px solid #e7edf4;
+        border-radius: 14px;
+        background: #f8fbff;
+    }
+
+    .info-icon {
+        margin-bottom: 7px;
+        color: #2563eb;
+        font-size: 17px;
+    }
+
+    .info-label {
+        color: #64748b;
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .info-value {
+        margin-top: 5px;
+        color: #0f172a;
+        font-size: 12px;
+        font-weight: 850;
+    }
+
+    .staff-section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 25px 0 16px;
+        color: #0f172a;
+        font-size: 17px;
+        font-weight: 900;
+    }
+
+    .service-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 13px 0;
+        border-bottom: 1px solid #edf1f6;
+    }
+
+    .service-price {
+        color: #1d4ed8;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .form-panel {
+        margin-top: 25px;
+        padding: 22px;
+        border: 1px solid #e5ecf4;
+        border-radius: 17px;
+        background: #f8fbff;
+    }
+
+    .submit-button {
+        min-height: 48px;
+        padding: 0 20px;
+        border: none;
+        border-radius: 13px;
+        color: white;
+        background:
+            linear-gradient(
+                135deg,
+                #1683ff,
+                #4f46e5
+            );
+        font-weight: 850;
+        box-shadow:
+            0 10px 25px
+            rgba(37, 99, 235, .22);
+    }
+
+    .staff-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 20px;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    @media (max-width: 900px) {
         .info-grid {
-            display: grid;
             grid-template-columns:
-                repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 25px 0;
+                repeat(2, 1fr);
         }
+    }
 
-        .info-box {
-            background: #f9fafb;
-            padding: 15px;
-            border-radius: 8px;
+    @media (max-width: 575px) {
+        .info-grid {
+            grid-template-columns: 1fr;
         }
+    }
+</style>
 
-        .label {
-            color: #6b7280;
-            font-size: 13px;
-            margin-bottom: 6px;
-        }
+@endpush
 
-        .value {
-            font-weight: bold;
-        }
 
-        .service-item {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 12px 0;
-        }
+@section('content')
 
-        .form-group {
-            margin-top: 20px;
-        }
+<div class="container service-order-create-page">
 
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
+    <section class="staff-form-hero" data-reveal="zoom">
 
-        input,
-        select,
-        textarea {
-            width: 100%;
-            padding: 11px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 15px;
-        }
+        <div class="staff-form-hero-content">
 
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
+            <div class="staff-form-code">
 
-        .button {
-            margin-top: 25px;
-            background: #111827;
-            color: white;
-            border: none;
-            border-radius: 7px;
-            padding: 13px 20px;
-            cursor: pointer;
-            font-size: 16px;
-        }
+                <i class="bi bi-calendar-check me-1"></i>
 
-        .back {
-            display: inline-block;
-            margin-top: 25px;
-            color: #111827;
-            text-decoration: none;
-        }
-    </style>
-</head>
+                {{ $appointment->appointment_code }}
 
-<body>
-
-    <header class="header">
-
-        <div class="header-inner">
-
-            <div class="logo">
-                AutoCare - Nhân viên
             </div>
-
-            <a
-                href="{{ route(
-                    'staff.appointments.show',
-                    $appointment->id
-                ) }}"
-            >
-                Quay lại lịch hẹn
-            </a>
-
-        </div>
-
-    </header>
-
-
-    <main class="container">
-
-        <div class="card">
 
             <h1>
                 Tạo phiếu bảo dưỡng
             </h1>
 
-            <p>
-                Mã lịch hẹn:
-                <strong>
-                    {{ $appointment->appointment_code }}
-                </strong>
-            </p>
+        </div>
+
+    </section>
 
 
-            @if ($errors->any())
+    @if ($errors->any())
 
-                <div class="errors">
+        <div class="alert alert-danger">
 
-                    <strong>
-                        Vui lòng kiểm tra lại:
-                    </strong>
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
 
-                    <ul>
+            <strong>
+                Vui lòng kiểm tra lại:
+            </strong>
 
-                        @foreach ($errors->all() as $error)
+            <ul class="mb-0 mt-2">
 
-                            <li>
-                                {{ $error }}
-                            </li>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
 
-                        @endforeach
+            </ul>
 
-                    </ul>
+        </div>
 
-                </div>
+    @endif
 
-            @endif
 
+    <article class="staff-form-card" data-reveal>
+
+        <div class="staff-form-body">
 
             <div class="info-grid">
 
-                <div class="info-box">
+                <div class="info-card">
 
-                    <div class="label">
+                    <div class="info-icon">
+                        <i class="bi bi-person"></i>
+                    </div>
+
+                    <div class="info-label">
                         Khách hàng
                     </div>
 
-                    <div class="value">
+                    <div class="info-value">
                         {{ $appointment->contact_name }}
                     </div>
 
                 </div>
 
 
-                <div class="info-box">
+                <div class="info-card">
 
-                    <div class="label">
+                    <div class="info-icon">
+                        <i class="bi bi-car-front-fill"></i>
+                    </div>
+
+                    <div class="info-label">
                         Phương tiện
                     </div>
 
-                    <div class="value">
+                    <div class="info-value">
 
                         {{ $appointment->vehicle->brand->name }}
 
@@ -244,26 +290,34 @@
                 </div>
 
 
-                <div class="info-box">
+                <div class="info-card">
 
-                    <div class="label">
+                    <div class="info-icon">
+                        <i class="bi bi-credit-card-2-front"></i>
+                    </div>
+
+                    <div class="info-label">
                         Biển số
                     </div>
 
-                    <div class="value">
+                    <div class="info-value">
                         {{ $appointment->vehicle->license_plate }}
                     </div>
 
                 </div>
 
 
-                <div class="info-box">
+                <div class="info-card">
 
-                    <div class="label">
+                    <div class="info-icon">
+                        <i class="bi bi-speedometer2"></i>
+                    </div>
+
+                    <div class="info-label">
                         ODO hiện tại
                     </div>
 
-                    <div class="value">
+                    <div class="info-value">
 
                         {{
                             number_format(
@@ -280,20 +334,24 @@
             </div>
 
 
-            <h2>
+            <div class="staff-section-title">
+
+                <i class="bi bi-tools text-primary"></i>
+
                 Dịch vụ khách đã đặt
-            </h2>
+
+            </div>
 
 
             @foreach ($appointment->services as $service)
 
-                <div class="service-item">
+                <div class="service-line">
 
-                    <span>
+                    <span class="fw-bold">
                         {{ $service->name }}
                     </span>
 
-                    <strong>
+                    <span class="service-price">
 
                         {{
                             number_format(
@@ -304,7 +362,7 @@
                             )
                         }} đ
 
-                    </strong>
+                    </span>
 
                 </div>
 
@@ -312,6 +370,7 @@
 
 
             <form
+                id="createServiceOrderForm"
                 method="POST"
                 action="{{ route(
                     'staff.service-orders.store',
@@ -322,129 +381,153 @@
                 @csrf
 
 
-                <div class="form-group">
+                <div class="form-panel">
 
-                    <label for="technician_id">
-                        Kỹ thuật viên phụ trách *
-                    </label>
+                    <div class="row g-3">
 
-                    <select
-                        id="technician_id"
-                        name="technician_id"
-                        required
-                    >
+                        <div class="col-md-6">
 
-                        <option value="">
-                            -- Chọn kỹ thuật viên --
-                        </option>
+                            <label
+                                for="technician_id"
+                                class="form-label fw-bold"
+                            >
+                                Kỹ thuật viên phụ trách *
+                            </label>
 
-
-                        @foreach ($technicians as $technician)
-
-                            <option
-                                value="{{ $technician->id }}"
-                                {{
-                                    old('technician_id')
-                                    == $technician->id
-                                        ? 'selected'
-                                        : ''
-                                }}
+                            <select
+                                id="technician_id"
+                                name="technician_id"
+                                class="form-select"
+                                required
                             >
 
-                                {{ $technician->name }}
+                                <option value="">
+                                    -- Chọn kỹ thuật viên --
+                                </option>
 
-                                -
+                                @foreach ($technicians as $technician)
 
-                                {{ $technician->email }}
+                                    <option
+                                        value="{{ $technician->id }}"
+                                        {{
+                                            old('technician_id')
+                                            == $technician->id
+                                                ? 'selected'
+                                                : ''
+                                        }}
+                                    >
+                                        {{ $technician->name }}
+                                        -
+                                        {{ $technician->email }}
+                                    </option>
 
-                            </option>
+                                @endforeach
 
-                        @endforeach
+                            </select>
 
-                    </select>
-
-                </div>
+                        </div>
 
 
-                <div class="form-group">
+                        <div class="col-md-6">
 
-                    <label for="received_mileage">
-                        ODO khi tiếp nhận xe *
-                    </label>
+                            <label
+                                for="received_mileage"
+                                class="form-label fw-bold"
+                            >
+                                ODO khi tiếp nhận xe *
+                            </label>
 
-                    <input
-                        type="number"
-                        id="received_mileage"
-                        name="received_mileage"
-                        min="{{ $appointment->vehicle->current_mileage }}"
-                        value="{{ old(
-                            'received_mileage',
-                            $appointment->vehicle->current_mileage
-                        ) }}"
-                        required
+                            <input
+                                type="number"
+                                id="received_mileage"
+                                name="received_mileage"
+                                class="form-control"
+                                min="{{ $appointment->vehicle->current_mileage }}"
+                                value="{{ old(
+                                    'received_mileage',
+                                    $appointment->vehicle->current_mileage
+                                ) }}"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="col-12">
+
+                            <label
+                                for="vehicle_condition"
+                                class="form-label fw-bold"
+                            >
+                                Tình trạng xe khi tiếp nhận
+                            </label>
+
+                            <textarea
+                                id="vehicle_condition"
+                                name="vehicle_condition"
+                                class="form-control"
+                                rows="4"
+                                maxlength="2000"
+                                placeholder="Ví dụ: Ngoại thất bình thường, khách phản ánh tiếng kêu khi phanh..."
+                            >{{ old('vehicle_condition') }}</textarea>
+
+                        </div>
+
+
+                        <div class="col-12">
+
+                            <label
+                                for="diagnosis"
+                                class="form-label fw-bold"
+                            >
+                                Chẩn đoán ban đầu
+                            </label>
+
+                            <textarea
+                                id="diagnosis"
+                                name="diagnosis"
+                                class="form-control"
+                                rows="4"
+                                maxlength="2000"
+                                placeholder="Kết quả kiểm tra ban đầu..."
+                            >{{ old('diagnosis') }}</textarea>
+
+                        </div>
+
+
+                        <div class="col-12">
+
+                            <label
+                                for="staff_note"
+                                class="form-label fw-bold"
+                            >
+                                Ghi chú nhân viên
+                            </label>
+
+                            <textarea
+                                id="staff_note"
+                                name="staff_note"
+                                class="form-control"
+                                rows="3"
+                                maxlength="1000"
+                            >{{ old('staff_note') }}</textarea>
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="submit-button mt-4"
+                        data-bs-toggle="modal"
+                        data-bs-target="#createServiceOrderModal"
                     >
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Tạo phiếu bảo dưỡng
+                    </button>
 
                 </div>
-
-
-                <div class="form-group">
-
-                    <label for="vehicle_condition">
-                        Tình trạng xe khi tiếp nhận
-                    </label>
-
-                    <textarea
-                        id="vehicle_condition"
-                        name="vehicle_condition"
-                        maxlength="2000"
-                        placeholder="Ví dụ: Ngoại thất bình thường, khách phản ánh tiếng kêu khi phanh..."
-                    >{{ old('vehicle_condition') }}</textarea>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="diagnosis">
-                        Chẩn đoán ban đầu
-                    </label>
-
-                    <textarea
-                        id="diagnosis"
-                        name="diagnosis"
-                        maxlength="2000"
-                        placeholder="Kết quả kiểm tra ban đầu..."
-                    >{{ old('diagnosis') }}</textarea>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="staff_note">
-                        Ghi chú nhân viên
-                    </label>
-
-                    <textarea
-                        id="staff_note"
-                        name="staff_note"
-                        maxlength="1000"
-                    >{{ old('staff_note') }}</textarea>
-
-                </div>
-
-
-                <button
-                    type="submit"
-                    class="button"
-                    onclick="
-                        return confirm(
-                            'Xác nhận tạo phiếu bảo dưỡng cho xe này?'
-                        );
-                    "
-                >
-                    Tạo phiếu bảo dưỡng
-                </button>
 
             </form>
 
@@ -454,15 +537,79 @@
                     'staff.appointments.show',
                     $appointment->id
                 ) }}"
-                class="back"
+                class="staff-back"
             >
-                ← Quay lại lịch hẹn
+                <i class="bi bi-arrow-left"></i>
+                Quay lại lịch hẹn
             </a>
 
         </div>
 
-    </main>
+    </article>
 
-</body>
+</div>
 
-</html>
+
+<div
+    class="modal fade"
+    id="createServiceOrderModal"
+    tabindex="-1"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+
+            <div class="modal-body p-4 p-md-5 text-center">
+
+                <div class="fs-1 text-primary mb-3">
+                    <i class="bi bi-tools"></i>
+                </div>
+
+                <h3>
+                    Tạo phiếu bảo dưỡng?
+                </h3>
+
+                <p class="text-secondary">
+                    Xác nhận tiếp nhận xe và
+                    tạo phiếu bảo dưỡng
+                    cho lịch
+                    <strong>
+                        {{ $appointment->appointment_code }}
+                    </strong>.
+                </p>
+
+                <div class="d-flex justify-content-center gap-2">
+
+                    <button
+                        type="button"
+                        class="btn btn-light"
+                        data-bs-dismiss="modal"
+                    >
+                        Quay lại
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        onclick="
+                            document
+                                .getElementById(
+                                    'createServiceOrderForm'
+                                )
+                                .submit();
+                        "
+                    >
+                        Xác nhận tạo
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+@endsection

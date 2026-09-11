@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 class AuthController extends Controller
 {
     /**
-     * Form đăng ký.
+     * Hiển thị form đăng ký.
      */
     public function showRegisterForm()
     {
@@ -20,7 +20,7 @@ class AuthController extends Controller
 
 
     /**
-     * Đăng ký CUSTOMER.
+     * Đăng ký tài khoản CUSTOMER.
      */
     public function register(Request $request)
     {
@@ -118,7 +118,7 @@ class AuthController extends Controller
 
 
     /**
-     * Form đăng nhập.
+     * Hiển thị form đăng nhập.
      */
     public function showLoginForm()
     {
@@ -162,6 +162,9 @@ class AuthController extends Controller
                 $request->boolean('remember')
             )
         ) {
+            /**
+             * Chống session fixation.
+             */
             $request
                 ->session()
                 ->regenerate();
@@ -172,8 +175,10 @@ class AuthController extends Controller
             $user->load('role');
 
 
+            /**
+             * User chưa được gán role.
+             */
             if (!$user->role) {
-
                 Auth::logout();
 
                 $request
@@ -194,13 +199,20 @@ class AuthController extends Controller
             }
 
 
-            /**
-             * CUSTOMER
-             */
+            /*
+            |--------------------------------------------------------------------------
+            | CUSTOMER
+            |--------------------------------------------------------------------------
+            */
+
             if (
                 $user->role->code ===
                 'CUSTOMER'
             ) {
+                /**
+                 * Lấy URL khách định truy cập
+                 * trước khi bị chuyển tới login.
+                 */
                 $intendedUrl =
                     $request
                         ->session()
@@ -209,8 +221,13 @@ class AuthController extends Controller
                         );
 
 
+                /**
+                 * Trường hợp khách bấm
+                 * "Đặt lịch" trước khi đăng nhập.
+                 */
                 if (
-                    $intendedUrl &&
+                    $intendedUrl
+                    &&
                     str_contains(
                         $intendedUrl,
                         '/appointments/create'
@@ -225,9 +242,13 @@ class AuthController extends Controller
                 }
 
 
+                /**
+                 * Đăng nhập bình thường
+                 * → Customer Dashboard.
+                 */
                 return redirect()
                     ->route(
-                        'vehicles.index'
+                        'customer.dashboard'
                     )
                     ->with(
                         'success',
@@ -236,13 +257,20 @@ class AuthController extends Controller
             }
 
 
-            /**
-             * STAFF
-             */
+            /*
+            |--------------------------------------------------------------------------
+            | STAFF
+            |--------------------------------------------------------------------------
+            */
+
             if (
                 $user->role->code ===
                 'STAFF'
             ) {
+                /**
+                 * Không sử dụng intended URL
+                 * của CUSTOMER cho STAFF.
+                 */
                 $request
                     ->session()
                     ->forget(
@@ -252,7 +280,7 @@ class AuthController extends Controller
 
                 return redirect()
                     ->route(
-                        'staff.appointments.index'
+                        'staff.dashboard'
                     )
                     ->with(
                         'success',
@@ -261,11 +289,12 @@ class AuthController extends Controller
             }
 
 
-            /**
-             * ADMIN
-             *
-             * Chưa có Dashboard riêng.
-             */
+            /*
+            |--------------------------------------------------------------------------
+            | ADMIN
+            |--------------------------------------------------------------------------
+            */
+
             if (
                 $user->role->code ===
                 'ADMIN'
@@ -277,9 +306,13 @@ class AuthController extends Controller
                     );
 
 
+                /**
+                 * Hiện ADMIN dùng chung
+                 * Dashboard quản lý với STAFF.
+                 */
                 return redirect()
                     ->route(
-                        'staff.appointments.index'
+                        'staff.dashboard'
                     )
                     ->with(
                         'success',
@@ -288,9 +321,12 @@ class AuthController extends Controller
             }
 
 
-            /**
-             * TECHNICIAN
-             */
+            /*
+            |--------------------------------------------------------------------------
+            | TECHNICIAN
+            |--------------------------------------------------------------------------
+            */
+
             if (
                 $user->role->code ===
                 'TECHNICIAN'
@@ -313,6 +349,9 @@ class AuthController extends Controller
             }
 
 
+            /**
+             * Role không xác định.
+             */
             Auth::logout();
 
             $request
@@ -333,11 +372,51 @@ class AuthController extends Controller
         }
 
 
+        /**
+         * Sai email hoặc mật khẩu.
+         */
         return back()
             ->withErrors([
                 'email' =>
                     'Email hoặc mật khẩu không chính xác.',
             ])
             ->onlyInput('email');
+    }
+
+
+    /**
+     * Đăng xuất tài khoản.
+     */
+    public function logout(Request $request)
+    {
+        /**
+         * Xóa trạng thái đăng nhập
+         * khỏi authentication guard.
+         */
+        Auth::logout();
+
+
+        /**
+         * Hủy toàn bộ session cũ.
+         */
+        $request
+            ->session()
+            ->invalidate();
+
+
+        /**
+         * Sinh lại CSRF token.
+         */
+        $request
+            ->session()
+            ->regenerateToken();
+
+
+        return redirect()
+            ->route('home')
+            ->with(
+                'success',
+                'Bạn đã đăng xuất thành công.'
+            );
     }
 }

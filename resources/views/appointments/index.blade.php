@@ -1,241 +1,331 @@
-<!DOCTYPE html>
-<html lang="vi">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+@section(
+    'title',
+    'Lịch hẹn của tôi - AutoCare Long Biên'
+)
 
-    <title>
-        Lịch hẹn của tôi - AutoCare Long Biên
-    </title>
 
-    <style>
-        * {
-            box-sizing: border-box;
+@push('styles')
+
+<style>
+    .appointments-page {
+        max-width: 1200px;
+    }
+
+    .appointments-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 30px;
+        margin-bottom: 28px;
+        border-radius: 26px;
+        color: white;
+        background:
+            linear-gradient(
+                120deg,
+                #07111f,
+                #0d3476 55%,
+                #1677ff
+            );
+        box-shadow:
+            0 24px 65px
+            rgba(22, 119, 255, 0.22);
+    }
+
+    .appointments-hero::before {
+        content: "";
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        top: -190px;
+        right: -100px;
+        border-radius: 50%;
+        background:
+            radial-gradient(
+                circle,
+                rgba(103, 232, 249, 0.40),
+                transparent 70%
+            );
+    }
+
+    .appointments-hero-inner {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+
+    .appointments-hero h1 {
+        margin: 0;
+        color: white;
+        font-size:
+            clamp(
+                2rem,
+                4vw,
+                3.2rem
+            );
+        font-weight: 900;
+        letter-spacing: -0.055em;
+    }
+
+    .appointments-hero p {
+        margin: 10px 0 0;
+        color: #cbd5e1;
+        line-height: 1.7;
+    }
+
+    .appointment-create-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        padding: 13px 18px;
+        border-radius: 14px;
+        color: #07111f;
+        text-decoration: none;
+        background:
+            linear-gradient(
+                135deg,
+                #67e8f9,
+                #bfdbfe
+            );
+        font-size: 13px;
+        font-weight: 900;
+        box-shadow:
+            0 12px 30px
+            rgba(103, 232, 249, 0.20);
+        transition:
+            all 0.23s ease;
+    }
+
+    .appointment-create-button:hover {
+        color: #07111f;
+        transform:
+            translateY(-3px);
+        box-shadow:
+            0 18px 38px
+            rgba(103, 232, 249, 0.30);
+    }
+
+    .appointment-card {
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 18px;
+        padding: 24px;
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.88);
+        border-radius: 20px;
+        background:
+            rgba(255, 255, 255, 0.91);
+        box-shadow:
+            var(--ac-shadow);
+        backdrop-filter:
+            blur(16px);
+        transition:
+            transform 0.23s ease,
+            box-shadow 0.23s ease;
+    }
+
+    .appointment-card:hover {
+        transform:
+            translateY(-5px);
+        box-shadow:
+            var(--ac-shadow-lg);
+    }
+
+    .appointment-card::after {
+        content: "";
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        right: -100px;
+        top: -100px;
+        border-radius: 50%;
+        background:
+            radial-gradient(
+                circle,
+                rgba(59, 130, 246, 0.12),
+                transparent 72%
+            );
+    }
+
+    .appointment-card-top {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .appointment-code {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .appointment-vehicle {
+        color: #0f172a;
+        font-size: 21px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+    }
+
+    .appointment-license {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 7px;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .appointment-info-grid {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns:
+            repeat(
+                4,
+                minmax(0, 1fr)
+            );
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .appointment-info {
+        padding: 14px;
+        border:
+            1px solid #e8eef5;
+        border-radius: 14px;
+        background:
+            linear-gradient(
+                180deg,
+                #f8fbff,
+                #f5f8fc
+            );
+    }
+
+    .appointment-info-icon {
+        margin-bottom: 8px;
+        color: #2563eb;
+        font-size: 17px;
+    }
+
+    .appointment-info-label {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 750;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .appointment-info-value {
+        margin-top: 4px;
+        color: #0f172a;
+        font-size: 13px;
+        font-weight: 850;
+    }
+
+    .appointment-card-footer {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+
+    .appointment-detail-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 11px;
+        color: white;
+        text-decoration: none;
+        background:
+            linear-gradient(
+                135deg,
+                #1683ff,
+                #4f46e5
+            );
+        font-size: 12px;
+        font-weight: 850;
+        box-shadow:
+            0 8px 22px
+            rgba(37, 99, 235, 0.20);
+        transition:
+            all 0.2s ease;
+    }
+
+    .appointment-detail-button:hover {
+        color: white;
+        transform:
+            translateY(-2px);
+    }
+
+    .appointments-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 12px;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 750;
+    }
+
+    .appointments-back:hover {
+        color: #2563eb;
+    }
+
+    @media (max-width: 991px) {
+        .appointment-info-grid {
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
         }
+    }
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f6f8;
-            color: #1f2937;
-        }
-
-        .header {
-            background: #111827;
-            color: white;
-            padding: 20px 30px;
-        }
-
-        .header-inner {
-            max-width: 1100px;
-            margin: auto;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .logo {
-            font-size: 22px;
-            font-weight: bold;
-        }
-
-        .header a {
-            color: white;
-            text-decoration: none;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-
-        .page-header h1 {
-            margin: 0 0 8px;
-        }
-
-        .page-header p {
-            margin: 0;
-            color: #6b7280;
-        }
-
-        .new-button {
-            background: #111827;
-            color: white;
-            text-decoration: none;
-            padding: 12px 18px;
-            border-radius: 7px;
-        }
-
-        .success {
-            background: #ecfdf5;
-            color: #065f46;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .error {
-            background: #fef2f2;
-            color: #991b1b;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .empty {
-            background: white;
-            padding: 50px;
-            text-align: center;
-            border-radius: 12px;
+    @media (max-width: 575px) {
+        .appointment-info-grid {
+            grid-template-columns: 1fr;
         }
 
         .appointment-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 22px;
-            box-shadow:
-                0 2px 10px rgba(0, 0, 0, 0.07);
+            padding: 19px;
         }
 
-        .appointment-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 20px;
-            flex-wrap: wrap;
+        .appointments-hero {
+            padding: 24px;
         }
+    }
+</style>
 
-        .code {
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .vehicle {
-            font-size: 21px;
-            font-weight: bold;
-            margin-top: 5px;
-        }
-
-        .license {
-            color: #6b7280;
-            margin-top: 5px;
-        }
-
-        .status {
-            padding: 7px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .pending {
-            background: #fff7ed;
-            color: #c2410c;
-        }
-
-        .confirmed {
-            background: #eff6ff;
-            color: #1d4ed8;
-        }
-
-        .progress {
-            background: #f5f3ff;
-            color: #6d28d9;
-        }
-
-        .completed {
-            background: #ecfdf5;
-            color: #047857;
-        }
-
-        .cancelled {
-            background: #fef2f2;
-            color: #b91c1c;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns:
-                repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .info-box {
-            background: #f9fafb;
-            padding: 15px;
-            border-radius: 8px;
-        }
-
-        .label {
-            color: #6b7280;
-            font-size: 13px;
-            margin-bottom: 5px;
-        }
-
-        .value {
-            font-weight: bold;
-        }
-
-        .actions {
-            margin-top: 20px;
-        }
-
-        .detail-button {
-            display: inline-block;
-            background: #111827;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 6px;
-            text-decoration: none;
-        }
-
-        .back {
-            display: inline-block;
-            margin-top: 15px;
-            color: #111827;
-            text-decoration: none;
-        }
-    </style>
-</head>
-
-<body>
-
-    <header class="header">
-
-        <div class="header-inner">
-
-            <div class="logo">
-                AutoCare Long Biên
-            </div>
-
-            <a href="{{ route('home') }}">
-                Trang chủ
-            </a>
-
-        </div>
-
-    </header>
+@endpush
 
 
-    <main class="container">
+@section('content')
 
-        <div class="page-header">
+<div class="container appointments-page">
+
+    <section
+        class="appointments-hero"
+        data-reveal="zoom"
+    >
+
+        <div class="appointments-hero-inner">
 
             <div>
 
@@ -244,8 +334,8 @@
                 </h1>
 
                 <p>
-                    Theo dõi các lịch bảo dưỡng
-                    của phương tiện.
+                    Theo dõi toàn bộ hành trình
+                    đặt lịch và bảo dưỡng phương tiện.
                 </p>
 
             </div>
@@ -253,268 +343,335 @@
 
             <a
                 href="{{ route('appointments.create') }}"
-                class="new-button"
+                class="appointment-create-button"
             >
-                + Đặt lịch mới
+
+                <i class="bi bi-calendar-plus"></i>
+
+                Đặt lịch mới
+
             </a>
 
         </div>
 
+    </section>
 
-        @if (session('success'))
 
-            <div class="success">
-                {{ session('success') }}
-            </div>
+    @if (session('success'))
 
-        @endif
-
-
-        @if (session('error'))
-
-            <div class="error">
-                {{ session('error') }}
-            </div>
-
-        @endif
-
-
-        @if ($appointments->isEmpty())
-
-            <div class="empty">
-
-                <h2>
-                    Bạn chưa có lịch hẹn nào
-                </h2>
-
-                <a
-                    href="{{ route('appointments.create') }}"
-                    class="new-button"
-                >
-                    Đặt lịch bảo dưỡng
-                </a>
-
-            </div>
-
-        @else
-
-            @foreach ($appointments as $appointment)
-
-                @php
-
-                    $statusText = match (
-                        $appointment->status
-                    ) {
-                        'PENDING' =>
-                            'Chờ xác nhận',
-
-                        'CONFIRMED' =>
-                            'Đã xác nhận',
-
-                        'IN_PROGRESS' =>
-                            'Đang thực hiện',
-
-                        'COMPLETED' =>
-                            'Hoàn thành',
-
-                        'CANCELLED' =>
-                            'Đã hủy',
-
-                        default =>
-                            $appointment->status,
-                    };
-
-
-                    $statusClass = match (
-                        $appointment->status
-                    ) {
-                        'PENDING' =>
-                            'pending',
-
-                        'CONFIRMED' =>
-                            'confirmed',
-
-                        'IN_PROGRESS' =>
-                            'progress',
-
-                        'COMPLETED' =>
-                            'completed',
-
-                        'CANCELLED' =>
-                            'cancelled',
-
-                        default =>
-                            'pending',
-                    };
-
-                @endphp
-
-
-                <article class="appointment-card">
-
-                    <div class="appointment-top">
-
-                        <div>
-
-                            <div class="code">
-
-                                Mã:
-
-                                <strong>
-                                    {{ $appointment->appointment_code }}
-                                </strong>
-
-                            </div>
-
-
-                            <div class="vehicle">
-
-                                {{ $appointment->vehicle->brand->name }}
-
-                                {{ $appointment->vehicle->vehicleModel->name }}
-
-                            </div>
-
-
-                            <div class="license">
-
-                                {{
-                                    $appointment
-                                        ->vehicle
-                                        ->license_plate
-                                }}
-
-                            </div>
-
-                        </div>
-
-
-                        <span
-                            class="status {{ $statusClass }}"
-                        >
-                            {{ $statusText }}
-                        </span>
-
-                    </div>
-
-
-                    <div class="info-grid">
-
-                        <div class="info-box">
-
-                            <div class="label">
-                                Ngày
-                            </div>
-
-                            <div class="value">
-
-                                {{
-                                    $appointment
-                                        ->appointment_date
-                                        ->format('d/m/Y')
-                                }}
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-box">
-
-                            <div class="label">
-                                Giờ
-                            </div>
-
-                            <div class="value">
-
-                                {{
-                                    substr(
-                                        $appointment
-                                            ->appointment_time,
-                                        0,
-                                        5
-                                    )
-                                }}
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-box">
-
-                            <div class="label">
-                                Dịch vụ
-                            </div>
-
-                            <div class="value">
-
-                                {{
-                                    $appointment
-                                        ->services
-                                        ->count()
-                                }}
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="info-box">
-
-                            <div class="label">
-                                Giá tham khảo
-                            </div>
-
-                            <div class="value">
-
-                                {{
-                                    number_format(
-                                        $appointment
-                                            ->estimated_total,
-                                        0,
-                                        ',',
-                                        '.'
-                                    )
-                                }} đ
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="actions">
-
-                        <a
-                            href="{{ route(
-                                'appointments.show',
-                                $appointment->id
-                            ) }}"
-                            class="detail-button"
-                        >
-                            Xem chi tiết
-                        </a>
-
-                    </div>
-
-                </article>
-
-            @endforeach
-
-        @endif
-
-
-        <a
-            href="{{ route('home') }}"
-            class="back"
+        <div
+            class="alert alert-success"
+            data-reveal
         >
-            ← Quay lại trang chủ
-        </a>
 
-    </main>
+            <i class="bi bi-check-circle-fill me-2"></i>
 
-</body>
+            {{ session('success') }}
 
-</html>
+        </div>
+
+    @endif
+
+
+    @if (session('error'))
+
+        <div
+            class="alert alert-danger"
+            data-reveal
+        >
+
+            <i class="bi bi-exclamation-circle-fill me-2"></i>
+
+            {{ session('error') }}
+
+        </div>
+
+    @endif
+
+
+    @if ($appointments->isEmpty())
+
+        <div
+            class="empty-state"
+            data-reveal="zoom"
+        >
+
+            <div class="empty-state-icon">
+
+                <i class="bi bi-calendar2-x"></i>
+
+            </div>
+
+            <h3>
+                Bạn chưa có lịch hẹn
+            </h3>
+
+            <p>
+                Hãy tạo lịch bảo dưỡng đầu tiên
+                cho phương tiện của bạn.
+            </p>
+
+            <a
+                href="{{ route('appointments.create') }}"
+                class="
+                    btn
+                    btn-primary
+                    btn-shine
+                    px-4
+                "
+            >
+
+                <i class="bi bi-calendar-plus me-2"></i>
+
+                Đặt lịch ngay
+
+            </a>
+
+        </div>
+
+    @else
+
+        @foreach ($appointments as $appointment)
+
+            @php
+                $statusText = match (
+                    $appointment->status
+                ) {
+                    'PENDING' =>
+                        'Chờ xác nhận',
+
+                    'CONFIRMED' =>
+                        'Đã xác nhận',
+
+                    'IN_PROGRESS' =>
+                        'Đang thực hiện',
+
+                    'COMPLETED' =>
+                        'Hoàn thành',
+
+                    'CANCELLED' =>
+                        'Đã hủy',
+
+                    default =>
+                        $appointment->status,
+                };
+
+
+                $statusClass = match (
+                    $appointment->status
+                ) {
+                    'PENDING' =>
+                        'status-pending',
+
+                    'CONFIRMED' =>
+                        'status-confirmed',
+
+                    'IN_PROGRESS' =>
+                        'status-progress',
+
+                    'COMPLETED' =>
+                        'status-completed',
+
+                    'CANCELLED' =>
+                        'status-cancelled',
+
+                    default =>
+                        'status-pending',
+                };
+            @endphp
+
+
+            <article
+                class="appointment-card"
+                data-reveal
+                data-tilt
+            >
+
+                <div class="appointment-card-top">
+
+                    <div>
+
+                        <div class="appointment-code">
+
+                            <i class="bi bi-hash"></i>
+
+                            {{ $appointment->appointment_code }}
+
+                        </div>
+
+
+                        <div class="appointment-vehicle">
+
+                            {{ $appointment->vehicle->brand->name }}
+
+                            {{ $appointment->vehicle->vehicleModel->name }}
+
+                        </div>
+
+
+                        <div class="appointment-license">
+
+                            <i class="bi bi-car-front-fill"></i>
+
+                            {{ $appointment->vehicle->license_plate }}
+
+                        </div>
+
+                    </div>
+
+
+                    <span
+                        class="
+                            status-badge
+                            {{ $statusClass }}
+                        "
+                    >
+                        {{ $statusText }}
+                    </span>
+
+                </div>
+
+
+                <div class="appointment-info-grid">
+
+                    <div class="appointment-info">
+
+                        <div class="appointment-info-icon">
+                            <i class="bi bi-calendar3"></i>
+                        </div>
+
+                        <div class="appointment-info-label">
+                            Ngày hẹn
+                        </div>
+
+                        <div class="appointment-info-value">
+
+                            {{
+                                $appointment
+                                    ->appointment_date
+                                    ->format('d/m/Y')
+                            }}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="appointment-info">
+
+                        <div class="appointment-info-icon">
+                            <i class="bi bi-clock"></i>
+                        </div>
+
+                        <div class="appointment-info-label">
+                            Giờ hẹn
+                        </div>
+
+                        <div class="appointment-info-value">
+
+                            {{
+                                substr(
+                                    $appointment
+                                        ->appointment_time,
+                                    0,
+                                    5
+                                )
+                            }}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="appointment-info">
+
+                        <div class="appointment-info-icon">
+                            <i class="bi bi-tools"></i>
+                        </div>
+
+                        <div class="appointment-info-label">
+                            Dịch vụ
+                        </div>
+
+                        <div class="appointment-info-value">
+
+                            {{
+                                $appointment
+                                    ->services
+                                    ->count()
+                            }}
+                            dịch vụ
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="appointment-info">
+
+                        <div class="appointment-info-icon">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+
+                        <div class="appointment-info-label">
+                            Giá tham khảo
+                        </div>
+
+                        <div class="appointment-info-value">
+
+                            {{
+                                number_format(
+                                    $appointment
+                                        ->estimated_total,
+                                    0,
+                                    ',',
+                                    '.'
+                                )
+                            }} đ
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="appointment-card-footer">
+
+                    <a
+                        href="{{ route(
+                            'appointments.show',
+                            $appointment->id
+                        ) }}"
+                        class="appointment-detail-button"
+                    >
+
+                        Xem chi tiết
+
+                        <i class="bi bi-arrow-right"></i>
+
+                    </a>
+
+                </div>
+
+            </article>
+
+        @endforeach
+
+    @endif
+
+
+    <a
+        href="{{ route('customer.dashboard') }}"
+        class="appointments-back"
+    >
+
+        <i class="bi bi-arrow-left"></i>
+
+        Quay lại Tổng quan
+
+    </a>
+
+</div>
+
+@endsection

@@ -1,436 +1,425 @@
-<!DOCTYPE html>
-<html lang="vi">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+@section(
+    'title',
+    'Quản lý kho - AutoCare Long Biên'
+)
 
-    <title>
-        Quản lý kho - AutoCare Long Biên
-    </title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+@push('styles')
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            color: #1f2937;
-        }
+<style>
+    .inventory-page {
+        max-width: 1280px;
+    }
 
-        .header {
-            background: #111827;
-            color: white;
-            padding: 20px 30px;
-        }
+    .inventory-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 33px;
+        margin-bottom: 25px;
+        border-radius: 27px;
+        color: white;
+        background:
+            linear-gradient(
+                120deg,
+                #06101e,
+                #0c3474 52%,
+                #1677ff
+            );
+        box-shadow:
+            0 25px 70px
+            rgba(22, 119, 255, .22);
+    }
 
-        .header-inner {
-            max-width: 1250px;
-            margin: auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-        }
+    .inventory-hero::before {
+        content: "";
+        position: absolute;
+        width: 340px;
+        height: 340px;
+        right: -100px;
+        top: -200px;
+        border-radius: 50%;
+        background:
+            radial-gradient(
+                circle,
+                rgba(103, 232, 249, .4),
+                transparent 70%
+            );
+    }
 
-        .logo {
-            font-size: 22px;
-            font-weight: bold;
-        }
+    .inventory-hero-content {
+        position: relative;
+        z-index: 2;
+    }
 
-        .header-links {
-            display: flex;
-            gap: 20px;
-        }
+    .inventory-hero h1 {
+        margin: 0;
+        color: white;
+        font-size:
+            clamp(2rem, 4vw, 3.3rem);
+        font-weight: 900;
+        letter-spacing: -.055em;
+    }
 
-        .header a {
-            color: white;
-            text-decoration: none;
-        }
+    .inventory-hero p {
+        max-width: 700px;
+        margin: 11px 0 0;
+        color: #cbd5e1;
+        line-height: 1.75;
+    }
 
-        .container {
-            max-width: 1250px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
+    .inventory-summary {
+        display: grid;
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+        gap: 15px;
+        margin-bottom: 22px;
+    }
 
-        .page-description {
-            color: #6b7280;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
+    .summary-card {
+        padding: 19px;
+        border:
+            1px solid
+            rgba(255, 255, 255, .88);
+        border-radius: 18px;
+        background:
+            rgba(255, 255, 255, .92);
+        box-shadow: var(--ac-shadow);
+    }
 
-        .success {
-            background: #ecfdf5;
-            color: #065f46;
-            padding: 15px 18px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
+    .summary-icon {
+        width: 43px;
+        height: 43px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        border-radius: 13px;
+        color: #2563eb;
+        background: #eff6ff;
+        font-size: 18px;
+    }
 
-        .error {
-            background: #fef2f2;
-            color: #991b1b;
-            padding: 15px 18px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
+    .summary-label {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
 
-        .summary-grid {
-            display: grid;
+    .summary-value {
+        margin-top: 5px;
+        color: #0f172a;
+        font-size: 23px;
+        font-weight: 900;
+    }
+
+    .inventory-notice {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 22px;
+        padding: 15px 17px;
+        border: 1px solid #bfdbfe;
+        border-radius: 14px;
+        color: #1e40af;
+        background: #eff6ff;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    .inventory-table-card {
+        overflow: hidden;
+        border:
+            1px solid
+            rgba(255, 255, 255, .88);
+        border-radius: 20px;
+        background:
+            rgba(255, 255, 255, .94);
+        box-shadow: var(--ac-shadow);
+    }
+
+    .inventory-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .inventory-table {
+        width: 100%;
+        min-width: 1100px;
+        margin: 0;
+    }
+
+    .inventory-table th {
+        padding: 14px;
+        color: #475569;
+        background: #f8fbff;
+        font-size: 10px;
+        font-weight: 850;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .inventory-table td {
+        padding: 14px;
+        border-bottom: 1px solid #edf1f6;
+        color: #334155;
+        font-size: 12px;
+        vertical-align: middle;
+    }
+
+    .part-name {
+        color: #0f172a;
+        font-weight: 900;
+    }
+
+    .part-code {
+        margin-top: 3px;
+        color: #94a3b8;
+        font-size: 10px;
+    }
+
+    .stock-value {
+        color: #0f172a;
+        font-weight: 900;
+    }
+
+    .inventory-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 11px;
+        border-radius: 9px;
+        color: white;
+        text-decoration: none;
+        background:
+            linear-gradient(
+                135deg,
+                #1683ff,
+                #4f46e5
+            );
+        font-size: 10px;
+        font-weight: 850;
+    }
+
+    .inventory-back {
+        display: inline-flex;
+        gap: 7px;
+        margin-top: 20px;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    @media (max-width: 991px) {
+        .inventory-summary {
             grid-template-columns:
-                repeat(auto-fit, minmax(210px, 1fr));
-            gap: 18px;
-            margin-bottom: 30px;
+                repeat(2, 1fr);
         }
+    }
 
-        .summary-card {
-            background: white;
-            padding: 22px;
-            border-radius: 12px;
-            box-shadow:
-                0 2px 10px rgba(0, 0, 0, 0.06);
+    @media (max-width: 575px) {
+        .inventory-summary {
+            grid-template-columns: 1fr;
         }
+    }
+</style>
 
-        .summary-label {
-            color: #6b7280;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-
-        .summary-value {
-            font-size: 26px;
-            font-weight: bold;
-        }
-
-        .warning-value {
-            color: #b45309;
-        }
-
-        .table-wrapper {
-            background: white;
-            border-radius: 12px;
-            overflow-x: auto;
-            box-shadow:
-                0 2px 10px rgba(0, 0, 0, 0.06);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 1100px;
-        }
-
-        th,
-        td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        th {
-            background: #f9fafb;
-            font-size: 13px;
-            color: #4b5563;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        .part-name {
-            font-weight: bold;
-        }
-
-        .part-code {
-            color: #6b7280;
-            font-size: 13px;
-            margin-top: 4px;
-        }
-
-        .stock {
-            font-weight: bold;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-
-        .good {
-            background: #ecfdf5;
-            color: #047857;
-        }
-
-        .low {
-            background: #fff7ed;
-            color: #c2410c;
-        }
-
-        .out {
-            background: #fef2f2;
-            color: #b91c1c;
-        }
-
-        .inactive {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-
-        .action-button {
-            display: inline-block;
-            background: #111827;
-            color: white;
-            text-decoration: none;
-            padding: 8px 13px;
-            border-radius: 6px;
-            font-size: 13px;
-            white-space: nowrap;
-        }
-
-        .disabled-button {
-            background: #9ca3af;
-            pointer-events: none;
-        }
-
-        .empty {
-            background: white;
-            padding: 50px;
-            text-align: center;
-            border-radius: 12px;
-        }
-
-        .notice {
-            background: #eff6ff;
-            color: #1e40af;
-            padding: 15px 18px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            line-height: 1.6;
-        }
-
-        .back {
-            display: inline-block;
-            margin-top: 25px;
-            color: #111827;
-            text-decoration: none;
-        }
-    </style>
-</head>
-
-<body>
-
-    <header class="header">
-
-        <div class="header-inner">
-
-            <div class="logo">
-                AutoCare - Quản lý kho
-            </div>
+@endpush
 
 
-            <div class="header-links">
+@section('content')
 
-                <a href="{{ route('staff.appointments.index') }}">
-                    Lịch hẹn
-                </a>
+<div class="container inventory-page">
 
-                <a href="{{ route('home') }}">
-                    Trang chủ
-                </a>
+    <section class="inventory-hero" data-reveal="zoom">
 
-            </div>
+        <div class="inventory-hero-content">
+
+            <h1>
+                Kho phụ tùng
+            </h1>
+
+            <p>
+                Theo dõi danh mục phụ tùng,
+                giá nhập, giá bán và số lượng tồn kho
+                phục vụ quá trình bảo dưỡng ô tô.
+            </p>
 
         </div>
 
-    </header>
+    </section>
 
 
-    <main class="container">
+    @if (session('success'))
 
-        <h1>
-            Kho phụ tùng
-        </h1>
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
 
-
-        <p class="page-description">
-            Theo dõi danh mục phụ tùng,
-            giá nhập, giá bán và số lượng tồn kho
-            phục vụ quá trình bảo dưỡng ô tô.
-        </p>
+    @endif
 
 
-        @if (session('success'))
+    @if (session('error'))
 
-            <div class="success">
-                {{ session('success') }}
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+
+    @endif
+
+
+    <section class="inventory-summary">
+
+        <div class="summary-card" data-reveal data-tilt>
+
+            <div class="summary-icon">
+                <i class="bi bi-box-seam"></i>
             </div>
 
-        @endif
-
-
-        @if (session('error'))
-
-            <div class="error">
-                {{ session('error') }}
+            <div class="summary-label">
+                Số loại phụ tùng
             </div>
 
-        @endif
-
-
-        <div class="summary-grid">
-
-            <div class="summary-card">
-
-                <div class="summary-label">
-                    Số loại phụ tùng
-                </div>
-
-                <div class="summary-value">
-                    {{ $totalParts }}
-                </div>
-
-            </div>
-
-
-            <div class="summary-card">
-
-                <div class="summary-label">
-                    Tổng số lượng tồn
-                </div>
-
-                <div class="summary-value">
-                    {{ number_format($totalStockQuantity) }}
-                </div>
-
-            </div>
-
-
-            <div class="summary-card">
-
-                <div class="summary-label">
-                    Phụ tùng cần chú ý
-                </div>
-
-                <div
-                    class="summary-value
-                    {{ $lowStockCount > 0 ? 'warning-value' : '' }}"
-                >
-                    {{ $lowStockCount }}
-                </div>
-
-            </div>
-
-
-            <div class="summary-card">
-
-                <div class="summary-label">
-                    Giá trị tồn theo giá nhập
-                </div>
-
-                <div class="summary-value">
-
-                    {{
-                        number_format(
-                            $inventoryCostValue,
-                            0,
-                            ',',
-                            '.'
-                        )
-                    }} đ
-
-                </div>
-
+            <div class="summary-value">
+                {{ $totalParts }}
             </div>
 
         </div>
 
 
-        <div class="notice">
+        <div class="summary-card" data-reveal data-tilt>
 
-            <strong>
-                Quy tắc cảnh báo:
-            </strong>
+            <div class="summary-icon">
+                <i class="bi bi-boxes"></i>
+            </div>
 
-            phụ tùng được coi là sắp hết khi
-            số lượng tồn nhỏ hơn hoặc bằng
+            <div class="summary-label">
+                Tổng số lượng tồn
+            </div>
+
+            <div class="summary-value">
+                {{ number_format($totalStockQuantity) }}
+            </div>
+
+        </div>
+
+
+        <div class="summary-card" data-reveal data-tilt>
+
+            <div
+                class="summary-icon"
+                style="
+                    color: #d97706;
+                    background: #fff7ed;
+                "
+            >
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+
+            <div class="summary-label">
+                Phụ tùng cần chú ý
+            </div>
+
+            <div class="summary-value">
+                {{ $lowStockCount }}
+            </div>
+
+        </div>
+
+
+        <div class="summary-card" data-reveal data-tilt>
+
+            <div
+                class="summary-icon"
+                style="
+                    color: #059669;
+                    background: #ecfdf5;
+                "
+            >
+                <i class="bi bi-cash-stack"></i>
+            </div>
+
+            <div class="summary-label">
+                Giá trị tồn theo giá nhập
+            </div>
+
+            <div class="summary-value">
+
+                {{
+                    number_format(
+                        $inventoryCostValue,
+                        0,
+                        ',',
+                        '.'
+                    )
+                }} đ
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <div class="inventory-notice">
+
+        <i class="bi bi-info-circle-fill"></i>
+
+        <div>
+            <strong>Quy tắc cảnh báo:</strong>
+            phụ tùng được coi là sắp hết
+            khi số lượng tồn nhỏ hơn hoặc bằng
             mức tồn tối thiểu.
+        </div>
+
+    </div>
+
+
+    @if ($parts->isEmpty())
+
+        <div class="empty-state">
+
+            <div class="empty-state-icon">
+                <i class="bi bi-box-seam"></i>
+            </div>
+
+            <h3>
+                Kho chưa có phụ tùng
+            </h3>
+
+            <p>
+                Hãy seed hoặc thêm dữ liệu
+                phụ tùng trước khi sử dụng.
+            </p>
 
         </div>
 
+    @else
 
-        @if ($parts->isEmpty())
+        <section
+            class="inventory-table-card"
+            data-reveal
+        >
 
-            <div class="empty">
+            <div class="inventory-table-wrapper">
 
-                <h2>
-                    Kho chưa có phụ tùng
-                </h2>
-
-                <p>
-                    Hãy seed hoặc thêm dữ liệu phụ tùng
-                    trước khi sử dụng chức năng này.
-                </p>
-
-            </div>
-
-        @else
-
-            <div class="table-wrapper">
-
-                <table>
+                <table class="table inventory-table">
 
                     <thead>
 
                         <tr>
-
-                            <th>
-                                Phụ tùng
-                            </th>
-
-                            <th>
-                                Nhóm
-                            </th>
-
-                            <th>
-                                ĐVT
-                            </th>
-
-                            <th>
-                                Giá nhập
-                            </th>
-
-                            <th>
-                                Giá bán
-                            </th>
-
-                            <th>
-                                Tồn hiện tại
-                            </th>
-
-                            <th>
-                                Tồn tối thiểu
-                            </th>
-
-                            <th>
-                                Trạng thái
-                            </th>
-
-                            <th>
-                                Thao tác
-                            </th>
-
+                            <th>Phụ tùng</th>
+                            <th>Nhóm</th>
+                            <th>ĐVT</th>
+                            <th>Giá nhập</th>
+                            <th>Giá bán</th>
+                            <th>Tồn hiện tại</th>
+                            <th>Tồn tối thiểu</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
                         </tr>
 
                     </thead>
@@ -441,45 +430,39 @@
                         @foreach ($parts as $part)
 
                             @php
-
                                 if (!$part->is_active) {
-
                                     $stockText =
                                         'Ngừng sử dụng';
 
                                     $stockClass =
-                                        'inactive';
+                                        'text-bg-secondary';
 
                                 } elseif (
                                     $part->stock_quantity === 0
                                 ) {
-
                                     $stockText =
                                         'Hết hàng';
 
                                     $stockClass =
-                                        'out';
+                                        'text-bg-danger';
 
                                 } elseif (
                                     $part->stock_quantity <=
                                     $part->minimum_stock
                                 ) {
-
                                     $stockText =
                                         'Sắp hết';
 
                                     $stockClass =
-                                        'low';
+                                        'text-bg-warning';
 
                                 } else {
-
                                     $stockText =
                                         'Đủ hàng';
 
                                     $stockClass =
-                                        'good';
+                                        'text-bg-success';
                                 }
-
                             @endphp
 
 
@@ -497,19 +480,15 @@
 
                                 </td>
 
-
                                 <td>
                                     {{ $part->category ?? 'Khác' }}
                                 </td>
-
 
                                 <td>
                                     {{ $part->unit }}
                                 </td>
 
-
                                 <td>
-
                                     {{
                                         number_format(
                                             $part->cost_price,
@@ -518,12 +497,9 @@
                                             '.'
                                         )
                                     }} đ
-
                                 </td>
 
-
                                 <td>
-
                                     {{
                                         number_format(
                                             $part->selling_price,
@@ -532,46 +508,39 @@
                                             '.'
                                         )
                                     }} đ
-
                                 </td>
 
-
-                                <td class="stock">
-
+                                <td class="stock-value">
                                     {{
                                         number_format(
                                             $part->stock_quantity
                                         )
                                     }}
-
                                     {{ $part->unit }}
-
                                 </td>
 
-
                                 <td>
-
                                     {{
                                         number_format(
                                             $part->minimum_stock
                                         )
                                     }}
-
                                     {{ $part->unit }}
-
                                 </td>
-
 
                                 <td>
 
                                     <span
-                                        class="badge {{ $stockClass }}"
+                                        class="
+                                            badge
+                                            rounded-pill
+                                            {{ $stockClass }}
+                                        "
                                     >
                                         {{ $stockText }}
                                     </span>
 
                                 </td>
-
 
                                 <td>
 
@@ -582,15 +551,19 @@
                                                 'staff.parts.stock-in.form',
                                                 $part->id
                                             ) }}"
-                                            class="action-button"
+                                            class="inventory-action"
                                         >
+                                            <i class="bi bi-box-arrow-in-down"></i>
                                             Nhập kho
                                         </a>
 
                                     @else
 
                                         <span
-                                            class="action-button disabled-button"
+                                            class="
+                                                badge
+                                                text-bg-secondary
+                                            "
                                         >
                                             Ngừng sử dụng
                                         </span>
@@ -609,18 +582,19 @@
 
             </div>
 
-        @endif
+        </section>
+
+    @endif
 
 
-        <a
-            href="{{ route('staff.appointments.index') }}"
-            class="back"
-        >
-            ← Quay lại quản lý lịch hẹn
-        </a>
+    <a
+        href="{{ route('staff.dashboard') }}"
+        class="inventory-back"
+    >
+        <i class="bi bi-arrow-left"></i>
+        Quay lại Dashboard
+    </a>
 
-    </main>
+</div>
 
-</body>
-
-</html>
+@endsection

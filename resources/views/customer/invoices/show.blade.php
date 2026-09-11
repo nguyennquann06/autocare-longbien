@@ -3,29 +3,32 @@
 
 @section(
     'title',
-    'Hóa đơn - AutoCare Long Biên'
+    'Chi tiết hóa đơn - AutoCare Long Biên'
 )
 
 
 @push('styles')
 
 <style>
-    .staff-invoice-page {
-        max-width: 1080px;
+    .customer-invoice-detail {
+        max-width: 1050px;
     }
 
     .invoice-document {
+        position: relative;
         overflow: hidden;
         border:
             1px solid
-            rgba(255, 255, 255, .88);
+            rgba(255, 255, 255, 0.88);
         border-radius: 24px;
         background:
-            rgba(255, 255, 255, .94);
-        box-shadow: var(--ac-shadow-lg);
+            rgba(255, 255, 255, 0.94);
+        box-shadow:
+            var(--ac-shadow-lg);
+        backdrop-filter: blur(16px);
     }
 
-    .invoice-header {
+    .invoice-document-header {
         position: relative;
         overflow: hidden;
         padding: 30px;
@@ -33,24 +36,24 @@
         background:
             linear-gradient(
                 120deg,
-                #06101e,
-                #0c3474 55%,
+                #07111f,
+                #0d3476 55%,
                 #1677ff
             );
     }
 
-    .invoice-header::before {
+    .invoice-document-header::before {
         content: "";
         position: absolute;
-        width: 320px;
-        height: 320px;
-        top: -190px;
+        width: 300px;
+        height: 300px;
         right: -100px;
+        top: -180px;
         border-radius: 50%;
         background:
             radial-gradient(
                 circle,
-                rgba(103, 232, 249, .4),
+                rgba(103, 232, 249, 0.40),
                 transparent 70%
             );
     }
@@ -60,42 +63,103 @@
         z-index: 2;
         display: flex;
         justify-content: space-between;
+        align-items: flex-start;
         gap: 20px;
         flex-wrap: wrap;
     }
 
+    .invoice-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .invoice-brand-logo {
+        width: 46px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        color: white;
+        background:
+            linear-gradient(
+                135deg,
+                #38bdf8,
+                #4f46e5
+            );
+        box-shadow:
+            0 10px 25px
+            rgba(37, 99, 235, 0.32);
+        font-weight: 900;
+    }
+
+    .invoice-brand-name {
+        color: white;
+        font-size: 16px;
+        font-weight: 900;
+    }
+
+    .invoice-brand-subtitle {
+        margin-top: 2px;
+        color: #bfdbfe;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
     .invoice-code {
         color: #bfdbfe;
-        font-size: 11px;
-        font-weight: 800;
+        font-size: 12px;
+        font-weight: 750;
     }
 
-    .invoice-header h1 {
-        margin: 7px 0 0;
+    .invoice-title {
+        margin: 6px 0 0;
         color: white;
         font-size:
-            clamp(2rem, 4vw, 3.1rem);
+            clamp(
+                2rem,
+                4vw,
+                3rem
+            );
         font-weight: 900;
-        letter-spacing: -.055em;
+        letter-spacing: -0.05em;
     }
 
-    .invoice-body {
-        padding: 29px;
+    .invoice-document-body {
+        padding: 30px;
     }
 
     .invoice-info-grid {
         display: grid;
         grid-template-columns:
-            repeat(3, minmax(0, 1fr));
+            repeat(
+                5,
+                minmax(0, 1fr)
+            );
         gap: 12px;
-        margin-bottom: 27px;
+        margin-bottom: 28px;
     }
 
-    .invoice-info {
-        padding: 14px;
-        border: 1px solid #e7edf4;
+    .invoice-info-card {
+        padding: 15px;
+        border:
+            1px solid #e7edf4;
         border-radius: 14px;
-        background: #f8fbff;
+        background:
+            linear-gradient(
+                180deg,
+                #f8fbff,
+                #f5f8fc
+            );
+    }
+
+    .invoice-info-icon {
+        margin-bottom: 8px;
+        color: #2563eb;
+        font-size: 17px;
     }
 
     .invoice-info-label {
@@ -103,6 +167,7 @@
         font-size: 9px;
         font-weight: 800;
         text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
     .invoice-info-value {
@@ -112,32 +177,59 @@
         font-weight: 850;
     }
 
-    .invoice-table-wrap {
+    .invoice-table-wrapper {
         overflow-x: auto;
-        border: 1px solid #e7edf4;
+        border:
+            1px solid #e7edf4;
         border-radius: 16px;
     }
 
     .invoice-table {
         width: 100%;
-        min-width: 760px;
         margin: 0;
+        border-collapse: collapse;
+        min-width: 760px;
     }
 
     .invoice-table th {
-        padding: 13px;
+        padding: 13px 14px;
         color: #475569;
-        background: #f8fbff;
+        background:
+            linear-gradient(
+                180deg,
+                #f8fbff,
+                #f3f7fb
+            );
+        border-bottom:
+            1px solid #e7edf4;
         font-size: 10px;
         font-weight: 850;
         text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
     .invoice-table td {
-        padding: 13px;
-        border-bottom: 1px solid #edf1f6;
+        padding: 14px;
+        border-bottom:
+            1px solid #edf1f6;
         color: #334155;
         font-size: 12px;
+        vertical-align: middle;
+    }
+
+    .invoice-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .invoice-item-name {
+        color: #0f172a;
+        font-weight: 850;
+    }
+
+    .invoice-item-code {
+        margin-top: 3px;
+        color: #94a3b8;
+        font-size: 10px;
     }
 
     .invoice-number {
@@ -145,40 +237,71 @@
         white-space: nowrap;
     }
 
-    .invoice-bottom {
+    .invoice-bottom-grid {
         display: grid;
         grid-template-columns:
             1fr 390px;
         gap: 22px;
-        margin-top: 25px;
+        margin-top: 26px;
+        align-items: start;
+    }
+
+    .payment-card {
+        padding: 20px;
+        border:
+            1px solid #e4ebf3;
+        border-radius: 16px;
+        background:
+            linear-gradient(
+                135deg,
+                #f8fbff,
+                #f7faff
+            );
+    }
+
+    .payment-card-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 13px;
+        color: #0f172a;
+        font-size: 14px;
+        font-weight: 900;
+    }
+
+    .payment-text {
+        color: #475569;
+        font-size: 12px;
+        line-height: 1.8;
     }
 
     .invoice-note {
-        padding: 16px;
-        border: 1px solid #e4ebf3;
-        border-radius: 14px;
+        margin-top: 15px;
+        padding: 14px;
+        border-radius: 13px;
         color: #475569;
-        background: #f8fbff;
+        background: #f8fafc;
         font-size: 12px;
         line-height: 1.7;
     }
 
     .invoice-totals {
+        overflow: hidden;
         padding: 22px;
         border-radius: 18px;
         color: white;
         background:
             linear-gradient(
                 145deg,
-                #06101e,
+                #07111f,
                 #0d2f69
             );
         box-shadow:
             0 20px 45px
-            rgba(13, 47, 105, .22);
+            rgba(13, 47, 105, 0.22);
     }
 
-    .total-row {
+    .invoice-total-row {
         display: flex;
         justify-content: space-between;
         gap: 15px;
@@ -187,50 +310,84 @@
         font-size: 12px;
     }
 
-    .total-row strong {
+    .invoice-total-row strong {
         color: white;
     }
 
-    .grand-total {
-        margin-top: 8px;
+    .invoice-grand-total {
+        margin-top: 9px;
         padding-top: 15px;
         border-top:
             1px solid
-            rgba(255, 255, 255, .15);
+            rgba(255, 255, 255, 0.14);
         color: white;
         font-size: 17px;
         font-weight: 900;
     }
 
-    .payment-card {
-        margin-top: 24px;
-        padding: 20px;
-        border: 1px solid #e5ecf4;
-        border-radius: 16px;
-        background: #f8fbff;
-    }
-
-    .paid-card {
-        margin-top: 24px;
-        padding: 18px;
-        border: 1px solid #bbf7d0;
-        border-radius: 15px;
-        color: #065f46;
-        background: #ecfdf5;
-        line-height: 1.7;
-        font-size: 12px;
-    }
-
     .invoice-actions {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         gap: 12px;
         flex-wrap: wrap;
         margin-top: 24px;
     }
 
+    .invoice-back,
+    .invoice-print {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 43px;
+        padding: 10px 15px;
+        border-radius: 11px;
+        font-size: 12px;
+        font-weight: 850;
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .invoice-back {
+        color: #334155;
+        text-decoration: none;
+        border:
+            1px solid #d9e2ed;
+        background: white;
+    }
+
+    .invoice-print {
+        color: white;
+        border: none;
+        background:
+            linear-gradient(
+                135deg,
+                #1683ff,
+                #4f46e5
+            );
+        box-shadow:
+            0 8px 22px
+            rgba(37, 99, 235, 0.20);
+    }
+
+    .invoice-back:hover,
+    .invoice-print:hover {
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 1199px) {
+        .invoice-info-grid {
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+        }
+    }
+
     @media (max-width: 991px) {
-        .invoice-bottom {
+        .invoice-bottom-grid {
             grid-template-columns: 1fr;
         }
     }
@@ -238,7 +395,14 @@
     @media (max-width: 767px) {
         .invoice-info-grid {
             grid-template-columns:
-                repeat(2, 1fr);
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+        }
+
+        .invoice-document-body {
+            padding: 20px;
         }
     }
 
@@ -247,20 +411,18 @@
             grid-template-columns: 1fr;
         }
 
-        .invoice-body {
-            padding: 20px;
+        .invoice-document-header {
+            padding: 23px;
         }
     }
 
     @media print {
         .app-navbar,
         .autocare-footer,
-        .autocare-background,
-        .autocare-top-accent,
         #scrollTopButton,
-        .payment-card,
-        .invoice-actions,
-        .alert {
+        .autocare-top-accent,
+        .autocare-background,
+        .invoice-actions {
             display: none !important;
         }
 
@@ -272,19 +434,23 @@
             background: white !important;
         }
 
-        .staff-invoice-page {
+        .customer-invoice-detail {
             max-width: none !important;
-            margin: 0 !important;
             padding: 0 !important;
+            margin: 0 !important;
         }
 
         .invoice-document {
-            border: 0 !important;
+            border: none !important;
             border-radius: 0 !important;
             box-shadow: none !important;
         }
 
-        .invoice-header,
+        .invoice-document-header {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+        }
+
         .invoice-totals {
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
@@ -297,7 +463,7 @@
 
 @section('content')
 
-<div class="container staff-invoice-page">
+<div class="container customer-invoice-detail">
 
     @php
         $statusText = match (
@@ -315,6 +481,7 @@
             default =>
                 $invoice->payment_status,
         };
+
 
         $statusClass = match (
             $invoice->payment_status
@@ -334,48 +501,37 @@
     @endphp
 
 
-    @if (session('success'))
+    <article
+        class="invoice-document"
+        data-reveal="zoom"
+    >
 
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-
-    @endif
-
-
-    @if (session('error'))
-
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-
-    @endif
-
-
-    @if ($errors->any())
-
-        <div class="alert alert-danger">
-
-            <ul class="mb-0">
-
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-
-            </ul>
-
-        </div>
-
-    @endif
-
-
-    <article class="invoice-document" data-reveal="zoom">
-
-        <header class="invoice-header">
+        <header class="invoice-document-header">
 
             <div class="invoice-header-inner">
 
                 <div>
+
+                    <div class="invoice-brand">
+
+                        <div class="invoice-brand-logo">
+                            AC
+                        </div>
+
+                        <div>
+
+                            <div class="invoice-brand-name">
+                                AutoCare Long Biên
+                            </div>
+
+                            <div class="invoice-brand-subtitle">
+                                Car Service System
+                            </div>
+
+                        </div>
+
+                    </div>
+
 
                     <div class="invoice-code">
 
@@ -387,7 +543,8 @@
 
                     </div>
 
-                    <h1>
+
+                    <h1 class="invoice-title">
                         Hóa đơn dịch vụ
                     </h1>
 
@@ -408,87 +565,143 @@
         </header>
 
 
-        <div class="invoice-body">
+        <div class="invoice-document-body">
 
-            <div class="invoice-info-grid">
+            <section class="invoice-info-grid">
 
-                <div class="invoice-info">
-                    <div class="invoice-info-label">
-                        Khách hàng
+                <div class="invoice-info-card">
+
+                    <div class="invoice-info-icon">
+                        <i class="bi bi-car-front-fill"></i>
                     </div>
-                    <div class="invoice-info-value">
-                        {{ $invoice->customer->full_name }}
-                    </div>
-                </div>
 
-                <div class="invoice-info">
                     <div class="invoice-info-label">
                         Xe
                     </div>
+
                     <div class="invoice-info-value">
+
                         {{ $invoice->serviceOrder->vehicle->brand->name }}
+
                         {{ $invoice->serviceOrder->vehicle->vehicleModel->name }}
+
                     </div>
+
                 </div>
 
-                <div class="invoice-info">
+
+                <div class="invoice-info-card">
+
+                    <div class="invoice-info-icon">
+                        <i class="bi bi-credit-card-2-front"></i>
+                    </div>
+
                     <div class="invoice-info-label">
                         Biển số
                     </div>
+
                     <div class="invoice-info-value">
                         {{ $invoice->serviceOrder->vehicle->license_plate }}
                     </div>
+
                 </div>
 
-                <div class="invoice-info">
+
+                <div class="invoice-info-card">
+
+                    <div class="invoice-info-icon">
+                        <i class="bi bi-tools"></i>
+                    </div>
+
                     <div class="invoice-info-label">
                         Phiếu bảo dưỡng
                     </div>
+
                     <div class="invoice-info-value">
                         {{ $invoice->serviceOrder->order_code }}
                     </div>
+
                 </div>
 
-                <div class="invoice-info">
+
+                <div class="invoice-info-card">
+
+                    <div class="invoice-info-icon">
+                        <i class="bi bi-calendar3"></i>
+                    </div>
+
                     <div class="invoice-info-label">
                         Ngày lập
                     </div>
+
                     <div class="invoice-info-value">
+
                         {{
                             $invoice
                                 ->issued_at
                                 ->format('d/m/Y H:i')
                         }}
+
                     </div>
+
                 </div>
 
-                <div class="invoice-info">
-                    <div class="invoice-info-label">
-                        Nhân viên lập
+
+                <div class="invoice-info-card">
+
+                    <div class="invoice-info-icon">
+                        <i class="bi bi-person-gear"></i>
                     </div>
+
+                    <div class="invoice-info-label">
+                        Kỹ thuật viên
+                    </div>
+
                     <div class="invoice-info-value">
+
                         {{
-                            $invoice->creator->name
+                            $invoice
+                                ->serviceOrder
+                                ->technician
+                                ->name
                             ?? 'Không xác định'
                         }}
+
                     </div>
+
                 </div>
 
-            </div>
+            </section>
 
 
-            <div class="invoice-table-wrap">
+            <section class="invoice-table-wrapper">
 
-                <table class="table invoice-table">
+                <table class="invoice-table">
 
                     <thead>
 
                         <tr>
-                            <th>Nội dung</th>
-                            <th>Loại</th>
-                            <th>SL</th>
-                            <th class="invoice-number">Đơn giá</th>
-                            <th class="invoice-number">Thành tiền</th>
+
+                            <th>
+                                Nội dung
+                            </th>
+
+                            <th>
+                                Loại
+                            </th>
+
+                            <th>
+                                SL
+                            </th>
+
+                            <th class="invoice-number">
+                                Đơn giá
+                            </th>
+
+                            <th class="invoice-number">
+                                Thành tiền
+                            </th>
+
                         </tr>
 
                     </thead>
@@ -501,18 +714,21 @@
                             <tr>
 
                                 <td>
-                                    <strong>
+
+                                    <div class="invoice-item-name">
                                         {{ $item->item_name }}
-                                    </strong>
+                                    </div>
 
                                     @if ($item->item_code)
 
-                                        <div class="small text-secondary">
+                                        <div class="invoice-item-code">
                                             {{ $item->item_code }}
                                         </div>
 
                                     @endif
+
                                 </td>
+
 
                                 <td>
 
@@ -521,29 +737,35 @@
                                             badge
                                             rounded-pill
                                             {{
-                                                $item->item_type
-                                                === 'SERVICE'
+                                                $item->item_type === 'SERVICE'
                                                     ? 'text-bg-primary'
                                                     : 'text-bg-secondary'
                                             }}
                                         "
                                     >
+
                                         {{
-                                            $item->item_type
-                                            === 'SERVICE'
+                                            $item->item_type === 'SERVICE'
                                                 ? 'Dịch vụ'
                                                 : 'Phụ tùng'
                                         }}
+
                                     </span>
 
                                 </td>
 
+
                                 <td>
+
                                     {{ $item->quantity }}
+
                                     {{ $item->unit }}
+
                                 </td>
 
+
                                 <td class="invoice-number">
+
                                     {{
                                         number_format(
                                             $item->unit_price,
@@ -552,9 +774,17 @@
                                             '.'
                                         )
                                     }} đ
+
                                 </td>
 
-                                <td class="invoice-number fw-bold">
+
+                                <td
+                                    class="
+                                        invoice-number
+                                        fw-bold
+                                    "
+                                >
+
                                     {{
                                         number_format(
                                             $item->line_total,
@@ -563,6 +793,7 @@
                                             '.'
                                         )
                                     }} đ
+
                                 </td>
 
                             </tr>
@@ -573,12 +804,95 @@
 
                 </table>
 
-            </div>
+            </section>
 
 
-            <div class="invoice-bottom">
+            <div class="invoice-bottom-grid">
 
                 <div>
+
+                    <section class="payment-card">
+
+                        <div class="payment-card-title">
+
+                            <i class="bi bi-credit-card"></i>
+
+                            Thông tin thanh toán
+
+                        </div>
+
+
+                        <div class="payment-text">
+
+                            <strong>
+                                Trạng thái:
+                            </strong>
+
+                            {{ $statusText }}
+
+
+                            @if (
+                                $invoice->payment_status
+                                === 'PAID'
+                            )
+
+                                <br>
+
+                                <strong>
+                                    Phương thức:
+                                </strong>
+
+                                {{
+                                    match ($invoice->payment_method) {
+                                        'CASH' =>
+                                            'Tiền mặt',
+
+                                        'BANK_TRANSFER' =>
+                                            'Chuyển khoản ngân hàng',
+
+                                        'CARD' =>
+                                            'Thẻ',
+
+                                        default =>
+                                            'Không xác định',
+                                    }
+                                }}
+
+
+                                @if ($invoice->paid_at)
+
+                                    <br>
+
+                                    <strong>
+                                        Thanh toán lúc:
+                                    </strong>
+
+                                    {{
+                                        $invoice
+                                            ->paid_at
+                                            ->format('d/m/Y H:i')
+                                    }}
+
+                                @endif
+
+
+                            @elseif (
+                                $invoice->payment_status
+                                === 'UNPAID'
+                            )
+
+                                <br><br>
+
+                                Vui lòng thanh toán tại
+                                AutoCare Long Biên theo
+                                hướng dẫn của nhân viên.
+
+                            @endif
+
+                        </div>
+
+                    </section>
+
 
                     @if ($invoice->note)
 
@@ -595,189 +909,19 @@
 
                     @endif
 
-
-                    @if (
-                        $invoice->payment_status
-                        === 'UNPAID'
-                    )
-
-                        <section class="payment-card">
-
-                            <h5 class="fw-bold">
-                                Xác nhận thanh toán
-                            </h5>
-
-                            <p class="text-secondary small">
-
-                                Số tiền khách cần thanh toán:
-
-                                <strong class="text-dark">
-
-                                    {{
-                                        number_format(
-                                            $invoice->total_amount,
-                                            0,
-                                            ',',
-                                            '.'
-                                        )
-                                    }} đ
-
-                                </strong>
-
-                            </p>
-
-
-                            <form
-                                id="paymentForm"
-                                method="POST"
-                                action="{{ route(
-                                    'staff.invoices.pay',
-                                    $invoice->id
-                                ) }}"
-                            >
-
-                                @csrf
-                                @method('PATCH')
-
-
-                                <label
-                                    for="payment_method"
-                                    class="form-label fw-bold"
-                                >
-                                    Phương thức thanh toán
-                                </label>
-
-                                <select
-                                    id="payment_method"
-                                    name="payment_method"
-                                    class="form-select"
-                                    required
-                                >
-
-                                    <option value="">
-                                        -- Chọn phương thức --
-                                    </option>
-
-                                    <option
-                                        value="CASH"
-                                        {{
-                                            old('payment_method')
-                                            === 'CASH'
-                                                ? 'selected'
-                                                : ''
-                                        }}
-                                    >
-                                        Tiền mặt
-                                    </option>
-
-                                    <option
-                                        value="BANK_TRANSFER"
-                                        {{
-                                            old('payment_method')
-                                            === 'BANK_TRANSFER'
-                                                ? 'selected'
-                                                : ''
-                                        }}
-                                    >
-                                        Chuyển khoản ngân hàng
-                                    </option>
-
-                                    <option
-                                        value="CARD"
-                                        {{
-                                            old('payment_method')
-                                            === 'CARD'
-                                                ? 'selected'
-                                                : ''
-                                        }}
-                                    >
-                                        Thẻ
-                                    </option>
-
-                                </select>
-
-
-                                <button
-                                    type="button"
-                                    class="btn btn-success mt-3"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#paymentModal"
-                                >
-                                    <i class="bi bi-check-circle me-2"></i>
-                                    Xác nhận đã thanh toán
-                                </button>
-
-                            </form>
-
-                        </section>
-
-
-                    @elseif (
-                        $invoice->payment_status
-                        === 'PAID'
-                    )
-
-                        <section class="paid-card">
-
-                            <strong>
-                                <i class="bi bi-patch-check-fill me-1"></i>
-                                Hóa đơn đã được thanh toán
-                            </strong>
-
-                            <br>
-
-                            Phương thức:
-
-                            <strong>
-
-                                {{
-                                    match ($invoice->payment_method) {
-                                        'CASH' =>
-                                            'Tiền mặt',
-
-                                        'BANK_TRANSFER' =>
-                                            'Chuyển khoản ngân hàng',
-
-                                        'CARD' =>
-                                            'Thẻ',
-
-                                        default =>
-                                            $invoice->payment_method
-                                            ?? 'Không xác định',
-                                    }
-                                }}
-
-                            </strong>
-
-
-                            @if ($invoice->paid_at)
-
-                                <br>
-
-                                Thanh toán lúc:
-
-                                <strong>
-                                    {{
-                                        $invoice
-                                            ->paid_at
-                                            ->format('d/m/Y H:i')
-                                    }}
-                                </strong>
-
-                            @endif
-
-                        </section>
-
-                    @endif
-
                 </div>
 
 
                 <aside class="invoice-totals">
 
-                    <div class="total-row">
-                        <span>Dịch vụ</span>
+                    <div class="invoice-total-row">
+
+                        <span>
+                            Dịch vụ
+                        </span>
+
                         <strong>
+
                             {{
                                 number_format(
                                     $invoice->service_total,
@@ -786,12 +930,20 @@
                                     '.'
                                 )
                             }} đ
+
                         </strong>
+
                     </div>
 
-                    <div class="total-row">
-                        <span>Phụ tùng</span>
+
+                    <div class="invoice-total-row">
+
+                        <span>
+                            Phụ tùng
+                        </span>
+
                         <strong>
+
                             {{
                                 number_format(
                                     $invoice->parts_total,
@@ -800,12 +952,20 @@
                                     '.'
                                 )
                             }} đ
+
                         </strong>
+
                     </div>
 
-                    <div class="total-row">
-                        <span>Tổng trước giảm giá</span>
+
+                    <div class="invoice-total-row">
+
+                        <span>
+                            Tạm tính
+                        </span>
+
                         <strong>
+
                             {{
                                 number_format(
                                     $invoice->subtotal,
@@ -814,12 +974,20 @@
                                     '.'
                                 )
                             }} đ
+
                         </strong>
+
                     </div>
 
-                    <div class="total-row">
-                        <span>Giảm giá</span>
+
+                    <div class="invoice-total-row">
+
+                        <span>
+                            Giảm giá
+                        </span>
+
                         <strong>
+
                             -
                             {{
                                 number_format(
@@ -829,12 +997,20 @@
                                     '.'
                                 )
                             }} đ
+
                         </strong>
+
                     </div>
 
-                    <div class="total-row">
-                        <span>Thuế</span>
+
+                    <div class="invoice-total-row">
+
+                        <span>
+                            Thuế
+                        </span>
+
                         <strong>
+
                             {{
                                 number_format(
                                     $invoice->tax_amount,
@@ -843,12 +1019,25 @@
                                     '.'
                                 )
                             }} đ
+
                         </strong>
+
                     </div>
 
-                    <div class="total-row grand-total">
-                        <span>Tổng thanh toán</span>
+
+                    <div
+                        class="
+                            invoice-total-row
+                            invoice-grand-total
+                        "
+                    >
+
+                        <span>
+                            Tổng thanh toán
+                        </span>
+
                         <strong>
+
                             {{
                                 number_format(
                                     $invoice->total_amount,
@@ -857,7 +1046,9 @@
                                     '.'
                                 )
                             }} đ
+
                         </strong>
+
                     </div>
 
                 </aside>
@@ -868,23 +1059,27 @@
             <div class="invoice-actions">
 
                 <a
-                    href="{{ route(
-                        'staff.service-orders.show',
-                        $invoice->serviceOrder->id
-                    ) }}"
-                    class="btn btn-outline-secondary"
+                    href="{{ route('customer.invoices.index') }}"
+                    class="invoice-back"
                 >
-                    <i class="bi bi-arrow-left me-2"></i>
-                    Phiếu bảo dưỡng
+
+                    <i class="bi bi-arrow-left"></i>
+
+                    Hóa đơn của tôi
+
                 </a>
+
 
                 <button
                     type="button"
-                    class="btn btn-primary"
+                    class="invoice-print"
                     onclick="window.print()"
                 >
-                    <i class="bi bi-printer me-2"></i>
+
+                    <i class="bi bi-printer"></i>
+
                     In hóa đơn
+
                 </button>
 
             </div>
@@ -894,84 +1089,5 @@
     </article>
 
 </div>
-
-
-@if ($invoice->payment_status === 'UNPAID')
-
-    <div
-        class="modal fade"
-        id="paymentModal"
-        tabindex="-1"
-        aria-hidden="true"
-    >
-
-        <div class="modal-dialog modal-dialog-centered">
-
-            <div class="modal-content border-0 rounded-4 shadow-lg">
-
-                <div class="modal-body p-4 p-md-5 text-center">
-
-                    <div class="fs-1 text-success mb-3">
-                        <i class="bi bi-cash-coin"></i>
-                    </div>
-
-                    <h3>
-                        Xác nhận thanh toán?
-                    </h3>
-
-                    <p class="text-secondary">
-
-                        Xác nhận khách hàng đã thanh toán
-
-                        <strong>
-                            {{
-                                number_format(
-                                    $invoice->total_amount,
-                                    0,
-                                    ',',
-                                    '.'
-                                )
-                            }} đ
-                        </strong>
-
-                        cho hóa đơn này.
-
-                    </p>
-
-                    <div class="d-flex justify-content-center gap-2">
-
-                        <button
-                            type="button"
-                            class="btn btn-light"
-                            data-bs-dismiss="modal"
-                        >
-                            Quay lại
-                        </button>
-
-                        <button
-                            type="button"
-                            class="btn btn-success"
-                            onclick="
-                                document
-                                    .getElementById(
-                                        'paymentForm'
-                                    )
-                                    .requestSubmit();
-                            "
-                        >
-                            Xác nhận
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-@endif
 
 @endsection

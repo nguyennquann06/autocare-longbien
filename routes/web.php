@@ -2,9 +2,12 @@
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CustomerDashboardController;
+use App\Http\Controllers\CustomerInvoiceController;
 use App\Http\Controllers\MaintenanceHistoryController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StaffAppointmentController;
+use App\Http\Controllers\StaffDashboardController;
 use App\Http\Controllers\StaffInvoiceController;
 use App\Http\Controllers\StaffPartController;
 use App\Http\Controllers\StaffServiceOrderController;
@@ -12,18 +15,22 @@ use App\Http\Controllers\TechnicianServiceOrderController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Support\Facades\Route;
 
-// =========================
-// HOME
-// =========================
+/*
+|--------------------------------------------------------------------------
+| HOME
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/', function () {
     return view('home');
 })->name('home');
 
 
-// =========================
-// SERVICES
-// =========================
+/*
+|--------------------------------------------------------------------------
+| SERVICES
+|--------------------------------------------------------------------------
+*/
 
 Route::get(
     '/services',
@@ -36,9 +43,11 @@ Route::get(
 )->name('services.show');
 
 
-// =========================
-// AUTH
-// =========================
+/*
+|--------------------------------------------------------------------------
+| AUTH
+|--------------------------------------------------------------------------
+*/
 
 Route::get(
     '/register',
@@ -61,9 +70,42 @@ Route::post(
 )->name('login.submit');
 
 
-// =========================
-// CUSTOMER APPOINTMENTS
-// =========================
+/**
+ * Logout bắt buộc dùng POST.
+ *
+ * Không dùng GET /logout vì đăng xuất
+ * là hành động làm thay đổi trạng thái session.
+ */
+Route::post(
+    '/logout',
+    [AuthController::class, 'logout']
+)
+    ->middleware('auth')
+    ->name('logout');
+
+
+/*
+|--------------------------------------------------------------------------
+| CUSTOMER DASHBOARD
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/customer/dashboard',
+    [
+        CustomerDashboardController::class,
+        'index',
+    ]
+)
+    ->middleware('auth')
+    ->name('customer.dashboard');
+
+
+/*
+|--------------------------------------------------------------------------
+| CUSTOMER APPOINTMENTS
+|--------------------------------------------------------------------------
+*/
 
 Route::get(
     '/appointments',
@@ -101,9 +143,11 @@ Route::get(
     ->name('appointments.show');
 
 
-// =========================
-// CUSTOMER MAINTENANCE HISTORY
-// =========================
+/*
+|--------------------------------------------------------------------------
+| CUSTOMER MAINTENANCE HISTORY
+|--------------------------------------------------------------------------
+*/
 
 Route::get(
     '/maintenance-history',
@@ -120,9 +164,49 @@ Route::get(
     ->name('maintenance-history.show');
 
 
-// =========================
-// STAFF APPOINTMENTS
-// =========================
+/*
+|--------------------------------------------------------------------------
+| CUSTOMER INVOICES
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/my-invoices',
+    [CustomerInvoiceController::class, 'index']
+)
+    ->middleware('auth')
+    ->name('customer.invoices.index');
+
+Route::get(
+    '/my-invoices/{invoice}',
+    [CustomerInvoiceController::class, 'show']
+)
+    ->middleware('auth')
+    ->name('customer.invoices.show');
+
+
+/*
+|--------------------------------------------------------------------------
+| STAFF DASHBOARD
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/staff/dashboard',
+    [
+        StaffDashboardController::class,
+        'index',
+    ]
+)
+    ->middleware('auth')
+    ->name('staff.dashboard');
+
+
+/*
+|--------------------------------------------------------------------------
+| STAFF APPOINTMENTS
+|--------------------------------------------------------------------------
+*/
 
 Route::get(
     '/staff/appointments',
@@ -149,9 +233,11 @@ Route::get(
     ->name('staff.appointments.show');
 
 
-// =========================
-// STAFF SERVICE ORDERS
-// =========================
+/*
+|--------------------------------------------------------------------------
+| STAFF SERVICE ORDERS
+|--------------------------------------------------------------------------
+*/
 
 Route::get(
     '/staff/appointments/{appointment}/service-order/create',
@@ -184,9 +270,11 @@ Route::post(
     ->name('staff.service-orders.parts.store');
 
 
-// =========================
-// STAFF INVOICES
-// =========================
+/*
+|--------------------------------------------------------------------------
+| STAFF INVOICES
+|--------------------------------------------------------------------------
+*/
 
 Route::get(
     '/staff/service-orders/{serviceOrder}/invoice/create',
@@ -208,10 +296,6 @@ Route::post(
     ->middleware('auth')
     ->name('staff.invoices.store');
 
-
-/**
- * Xác nhận thanh toán.
- */
 Route::patch(
     '/staff/invoices/{invoice}/pay',
     [
@@ -221,7 +305,6 @@ Route::patch(
 )
     ->middleware('auth')
     ->name('staff.invoices.pay');
-
 
 Route::get(
     '/staff/invoices/{invoice}',
@@ -234,6 +317,12 @@ Route::get(
     ->name('staff.invoices.show');
 
 
+/*
+|--------------------------------------------------------------------------
+| STAFF SERVICE ORDER DETAIL
+|--------------------------------------------------------------------------
+*/
+
 Route::get(
     '/staff/service-orders/{serviceOrder}',
     [
@@ -245,9 +334,11 @@ Route::get(
     ->name('staff.service-orders.show');
 
 
-// =========================
-// STAFF INVENTORY / PARTS
-// =========================
+/*
+|--------------------------------------------------------------------------
+| STAFF INVENTORY / PARTS
+|--------------------------------------------------------------------------
+*/
 
 Route::get(
     '/staff/parts',
@@ -280,9 +371,11 @@ Route::post(
     ->name('staff.parts.stock-in');
 
 
-// =========================
-// TECHNICIAN SERVICE ORDERS
-// =========================
+/*
+|--------------------------------------------------------------------------
+| TECHNICIAN SERVICE ORDERS
+|--------------------------------------------------------------------------
+*/
 
 Route::get(
     '/technician/service-orders',
@@ -335,9 +428,11 @@ Route::patch(
     ->name('technician.service-orders.complete');
 
 
-// =========================
-// VEHICLES
-// =========================
+/*
+|--------------------------------------------------------------------------
+| VEHICLES
+|--------------------------------------------------------------------------
+*/
 
 Route::get(
     '/vehicles',
