@@ -10,7 +10,7 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed database.
+     * Seed the application's database.
      */
     public function run(): void
     {
@@ -18,10 +18,14 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
 
             VehicleBrandSeeder::class,
+
             VehicleModelSeeder::class,
 
             ServiceCategorySeeder::class,
+
             ServiceSeeder::class,
+
+            PartSeeder::class,
         ]);
     }
 }

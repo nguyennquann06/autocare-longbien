@@ -11,9 +11,6 @@ class Vehicle extends Model
 {
     use HasFactory;
 
-    /**
-     * Các trường được phép gán dữ liệu hàng loạt.
-     */
     protected $fillable = [
         'customer_id',
         'brand_id',
@@ -27,9 +24,6 @@ class Vehicle extends Model
         'note',
     ];
 
-    /**
-     * Ép kiểu dữ liệu.
-     */
     protected function casts(): array
     {
         return [
@@ -40,7 +34,7 @@ class Vehicle extends Model
     }
 
     /**
-     * Xe thuộc một khách hàng.
+     * Xe thuộc khách hàng.
      */
     public function customer(): BelongsTo
     {
@@ -51,7 +45,7 @@ class Vehicle extends Model
     }
 
     /**
-     * Xe thuộc một hãng xe.
+     * Xe thuộc hãng xe.
      */
     public function brand(): BelongsTo
     {
@@ -62,7 +56,7 @@ class Vehicle extends Model
     }
 
     /**
-     * Xe thuộc một dòng xe.
+     * Xe thuộc dòng xe.
      */
     public function vehicleModel(): BelongsTo
     {
@@ -73,12 +67,26 @@ class Vehicle extends Model
     }
 
     /**
-     * Một xe có thể có nhiều lịch hẹn.
+     * Một xe có nhiều lịch hẹn.
      */
     public function appointments(): HasMany
     {
         return $this->hasMany(
             Appointment::class,
+            'vehicle_id'
+        );
+    }
+
+    /**
+     * Một xe có nhiều phiếu bảo dưỡng.
+     *
+     * Đây chính là cơ sở để sau này
+     * tạo lịch sử bảo dưỡng của xe.
+     */
+    public function serviceOrders(): HasMany
+    {
+        return $this->hasMany(
+            ServiceOrder::class,
             'vehicle_id'
         );
     }

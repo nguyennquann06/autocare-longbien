@@ -2,16 +2,15 @@
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\MaintenanceHistoryController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\StaffAppointmentController;
+use App\Http\Controllers\StaffInvoiceController;
+use App\Http\Controllers\StaffPartController;
+use App\Http\Controllers\StaffServiceOrderController;
+use App\Http\Controllers\TechnicianServiceOrderController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Support\Facades\Route;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
 
 // =========================
 // HOME
@@ -51,7 +50,6 @@ Route::post(
     [AuthController::class, 'register']
 )->name('register.submit');
 
-
 Route::get(
     '/login',
     [AuthController::class, 'showLoginForm']
@@ -67,7 +65,6 @@ Route::post(
 // CUSTOMER APPOINTMENTS
 // =========================
 
-// Danh sách lịch hẹn của khách hàng
 Route::get(
     '/appointments',
     [AppointmentController::class, 'index']
@@ -75,8 +72,6 @@ Route::get(
     ->middleware('auth')
     ->name('appointments.index');
 
-
-// Form đặt lịch
 Route::get(
     '/appointments/create',
     [AppointmentController::class, 'create']
@@ -84,8 +79,6 @@ Route::get(
     ->middleware('auth')
     ->name('appointments.create');
 
-
-// Lưu lịch hẹn
 Route::post(
     '/appointments',
     [AppointmentController::class, 'store']
@@ -93,8 +86,6 @@ Route::post(
     ->middleware('auth')
     ->name('appointments.store');
 
-
-// Khách hàng hủy lịch
 Route::patch(
     '/appointments/{appointment}/cancel',
     [AppointmentController::class, 'cancel']
@@ -102,8 +93,6 @@ Route::patch(
     ->middleware('auth')
     ->name('appointments.cancel');
 
-
-// Chi tiết lịch hẹn khách hàng
 Route::get(
     '/appointments/{appointment}',
     [AppointmentController::class, 'show']
@@ -113,10 +102,28 @@ Route::get(
 
 
 // =========================
+// CUSTOMER MAINTENANCE HISTORY
+// =========================
+
+Route::get(
+    '/maintenance-history',
+    [MaintenanceHistoryController::class, 'index']
+)
+    ->middleware('auth')
+    ->name('maintenance-history.index');
+
+Route::get(
+    '/maintenance-history/{serviceOrder}',
+    [MaintenanceHistoryController::class, 'show']
+)
+    ->middleware('auth')
+    ->name('maintenance-history.show');
+
+
+// =========================
 // STAFF APPOINTMENTS
 // =========================
 
-// Danh sách toàn bộ lịch hẹn
 Route::get(
     '/staff/appointments',
     [StaffAppointmentController::class, 'index']
@@ -124,23 +131,208 @@ Route::get(
     ->middleware('auth')
     ->name('staff.appointments.index');
 
-
-// Cập nhật trạng thái
 Route::patch(
     '/staff/appointments/{appointment}/status',
-    [StaffAppointmentController::class, 'updateStatus']
+    [
+        StaffAppointmentController::class,
+        'updateStatus',
+    ]
 )
     ->middleware('auth')
     ->name('staff.appointments.updateStatus');
 
-
-// Chi tiết lịch hẹn
 Route::get(
     '/staff/appointments/{appointment}',
     [StaffAppointmentController::class, 'show']
 )
     ->middleware('auth')
     ->name('staff.appointments.show');
+
+
+// =========================
+// STAFF SERVICE ORDERS
+// =========================
+
+Route::get(
+    '/staff/appointments/{appointment}/service-order/create',
+    [
+        StaffServiceOrderController::class,
+        'create',
+    ]
+)
+    ->middleware('auth')
+    ->name('staff.service-orders.create');
+
+Route::post(
+    '/staff/appointments/{appointment}/service-order',
+    [
+        StaffServiceOrderController::class,
+        'store',
+    ]
+)
+    ->middleware('auth')
+    ->name('staff.service-orders.store');
+
+Route::post(
+    '/staff/service-orders/{serviceOrder}/parts',
+    [
+        StaffServiceOrderController::class,
+        'addPart',
+    ]
+)
+    ->middleware('auth')
+    ->name('staff.service-orders.parts.store');
+
+
+// =========================
+// STAFF INVOICES
+// =========================
+
+Route::get(
+    '/staff/service-orders/{serviceOrder}/invoice/create',
+    [
+        StaffInvoiceController::class,
+        'create',
+    ]
+)
+    ->middleware('auth')
+    ->name('staff.invoices.create');
+
+Route::post(
+    '/staff/service-orders/{serviceOrder}/invoice',
+    [
+        StaffInvoiceController::class,
+        'store',
+    ]
+)
+    ->middleware('auth')
+    ->name('staff.invoices.store');
+
+
+/**
+ * Xác nhận thanh toán.
+ */
+Route::patch(
+    '/staff/invoices/{invoice}/pay',
+    [
+        StaffInvoiceController::class,
+        'pay',
+    ]
+)
+    ->middleware('auth')
+    ->name('staff.invoices.pay');
+
+
+Route::get(
+    '/staff/invoices/{invoice}',
+    [
+        StaffInvoiceController::class,
+        'show',
+    ]
+)
+    ->middleware('auth')
+    ->name('staff.invoices.show');
+
+
+Route::get(
+    '/staff/service-orders/{serviceOrder}',
+    [
+        StaffServiceOrderController::class,
+        'show',
+    ]
+)
+    ->middleware('auth')
+    ->name('staff.service-orders.show');
+
+
+// =========================
+// STAFF INVENTORY / PARTS
+// =========================
+
+Route::get(
+    '/staff/parts',
+    [
+        StaffPartController::class,
+        'index',
+    ]
+)
+    ->middleware('auth')
+    ->name('staff.parts.index');
+
+Route::get(
+    '/staff/parts/{part}/stock-in',
+    [
+        StaffPartController::class,
+        'showStockInForm',
+    ]
+)
+    ->middleware('auth')
+    ->name('staff.parts.stock-in.form');
+
+Route::post(
+    '/staff/parts/{part}/stock-in',
+    [
+        StaffPartController::class,
+        'stockIn',
+    ]
+)
+    ->middleware('auth')
+    ->name('staff.parts.stock-in');
+
+
+// =========================
+// TECHNICIAN SERVICE ORDERS
+// =========================
+
+Route::get(
+    '/technician/service-orders',
+    [
+        TechnicianServiceOrderController::class,
+        'index',
+    ]
+)
+    ->middleware('auth')
+    ->name('technician.service-orders.index');
+
+Route::get(
+    '/technician/service-orders/{serviceOrder}',
+    [
+        TechnicianServiceOrderController::class,
+        'show',
+    ]
+)
+    ->middleware('auth')
+    ->name('technician.service-orders.show');
+
+Route::patch(
+    '/technician/service-orders/{serviceOrder}/start',
+    [
+        TechnicianServiceOrderController::class,
+        'start',
+    ]
+)
+    ->middleware('auth')
+    ->name('technician.service-orders.start');
+
+Route::patch(
+    '/technician/service-orders/{serviceOrder}/items/{item}',
+    [
+        TechnicianServiceOrderController::class,
+        'updateItemStatus',
+    ]
+)
+    ->middleware('auth')
+    ->name('technician.service-orders.items.update');
+
+Route::patch(
+    '/technician/service-orders/{serviceOrder}/complete',
+    [
+        TechnicianServiceOrderController::class,
+        'complete',
+    ]
+)
+    ->middleware('auth')
+    ->name('technician.service-orders.complete');
 
 
 // =========================
@@ -154,14 +346,12 @@ Route::get(
     ->middleware('auth')
     ->name('vehicles.index');
 
-
 Route::get(
     '/vehicles/create',
     [VehicleController::class, 'create']
 )
     ->middleware('auth')
     ->name('vehicles.create');
-
 
 Route::post(
     '/vehicles',
@@ -170,14 +360,12 @@ Route::post(
     ->middleware('auth')
     ->name('vehicles.store');
 
-
 Route::get(
     '/vehicles/{vehicle}/edit',
     [VehicleController::class, 'edit']
 )
     ->middleware('auth')
     ->name('vehicles.edit');
-
 
 Route::put(
     '/vehicles/{vehicle}',
@@ -186,7 +374,6 @@ Route::put(
     ->middleware('auth')
     ->name('vehicles.update');
 
-
 Route::delete(
     '/vehicles/{vehicle}',
     [VehicleController::class, 'destroy']
@@ -194,14 +381,12 @@ Route::delete(
     ->middleware('auth')
     ->name('vehicles.destroy');
 
-
 Route::get(
     '/vehicles/{vehicle}',
     [VehicleController::class, 'show']
 )
     ->middleware('auth')
     ->name('vehicles.show');
-
 
 Route::get(
     '/vehicle-models/{brandId}',

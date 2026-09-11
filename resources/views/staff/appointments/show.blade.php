@@ -78,10 +78,6 @@
             margin-bottom: 20px;
         }
 
-        .code {
-            color: #6b7280;
-        }
-
         .status {
             display: inline-block;
             padding: 8px 14px;
@@ -165,25 +161,33 @@
             border-radius: 7px;
             min-height: 110px;
             resize: vertical;
-            font-family: Arial, sans-serif;
         }
 
         .action-form {
-            margin-top: 25px;
+            margin-top: 20px;
             background: #f9fafb;
             padding: 20px;
             border-radius: 8px;
         }
 
-        .action-button {
+        .button {
+            display: inline-block;
             margin-top: 15px;
-            border: none;
+            background: #111827;
             color: white;
+            border: none;
+            text-decoration: none;
             padding: 12px 18px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 15px;
-            background: #111827;
+        }
+
+        .service-order-button {
+            background: #1d4ed8;
+        }
+
+        .invoice-button {
+            background: #047857;
         }
 
         .back {
@@ -218,67 +222,45 @@
 
         @php
 
-            $statusText = match (
-                $appointment->status
-            ) {
-                'PENDING' => 'Chờ xác nhận',
-
-                'CONFIRMED' => 'Đã xác nhận',
-
-                'IN_PROGRESS' => 'Đang thực hiện',
-
-                'COMPLETED' => 'Hoàn thành',
-
-                'CANCELLED' => 'Đã hủy',
-
-                default => $appointment->status,
-            };
-
-
-            $statusClass = match (
-                $appointment->status
-            ) {
-                'PENDING' => 'pending',
-
-                'CONFIRMED' => 'confirmed',
-
-                'IN_PROGRESS' => 'progress',
-
-                'COMPLETED' => 'completed',
-
-                'CANCELLED' => 'cancelled',
-
-                default => 'pending',
-            };
-
-
-            $nextStatus = match (
-                $appointment->status
-            ) {
-                'PENDING' => 'CONFIRMED',
-
-                'CONFIRMED' => 'IN_PROGRESS',
-
-                'IN_PROGRESS' => 'COMPLETED',
-
-                default => null,
-            };
-
-
-            $nextButtonText = match (
-                $appointment->status
-            ) {
+            $statusText = match ($appointment->status) {
                 'PENDING' =>
-                    'Xác nhận lịch hẹn',
+                    'Chờ xác nhận',
 
                 'CONFIRMED' =>
-                    'Bắt đầu thực hiện',
+                    'Đã xác nhận',
 
                 'IN_PROGRESS' =>
-                    'Hoàn thành dịch vụ',
+                    'Đang thực hiện',
+
+                'COMPLETED' =>
+                    'Hoàn thành',
+
+                'CANCELLED' =>
+                    'Đã hủy',
 
                 default =>
-                    null,
+                    $appointment->status,
+            };
+
+
+            $statusClass = match ($appointment->status) {
+                'PENDING' =>
+                    'pending',
+
+                'CONFIRMED' =>
+                    'confirmed',
+
+                'IN_PROGRESS' =>
+                    'progress',
+
+                'COMPLETED' =>
+                    'completed',
+
+                'CANCELLED' =>
+                    'cancelled',
+
+                default =>
+                    'pending',
             };
 
         @endphp
@@ -304,15 +286,13 @@
 
         <article class="card">
 
-            <div class="code">
-
-                Mã lịch hẹn:
+            <p>
+                Mã lịch:
 
                 <strong>
                     {{ $appointment->appointment_code }}
                 </strong>
-
-            </div>
+            </p>
 
 
             <h1>
@@ -350,24 +330,6 @@
 
                     <div class="value">
                         {{ $appointment->contact_phone }}
-                    </div>
-
-                </div>
-
-
-                <div class="info-box">
-
-                    <div class="label">
-                        Email
-                    </div>
-
-                    <div class="value">
-
-                        {{
-                            $appointment->contact_email
-                            ?? 'Không có'
-                        }}
-
                     </div>
 
                 </div>
@@ -442,28 +404,6 @@
 
                 </div>
 
-
-                <div class="info-box">
-
-                    <div class="label">
-                        Giá tham khảo
-                    </div>
-
-                    <div class="value">
-
-                        {{
-                            number_format(
-                                $appointment->estimated_total,
-                                0,
-                                ',',
-                                '.'
-                            )
-                        }} đ
-
-                    </div>
-
-                </div>
-
             </div>
 
 
@@ -478,10 +418,9 @@
 
                     <div class="service-item">
 
-                        <div>
+                        <span>
                             {{ $service->name }}
-                        </div>
-
+                        </span>
 
                         <strong>
 
@@ -508,7 +447,7 @@
                 <section class="section">
 
                     <h2>
-                        Ghi chú của khách hàng
+                        Ghi chú khách hàng
                     </h2>
 
                     <div class="note">
@@ -520,12 +459,15 @@
             @endif
 
 
-            @if ($nextStatus)
+            {{-- =========================
+                PENDING
+            ========================== --}}
+            @if ($appointment->status === 'PENDING')
 
                 <section class="section">
 
                     <h2>
-                        Xử lý lịch hẹn
+                        Xác nhận lịch hẹn
                     </h2>
 
 
@@ -539,21 +481,20 @@
                     >
 
                         @csrf
-
                         @method('PATCH')
 
 
                         <input
                             type="hidden"
                             name="status"
-                            value="{{ $nextStatus }}"
+                            value="CONFIRMED"
                         >
 
 
                         <label for="staff_note">
 
                             <strong>
-                                Ghi chú của nhân viên
+                                Ghi chú nhân viên
                             </strong>
 
                         </label>
@@ -565,7 +506,6 @@
                             id="staff_note"
                             name="staff_note"
                             maxlength="1000"
-                            placeholder="Ví dụ: Đã liên hệ khách hàng và xác nhận thời gian..."
                         >{{ old(
                             'staff_note',
                             $appointment->staff_note
@@ -574,36 +514,182 @@
 
                         <button
                             type="submit"
-                            class="action-button"
-                            onclick="
-                                return confirm(
-                                    'Bạn có chắc chắn muốn cập nhật trạng thái lịch hẹn?'
-                                );
-                            "
+                            class="button"
                         >
-                            {{ $nextButtonText }}
+                            Xác nhận lịch hẹn
                         </button>
 
                     </form>
 
                 </section>
 
-            @elseif ($appointment->status === 'COMPLETED')
+            @endif
+
+
+            {{-- =========================
+                SERVICE ORDER
+            ========================== --}}
+            @if ($appointment->serviceOrder)
 
                 <section class="section">
 
+                    <h2>
+                        Phiếu bảo dưỡng
+                    </h2>
+
+
                     <div class="note">
-                        Lịch hẹn này đã hoàn thành.
+
+                        Mã phiếu:
+
+                        <strong>
+                            {{ $appointment->serviceOrder->order_code }}
+                        </strong>
+
+                        <br><br>
+
+                        Trạng thái:
+
+                        <strong>
+
+                            {{
+                                match (
+                                    $appointment
+                                        ->serviceOrder
+                                        ->status
+                                ) {
+                                    'RECEIVED' =>
+                                        'Đã tiếp nhận',
+
+                                    'IN_PROGRESS' =>
+                                        'Đang thực hiện',
+
+                                    'COMPLETED' =>
+                                        'Hoàn thành',
+
+                                    'CANCELLED' =>
+                                        'Đã hủy',
+
+                                    default =>
+                                        $appointment
+                                            ->serviceOrder
+                                            ->status,
+                                }
+                            }}
+
+                        </strong>
+
                     </div>
+
+
+                    <a
+                        href="{{ route(
+                            'staff.service-orders.show',
+                            $appointment->serviceOrder->id
+                        ) }}"
+                        class="button service-order-button"
+                    >
+                        Xem phiếu bảo dưỡng
+                    </a>
+
+
+                    {{-- =========================
+                        INVOICE
+                    ========================== --}}
+                    @if (
+                        $appointment->serviceOrder->status
+                        === 'COMPLETED'
+                    )
+
+                        @if (
+                            $appointment
+                                ->serviceOrder
+                                ->invoice
+                        )
+
+                            <a
+                                href="{{ route(
+                                    'staff.invoices.show',
+                                    $appointment
+                                        ->serviceOrder
+                                        ->invoice
+                                        ->id
+                                ) }}"
+                                class="button invoice-button"
+                            >
+                                Xem hóa đơn
+                            </a>
+
+                        @else
+
+                            <a
+                                href="{{ route(
+                                    'staff.invoices.create',
+                                    $appointment->serviceOrder->id
+                                ) }}"
+                                class="button invoice-button"
+                            >
+                                Lập hóa đơn
+                            </a>
+
+                        @endif
+
+                    @endif
 
                 </section>
 
-            @elseif ($appointment->status === 'CANCELLED')
+
+            {{-- =========================
+                CONFIRMED nhưng chưa có
+                Service Order
+            ========================== --}}
+            @elseif (
+                $appointment->status
+                === 'CONFIRMED'
+            )
+
+                <section class="section">
+
+                    <h2>
+                        Phiếu bảo dưỡng
+                    </h2>
+
+
+                    <div class="note">
+
+                        Lịch đã được xác nhận.
+
+                        Hãy tiếp nhận xe và tạo
+                        phiếu bảo dưỡng trước khi
+                        bắt đầu thực hiện.
+
+                    </div>
+
+
+                    <a
+                        href="{{ route(
+                            'staff.service-orders.create',
+                            $appointment->id
+                        ) }}"
+                        class="button service-order-button"
+                    >
+                        Tạo phiếu bảo dưỡng
+                    </a>
+
+                </section>
+
+            @endif
+
+
+            @if (
+                $appointment->status
+                === 'CANCELLED'
+            )
 
                 <section class="section">
 
                     <div class="note">
-                        Khách hàng đã hủy lịch hẹn này.
+                        Lịch hẹn đã bị khách hàng hủy.
                     </div>
 
                 </section>
@@ -616,7 +702,7 @@
                 <section class="section">
 
                     <h2>
-                        Ghi chú hiện tại của nhân viên
+                        Ghi chú nhân viên
                     </h2>
 
                     <div class="note">
@@ -632,7 +718,7 @@
                 href="{{ route('staff.appointments.index') }}"
                 class="back"
             >
-                ← Quay lại danh sách lịch hẹn
+                ← Quay lại danh sách lịch
             </a>
 
         </article>

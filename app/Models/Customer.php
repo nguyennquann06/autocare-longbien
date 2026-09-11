@@ -11,9 +11,6 @@ class Customer extends Model
 {
     use HasFactory;
 
-    /**
-     * Các trường được phép gán dữ liệu hàng loạt.
-     */
     protected $fillable = [
         'user_id',
         'full_name',
@@ -25,18 +22,16 @@ class Customer extends Model
         'note',
     ];
 
-    /**
-     * Ép kiểu dữ liệu.
-     */
     protected function casts(): array
     {
         return [
-            'date_of_birth' => 'date',
+            'date_of_birth' =>
+                'date',
         ];
     }
 
     /**
-     * Hồ sơ khách hàng có thể thuộc một tài khoản.
+     * Hồ sơ khách hàng thuộc tài khoản.
      */
     public function user(): BelongsTo
     {
@@ -47,7 +42,7 @@ class Customer extends Model
     }
 
     /**
-     * Một khách hàng có nhiều phương tiện.
+     * Xe của khách hàng.
      */
     public function vehicles(): HasMany
     {
@@ -58,12 +53,34 @@ class Customer extends Model
     }
 
     /**
-     * Một khách hàng có nhiều lịch hẹn.
+     * Lịch hẹn của khách hàng.
      */
     public function appointments(): HasMany
     {
         return $this->hasMany(
             Appointment::class,
+            'customer_id'
+        );
+    }
+
+    /**
+     * Phiếu bảo dưỡng của khách hàng.
+     */
+    public function serviceOrders(): HasMany
+    {
+        return $this->hasMany(
+            ServiceOrder::class,
+            'customer_id'
+        );
+    }
+
+    /**
+     * Các hóa đơn của khách hàng.
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(
+            Invoice::class,
             'customer_id'
         );
     }

@@ -6,14 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Service extends Model
 {
     use HasFactory;
 
-    /**
-     * Các trường được phép gán dữ liệu hàng loạt.
-     */
     protected $fillable = [
         'category_id',
         'name',
@@ -26,9 +24,6 @@ class Service extends Model
         'is_active',
     ];
 
-    /**
-     * Ép kiểu dữ liệu.
-     */
     protected function casts(): array
     {
         return [
@@ -49,7 +44,7 @@ class Service extends Model
     }
 
     /**
-     * Dịch vụ thuộc một nhóm dịch vụ.
+     * Dịch vụ thuộc nhóm dịch vụ.
      */
     public function category(): BelongsTo
     {
@@ -60,8 +55,8 @@ class Service extends Model
     }
 
     /**
-     * Một dịch vụ có thể xuất hiện
-     * trong nhiều lịch hẹn.
+     * Các lịch hẹn mà khách
+     * đã chọn dịch vụ này.
      */
     public function appointments(): BelongsToMany
     {
@@ -76,5 +71,17 @@ class Service extends Model
                 'estimated_duration_minutes',
             ])
             ->withTimestamps();
+    }
+
+    /**
+     * Các hạng mục thực tế trong
+     * phiếu bảo dưỡng sử dụng dịch vụ này.
+     */
+    public function serviceOrderItems(): HasMany
+    {
+        return $this->hasMany(
+            ServiceOrderItem::class,
+            'service_id'
+        );
     }
 }

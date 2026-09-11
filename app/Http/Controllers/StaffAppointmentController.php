@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 class StaffAppointmentController extends Controller
 {
     /**
-     * Danh sách lịch hẹn dành cho nhân viên.
+     * Danh sách lịch hẹn.
      */
     public function index()
     {
@@ -21,6 +21,7 @@ class StaffAppointmentController extends Controller
             'vehicle.brand',
             'vehicle.vehicleModel',
             'services',
+            'serviceOrder.invoice',
         ])
             ->orderByDesc('appointment_date')
             ->orderByDesc('appointment_time')
@@ -46,6 +47,7 @@ class StaffAppointmentController extends Controller
             'vehicle.brand',
             'vehicle.vehicleModel',
             'services',
+            'serviceOrder.invoice',
         ]);
 
         return view(
@@ -63,6 +65,10 @@ class StaffAppointmentController extends Controller
         Appointment $appointment
     ) {
         $this->authorizeStaff();
+
+        $appointment->load(
+            'serviceOrder'
+        );
 
         $validated = $request->validate(
             [
@@ -94,21 +100,19 @@ class StaffAppointmentController extends Controller
             ]
         );
 
-        /**
-         * Quy định luồng trạng thái.
-         *
-         * Chỉ được chuyển sang trạng thái kế tiếp.
-         */
+
         $allowedTransitions = [
-            'PENDING' => 'CONFIRMED',
-            'CONFIRMED' => 'IN_PROGRESS',
-            'IN_PROGRESS' => 'COMPLETED',
+            'PENDING' =>
+                'CONFIRMED',
+
+            'CONFIRMED' =>
+                'IN_PROGRESS',
+
+            'IN_PROGRESS' =>
+                'COMPLETED',
         ];
 
-        /**
-         * COMPLETED hoặc CANCELLED
-         * không được chuyển tiếp.
-         */
+
         if (
             !isset(
                 $allowedTransitions[
@@ -127,17 +131,12 @@ class StaffAppointmentController extends Controller
                 );
         }
 
-        /**
-         * Không cho bỏ qua trạng thái.
-         *
-         * Ví dụ:
-         * PENDING không thể nhảy thẳng
-         * sang COMPLETED.
-         */
+
         $expectedStatus =
             $allowedTransitions[
                 $appointment->status
             ];
+
 
         if (
             $validated['status'] !==
@@ -154,6 +153,28 @@ class StaffAppointmentController extends Controller
                 );
         }
 
+
+        /**
+         * CONFIRMED -> IN_PROGRESS
+         * bắt buộc phải có Service Order.
+         */
+        if (
+            $appointment->status === 'CONFIRMED'
+            &&
+            !$appointment->serviceOrder
+        ) {
+            return redirect()
+                ->route(
+                    'staff.appointments.show',
+                    $appointment->id
+                )
+                ->with(
+                    'error',
+                    'Vui lòng tạo phiếu bảo dưỡng trước khi bắt đầu thực hiện.'
+                );
+        }
+
+
         $appointment->update([
             'status' =>
                 $validated['status'],
@@ -168,6 +189,7 @@ class StaffAppointmentController extends Controller
                     : $appointment->staff_note,
         ]);
 
+
         return redirect()
             ->route(
                 'staff.appointments.show',
@@ -181,27 +203,19 @@ class StaffAppointmentController extends Controller
 
 
     /**
-     * Kiểm tra quyền khu vực nhân viên.
-     *
-     * Cho phép:
-     * - STAFF
-     * - ADMIN
+     * Kiểm tra STAFF / ADMIN.
      */
     private function authorizeStaff(): void
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (
+            !$user ||
+            !$user->role
+        ) {
             abort(
                 403,
-                'Bạn chưa đăng nhập.'
-            );
-        }
-
-        if (!$user->role) {
-            abort(
-                403,
-                'Tài khoản chưa được phân quyền.'
+                'Bạn không có quyền truy cập.'
             );
         }
 

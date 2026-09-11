@@ -6,14 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Appointment extends Model
 {
     use HasFactory;
 
-    /**
-     * Các trường được phép gán dữ liệu hàng loạt.
-     */
     protected $fillable = [
         'appointment_code',
         'customer_id',
@@ -30,9 +28,6 @@ class Appointment extends Model
         'staff_note',
     ];
 
-    /**
-     * Ép kiểu dữ liệu.
-     */
     protected function casts(): array
     {
         return [
@@ -40,12 +35,13 @@ class Appointment extends Model
 
             'estimated_total' => 'decimal:2',
 
-            'estimated_duration_minutes' => 'integer',
+            'estimated_duration_minutes' =>
+                'integer',
         ];
     }
 
     /**
-     * Lịch hẹn thuộc một khách hàng.
+     * Lịch hẹn thuộc khách hàng.
      */
     public function customer(): BelongsTo
     {
@@ -56,7 +52,7 @@ class Appointment extends Model
     }
 
     /**
-     * Lịch hẹn thuộc một phương tiện.
+     * Lịch hẹn thuộc phương tiện.
      */
     public function vehicle(): BelongsTo
     {
@@ -67,7 +63,8 @@ class Appointment extends Model
     }
 
     /**
-     * Một lịch hẹn có thể có nhiều dịch vụ.
+     * Các dịch vụ khách đã chọn
+     * khi đặt lịch.
      */
     public function services(): BelongsToMany
     {
@@ -82,5 +79,17 @@ class Appointment extends Model
                 'estimated_duration_minutes',
             ])
             ->withTimestamps();
+    }
+
+    /**
+     * Một lịch hẹn có tối đa
+     * một phiếu bảo dưỡng.
+     */
+    public function serviceOrder(): HasOne
+    {
+        return $this->hasOne(
+            ServiceOrder::class,
+            'appointment_id'
+        );
     }
 }

@@ -2,24 +2,19 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
-use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     /**
-     * Các thuộc tính được phép gán hàng loạt.
-     *
-     * @var list<string>
+     * Các trường được phép gán hàng loạt.
      */
     protected $fillable = [
         'role_id',
@@ -29,9 +24,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Các thuộc tính được ẩn khi serialize.
-     *
-     * @var list<string>
+     * Các trường ẩn khi serialize.
      */
     protected $hidden = [
         'password',
@@ -40,30 +33,82 @@ class User extends Authenticatable
 
     /**
      * Ép kiểu dữ liệu.
-     *
-     * @return array<string, string>
      */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'email_verified_at' =>
+                'datetime',
+
+            'password' =>
+                'hashed',
         ];
     }
 
     /**
-     * Mỗi người dùng thuộc một vai trò.
+     * Vai trò tài khoản.
      */
     public function role(): BelongsTo
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(
+            Role::class,
+            'role_id'
+        );
     }
 
     /**
-     * Một tài khoản khách hàng có một hồ sơ khách hàng.
+     * Hồ sơ CUSTOMER.
      */
     public function customer(): HasOne
     {
-        return $this->hasOne(Customer::class);
+        return $this->hasOne(
+            Customer::class,
+            'user_id'
+        );
+    }
+
+    /**
+     * Phiếu bảo dưỡng do user tạo.
+     */
+    public function createdServiceOrders(): HasMany
+    {
+        return $this->hasMany(
+            ServiceOrder::class,
+            'created_by'
+        );
+    }
+
+    /**
+     * Phiếu bảo dưỡng được phân công
+     * cho TECHNICIAN.
+     */
+    public function technicianServiceOrders(): HasMany
+    {
+        return $this->hasMany(
+            ServiceOrder::class,
+            'technician_id'
+        );
+    }
+
+    /**
+     * Các giao dịch kho do user thực hiện.
+     */
+    public function inventoryTransactions(): HasMany
+    {
+        return $this->hasMany(
+            InventoryTransaction::class,
+            'performed_by'
+        );
+    }
+
+    /**
+     * Các hóa đơn do STAFF / ADMIN lập.
+     */
+    public function createdInvoices(): HasMany
+    {
+        return $this->hasMany(
+            Invoice::class,
+            'created_by'
+        );
     }
 }
