@@ -84,6 +84,46 @@ class GeminiProvider implements LlmProvider
             );
 
 
+        /*
+         * Không cần sửa config/ai.php.
+         *
+         * Nếu chưa khai báo các key này,
+         * hệ thống sử dụng default:
+         *
+         * max_attempts = 2
+         * base delay = 800 ms
+         * max acceptable Retry-After = 3 giây
+         */
+        $maxAttempts =
+            max(
+                1,
+                (int) config(
+                    'ai.providers.gemini.max_attempts',
+                    2
+                )
+            );
+
+
+        $retryBaseDelayMs =
+            max(
+                100,
+                (int) config(
+                    'ai.providers.gemini.retry_base_delay_ms',
+                    800
+                )
+            );
+
+
+        $maxRetryDelaySeconds =
+            max(
+                0,
+                (float) config(
+                    'ai.providers.gemini.retry_max_delay_seconds',
+                    3
+                )
+            );
+
+
         $endpoint =
             $baseUrl
             . '/models/'
@@ -98,40 +138,139 @@ class GeminiProvider implements LlmProvider
             );
 
 
-        try {
-            $response =
-                Http::acceptJson()
-                    ->asJson()
-                    ->withHeaders([
-                        'x-goog-api-key' =>
-                            $apiKey,
-                    ])
-                    ->connectTimeout(
-                        $connectTimeout
-                    )
-                    ->timeout(
-                        $timeout
-                    )
-                    ->post(
-                        $endpoint,
-                        $payload
+        $response = null;
+
+        $attempt = 0;
+
+
+        while ($attempt < $maxAttempts) {
+            $attempt++;
+
+
+            try {
+                $response =
+                    Http::acceptJson()
+                        ->asJson()
+                        ->withHeaders([
+                            'x-goog-api-key' =>
+                                $apiKey,
+                        ])
+                        ->connectTimeout(
+                            $connectTimeout
+                        )
+                        ->timeout(
+                            $timeout
+                        )
+                        ->post(
+                            $endpoint,
+                            $payload
+                        );
+            } catch (
+                ConnectionException $exception
+            ) {
+                /*
+                 * Mất kết nối / timeout:
+                 * retry ngắn nếu còn lượt.
+                 */
+                if ($attempt < $maxAttempts) {
+                    $this->sleepMilliseconds(
+                        min(
+                            (int)
+                            (
+                                $retryBaseDelayMs
+                                * $attempt
+                            ),
+                            2500
+                        )
                     );
-        } catch (ConnectionException $exception) {
-            throw new RuntimeException(
-                'Không thể kết nối tới Gemini API.',
-                previous: $exception
-            );
-        } catch (Throwable $exception) {
-            throw new RuntimeException(
-                'Đã xảy ra lỗi khi gọi Gemini API.',
-                previous: $exception
+
+                    continue;
+                }
+
+
+                throw new RuntimeException(
+                    'Không thể kết nối tới Gemini API.',
+                    previous: $exception
+                );
+            } catch (Throwable $exception) {
+                throw new RuntimeException(
+                    'Đã xảy ra lỗi khi gọi Gemini API.',
+                    previous: $exception
+                );
+            }
+
+
+            /*
+             * Thành công:
+             * thoát retry loop.
+             */
+            if ($response->successful()) {
+                break;
+            }
+
+
+            /*
+             * Chỉ retry với lỗi tạm thời:
+             *
+             * - 429
+             * - 5xx
+             *
+             * Nhưng 429 yêu cầu chờ quá lâu
+             * thì fallback ngay thay vì giữ
+             * request web treo hàng chục giây.
+             */
+            if (
+                $this->shouldRetry(
+                    $response,
+                    $attempt,
+                    $maxAttempts,
+                    $maxRetryDelaySeconds
+                )
+            ) {
+                $delayMs =
+                    $this
+                        ->calculateRetryDelayMilliseconds(
+                            $response,
+                            $attempt,
+                            $retryBaseDelayMs,
+                            $maxRetryDelaySeconds
+                        );
+
+
+                $this->sleepMilliseconds(
+                    $delayMs
+                );
+
+
+                continue;
+            }
+
+
+            /*
+             * Không nên retry hoặc đã hết lượt.
+             */
+            $this->ensureSuccessfulResponse(
+                $response
             );
         }
 
 
-        $this->ensureSuccessfulResponse(
-            $response
-        );
+        if (
+            !$response
+            ||
+            !$response->successful()
+        ) {
+            if ($response) {
+                $this->ensureSuccessfulResponse(
+                    $response
+                );
+            }
+
+
+            throw new RuntimeException(
+                'Gemini API không trả về phản hồi hợp lệ.'
+            );
+        }
 
 
         $data =
@@ -233,6 +372,9 @@ class GeminiProvider implements LlmProvider
                         $data,
                         'usageMetadata.thoughtsTokenCount'
                     ),
+
+                'attempts' =>
+                    $attempt,
             ],
         );
     }
@@ -359,13 +501,6 @@ class GeminiProvider implements LlmProvider
         }
 
 
-        /*
-         * Chỉ gửi temperature khi caller
-         * chủ động truyền vào options.
-         *
-         * Không ép temperature mặc định
-         * cho Gemini 3.x.
-         */
         if (
             array_key_exists(
                 'temperature',
@@ -389,8 +524,253 @@ class GeminiProvider implements LlmProvider
 
 
     /**
-     * Kiểm tra HTTP error,
-     * rate limit và API error.
+     * Có nên retry response này không?
+     */
+    private function shouldRetry(
+        Response $response,
+        int $attempt,
+        int $maxAttempts,
+        float $maxRetryDelaySeconds
+    ): bool {
+        if ($attempt >= $maxAttempts) {
+            return false;
+        }
+
+
+        $status =
+            $response->status();
+
+
+        if (
+            $status !== 429
+            &&
+            $status < 500
+        ) {
+            return false;
+        }
+
+
+        /*
+         * Với 429, nếu Google nói:
+         *
+         * "retry in 23s"
+         *
+         * thì không bắt người dùng chờ.
+         * ChatService sẽ fallback ngay.
+         */
+        if ($status === 429) {
+            $suggestedDelay =
+                $this
+                    ->extractSuggestedRetryDelaySeconds(
+                        $response
+                    );
+
+
+            if (
+                $suggestedDelay !== null
+                &&
+                $suggestedDelay
+                >
+                $maxRetryDelaySeconds
+            ) {
+                return false;
+            }
+        }
+
+
+        return true;
+    }
+
+
+    /**
+     * Tính thời gian retry.
+     */
+    private function calculateRetryDelayMilliseconds(
+        Response $response,
+        int $attempt,
+        int $baseDelayMs,
+        float $maxRetryDelaySeconds
+    ): int {
+        $suggestedDelay =
+            $this
+                ->extractSuggestedRetryDelaySeconds(
+                    $response
+                );
+
+
+        if (
+            $suggestedDelay !== null
+            &&
+            $suggestedDelay >= 0
+            &&
+            $suggestedDelay
+            <=
+            $maxRetryDelaySeconds
+        ) {
+            return max(
+                100,
+                (int)
+                round(
+                    $suggestedDelay
+                    * 1000
+                )
+            );
+        }
+
+
+        /*
+         * Exponential-ish backoff:
+         *
+         * attempt 1 -> 800 ms
+         * attempt 2 -> 1600 ms
+         */
+        $delay =
+            $baseDelayMs
+            *
+            max(
+                1,
+                $attempt
+            );
+
+
+        $maxDelayMs =
+            max(
+                500,
+                (int)
+                round(
+                    $maxRetryDelaySeconds
+                    * 1000
+                )
+            );
+
+
+        return min(
+            $delay,
+            $maxDelayMs
+        );
+    }
+
+
+    /**
+     * Đọc Retry-After từ:
+     *
+     * - HTTP header
+     * - error.details.retryDelay
+     * - message "Please retry in 23.1s"
+     */
+    private function extractSuggestedRetryDelaySeconds(
+        Response $response
+    ): ?float {
+        $retryAfter =
+            $response->header(
+                'Retry-After'
+            );
+
+
+        if (
+            is_string($retryAfter)
+            &&
+            is_numeric(
+                trim($retryAfter)
+            )
+        ) {
+            return max(
+                0,
+                (float)
+                trim($retryAfter)
+            );
+        }
+
+
+        $data =
+            $response->json();
+
+
+        $details =
+            data_get(
+                $data,
+                'error.details',
+                []
+            );
+
+
+        if (is_array($details)) {
+            foreach ($details as $detail) {
+                if (!is_array($detail)) {
+                    continue;
+                }
+
+
+                $retryDelay =
+                    $detail[
+                        'retryDelay'
+                    ]
+                    ?? null;
+
+
+                if (
+                    is_string($retryDelay)
+                    &&
+                    preg_match(
+                        '/([0-9]+(?:\.[0-9]+)?)s/i',
+                        $retryDelay,
+                        $matches
+                    )
+                ) {
+                    return
+                        (float)
+                        $matches[1];
+                }
+            }
+        }
+
+
+        $apiMessage =
+            (string)
+            data_get(
+                $data,
+                'error.message',
+                ''
+            );
+
+
+        if (
+            preg_match(
+                '/retry\s+in\s+([0-9]+(?:\.[0-9]+)?)s/i',
+                $apiMessage,
+                $matches
+            )
+        ) {
+            return
+                (float)
+                $matches[1];
+        }
+
+
+        return null;
+    }
+
+
+    /**
+     * Sleep bằng millisecond.
+     */
+    private function sleepMilliseconds(
+        int $milliseconds
+    ): void {
+        if ($milliseconds <= 0) {
+            return;
+        }
+
+
+        usleep(
+            $milliseconds
+            * 1000
+        );
+    }
+
+
+    /**
+     * Kiểm tra HTTP error.
      */
     private function ensureSuccessfulResponse(
         Response $response

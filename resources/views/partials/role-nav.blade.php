@@ -137,7 +137,7 @@
 
         z-index: 2;
 
-        max-width: 1380px;
+        max-width: 1480px;
 
         margin: 0 auto;
 
@@ -147,7 +147,7 @@
 
         align-items: center;
 
-        gap: 22px;
+        gap: 18px;
     }
 
 
@@ -355,6 +355,8 @@
         justify-content: flex-end;
 
         gap: 10px;
+
+        min-width: 0;
     }
 
 
@@ -386,7 +388,7 @@
 
         min-height: 39px;
 
-        padding: 9px 12px;
+        padding: 9px 11px;
 
         display: inline-flex;
 
@@ -400,7 +402,7 @@
 
         text-decoration: none;
 
-        font-size: 13px;
+        font-size: 12px;
 
         font-weight: 650;
 
@@ -465,6 +467,122 @@
         box-shadow:
             0 0 12px
             rgba(103, 232, 249, 1);
+    }
+
+
+    /* =====================================================
+       AUTOCARE AI NAV ITEM
+       ===================================================== */
+
+    .app-nav-link.ai-nav-link {
+        color: #ecfeff;
+
+        border:
+            1px solid
+            rgba(103, 232, 249, 0.13);
+
+        background:
+            linear-gradient(
+                135deg,
+                rgba(34, 211, 238, 0.08),
+                rgba(124, 58, 237, 0.11)
+            );
+    }
+
+
+    .app-nav-link.ai-nav-link:hover {
+        color: white;
+
+        border-color:
+            rgba(103, 232, 249, 0.32);
+
+        background:
+            linear-gradient(
+                135deg,
+                rgba(34, 211, 238, 0.19),
+                rgba(99, 102, 241, 0.24)
+            );
+
+        box-shadow:
+            0 8px 22px
+            rgba(34, 211, 238, 0.12);
+    }
+
+
+    .app-nav-link.ai-nav-link.active {
+        color: white;
+
+        border-color:
+            rgba(165, 243, 252, 0.40);
+
+        background:
+            linear-gradient(
+                135deg,
+                #0891b2,
+                #2563eb 52%,
+                #6d28d9
+            );
+
+        box-shadow:
+            0 8px 24px
+            rgba(37, 99, 235, 0.32),
+
+            inset 0 0 0 1px
+            rgba(255, 255, 255, 0.12);
+    }
+
+
+    .ai-nav-icon {
+        color: #67e8f9;
+
+        font-size: 13px;
+
+        filter:
+            drop-shadow(
+                0 0 6px
+                rgba(103, 232, 249, 0.75)
+            );
+    }
+
+
+    .app-nav-link.ai-nav-link.active
+    .ai-nav-icon {
+        color: white;
+    }
+
+
+    .ai-nav-badge {
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        padding: 2px 5px;
+
+        border-radius: 999px;
+
+        color: #cffafe;
+
+        background:
+            rgba(34, 211, 238, 0.14);
+
+        font-size: 7px;
+
+        font-weight: 900;
+
+        letter-spacing: 0.04em;
+
+        text-transform: uppercase;
+    }
+
+
+    .app-nav-link.ai-nav-link.active
+    .ai-nav-badge {
+        color: white;
+
+        background:
+            rgba(255, 255, 255, 0.15);
     }
 
 
@@ -644,6 +762,195 @@
 
         transform:
             translateY(-1px);
+    }
+
+
+    /* =====================================================
+       CUSTOMER AI FLOATING LAUNCHER
+       ===================================================== */
+
+    .autocare-ai-launcher {
+        position: fixed;
+
+        right: 24px;
+        bottom: 24px;
+
+        z-index: 1040;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 11px;
+
+        min-height: 58px;
+
+        padding:
+            9px 17px 9px 9px;
+
+        overflow: hidden;
+
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.30);
+
+        border-radius: 999px;
+
+        color: white;
+
+        text-decoration: none;
+
+        background:
+            linear-gradient(
+                135deg,
+                #0891b2 0%,
+                #2563eb 48%,
+                #6d28d9 100%
+            );
+
+        box-shadow:
+            0 17px 42px
+            rgba(37, 99, 235, 0.32),
+
+            0 0 0 5px
+            rgba(59, 130, 246, 0.07);
+
+        transition:
+            transform 0.25s ease,
+            box-shadow 0.25s ease;
+
+        isolation: isolate;
+    }
+
+
+    .autocare-ai-launcher::before {
+        content: "";
+
+        position: absolute;
+
+        width: 90px;
+        height: 90px;
+
+        top: -60px;
+        right: 15px;
+
+        border-radius: 50%;
+
+        background:
+            radial-gradient(
+                circle,
+                rgba(255, 255, 255, 0.34),
+                transparent 67%
+            );
+
+        pointer-events: none;
+
+        z-index: -1;
+    }
+
+
+    .autocare-ai-launcher:hover {
+        color: white;
+
+        transform:
+            translateY(-4px)
+            scale(1.02);
+
+        box-shadow:
+            0 23px 52px
+            rgba(37, 99, 235, 0.42),
+
+            0 0 0 7px
+            rgba(34, 211, 238, 0.08);
+    }
+
+
+    .autocare-ai-launcher-icon {
+        position: relative;
+
+        width: 42px;
+        height: 42px;
+
+        flex: 0 0 auto;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 50%;
+
+        color: white;
+
+        background:
+            rgba(255, 255, 255, 0.15);
+
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.18);
+
+        font-size: 19px;
+
+        box-shadow:
+            inset 0 0 18px
+            rgba(255, 255, 255, 0.08);
+    }
+
+
+    .autocare-ai-launcher-icon::after {
+        content: "";
+
+        position: absolute;
+
+        width: 9px;
+        height: 9px;
+
+        right: 0;
+        bottom: 1px;
+
+        border-radius: 50%;
+
+        background: #4ade80;
+
+        border: 2px solid #2563eb;
+
+        box-shadow:
+            0 0 9px
+            rgba(74, 222, 128, 0.85);
+    }
+
+
+    .autocare-ai-launcher-content {
+        display: flex;
+
+        flex-direction: column;
+
+        line-height: 1.08;
+    }
+
+
+    .autocare-ai-launcher-label {
+        color: white;
+
+        font-size: 12px;
+
+        font-weight: 900;
+
+        white-space: nowrap;
+    }
+
+
+    .autocare-ai-launcher-subtitle {
+        margin-top: 4px;
+
+        color: #cffafe;
+
+        font-size: 8px;
+
+        font-weight: 700;
+
+        white-space: nowrap;
     }
 
 
@@ -1015,7 +1322,7 @@
        RESPONSIVE
        ===================================================== */
 
-    @media (max-width: 1150px) {
+    @media (max-width: 1280px) {
 
         .app-navbar-inner {
             flex-wrap: wrap;
@@ -1065,6 +1372,8 @@
             width: 100%;
 
             min-height: 44px;
+
+            font-size: 13px;
         }
 
 
@@ -1073,8 +1382,7 @@
 
             margin-left: 0;
 
-            padding:
-                12px;
+            padding: 12px;
 
             justify-content:
                 space-between;
@@ -1125,6 +1433,32 @@
         .logout-modal-actions {
             grid-template-columns:
                 1fr;
+        }
+
+
+        .autocare-ai-launcher {
+            right: 15px;
+            bottom: 15px;
+
+            width: 54px;
+            height: 54px;
+
+            min-height: 54px;
+
+            padding: 5px;
+
+            justify-content: center;
+        }
+
+
+        .autocare-ai-launcher-icon {
+            width: 42px;
+            height: 42px;
+        }
+
+
+        .autocare-ai-launcher-content {
+            display: none;
         }
 
     }
@@ -1301,6 +1635,40 @@
                     >
                         <span class="nav-dot"></span>
                         Hóa đơn
+                    </a>
+
+
+                    <a
+                        href="{{ route(
+                            'chat.index'
+                        ) }}"
+                        class="
+                            app-nav-link
+                            ai-nav-link
+                            {{
+                                request()->routeIs(
+                                    'chat.*'
+                                )
+                                    ? 'active'
+                                    : ''
+                            }}
+                        "
+                    >
+
+                        <i
+                            class="
+                                bi
+                                bi-stars
+                                ai-nav-icon
+                            "
+                        ></i>
+
+                        AutoCare AI
+
+                        <span class="ai-nav-badge">
+                            AI
+                        </span>
+
                     </a>
 
 
@@ -1498,6 +1866,46 @@
     </div>
 
 </header>
+
+
+{{-- =====================================================
+    CUSTOMER AI FLOATING LAUNCHER
+===================================================== --}}
+@if (
+    $roleCode === 'CUSTOMER'
+    &&
+    !request()->routeIs('chat.*')
+)
+
+    <a
+        href="{{ route('chat.index') }}"
+        class="autocare-ai-launcher"
+        title="Mở AutoCare AI"
+        aria-label="Mở trợ lý AutoCare AI"
+    >
+
+        <span class="autocare-ai-launcher-icon">
+
+            <i class="bi bi-robot"></i>
+
+        </span>
+
+
+        <span class="autocare-ai-launcher-content">
+
+            <span class="autocare-ai-launcher-label">
+                AutoCare AI
+            </span>
+
+            <span class="autocare-ai-launcher-subtitle">
+                Hỏi trợ lý bảo dưỡng
+            </span>
+
+        </span>
+
+    </a>
+
+@endif
 
 
 {{-- =====================================================

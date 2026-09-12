@@ -18,6 +18,19 @@ class ChatController extends Controller
     public function index(
         Request $request
     ) {
+        /*
+        |--------------------------------------------------------------------------
+        | NEW CONVERSATION
+        |--------------------------------------------------------------------------
+        |
+        | ?new=1:
+        |
+        | - bỏ conversation hiện tại khỏi session
+        | - KHÔNG xóa dữ liệu trong database
+        | - giao diện trở về trạng thái chat mới
+        |
+        */
+
         if (
             $request->boolean(
                 'new'
@@ -28,13 +41,41 @@ class ChatController extends Controller
                 ->forget(
                     'chat_conversation_id'
                 );
+
+
+            return view(
+                'chat.index',
+                [
+                    'conversation' =>
+                        null,
+
+                    'messages' =>
+                        collect(),
+                ]
+            );
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CURRENT SESSION CONVERSATION
+        |--------------------------------------------------------------------------
+        |
+        | Chỉ hiển thị conversation nếu
+        | conversation_id còn tồn tại trong
+        | session hiện tại.
+        |
+        | KHÔNG tự động load conversation
+        | cũ từ database.
+        |
+        */
 
         $conversation =
             $this->resolveConversation(
                 $request,
                 false
             );
+
 
         $messages =
             $conversation
@@ -48,6 +89,7 @@ class ChatController extends Controller
                     )
                     ->get()
                 : collect();
+
 
         return view(
             'chat.index',
@@ -79,8 +121,10 @@ class ChatController extends Controller
                 ],
             ]);
 
+
         $user =
             $request->user();
+
 
         $message =
             trim(
@@ -89,11 +133,24 @@ class ChatController extends Controller
                 ]
             );
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESOLVE CURRENT CONVERSATION
+        |--------------------------------------------------------------------------
+        |
+        | Nếu session chưa có conversation:
+        | tạo conversation mới khi user gửi
+        | message đầu tiên.
+        |
+        */
+
         $conversation =
             $this->resolveConversation(
                 $request,
                 true
             );
+
 
         /*
         |--------------------------------------------------------------------------
@@ -118,20 +175,30 @@ class ChatController extends Controller
                         null,
                 ]);
 
+
         /*
         |--------------------------------------------------------------------------
         | ASSISTANT RESPONSE
         |--------------------------------------------------------------------------
+        |
+        | Truyền conversation +
+        | current user message id
+        | để ChatService chỉ lấy history
+        | trước message hiện tại.
+        |
         */
 
         try {
             $result =
                 $chatService->reply(
                     $message,
-                    $user
+                    $user,
+                    $conversation,
+                    $userMessage->id
                 );
         } catch (Throwable $exception) {
             report($exception);
+
 
             $result = [
                 'content' =>
@@ -143,7 +210,8 @@ class ChatController extends Controller
                         ]
                     ),
 
-                'sources' => [],
+                'sources' =>
+                    [],
 
                 'mode' =>
                     'error',
@@ -161,6 +229,7 @@ class ChatController extends Controller
                     [],
             ];
         }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -182,6 +251,7 @@ class ChatController extends Controller
                 ?? [],
         ];
 
+
         if (
             !empty(
                 $result[
@@ -196,6 +266,7 @@ class ChatController extends Controller
                     'provider'
                 ];
         }
+
 
         if (
             !empty(
@@ -212,6 +283,7 @@ class ChatController extends Controller
                 ];
         }
 
+
         if (
             !empty(
                 $result[
@@ -226,6 +298,7 @@ class ChatController extends Controller
                     'llm_metadata'
                 ];
         }
+
 
         $assistantMessage =
             $conversation
@@ -259,9 +332,10 @@ class ChatController extends Controller
                             : null,
                 ]);
 
+
         /*
         |--------------------------------------------------------------------------
-        | CONVERSATION
+        | UPDATE CONVERSATION
         |--------------------------------------------------------------------------
         */
 
@@ -273,11 +347,14 @@ class ChatController extends Controller
                 );
         }
 
+
         $conversation
             ->last_message_at =
             now();
 
+
         $conversation->save();
+
 
         /*
         |--------------------------------------------------------------------------
@@ -363,7 +440,25 @@ class ChatController extends Controller
 
 
     /**
-     * Conversation hiện tại.
+     * Resolve conversation của
+     * phiên đăng nhập hiện tại.
+     *
+     * QUY TẮC:
+     *
+     * 1. Có chat_conversation_id trong
+     *    session và thuộc user hiện tại:
+     *    → tiếp tục conversation đó.
+     *
+     * 2. Không có conversation trong
+     *    session và createIfMissing=false:
+     *    → trả null.
+     *
+     * 3. Không có conversation trong
+     *    session và createIfMissing=true:
+     *    → tạo conversation mới.
+     *
+     * Tuyệt đối không tự lấy conversation
+     * gần nhất từ database.
      */
     private function resolveConversation(
         Request $request,
@@ -372,6 +467,7 @@ class ChatController extends Controller
         $user =
             $request->user();
 
+
         $conversationId =
             $request
                 ->session()
@@ -379,10 +475,13 @@ class ChatController extends Controller
                     'chat_conversation_id'
                 );
 
+
         /*
-         * Chỉ được mở conversation
-         * của chính user hiện tại.
-         */
+        |--------------------------------------------------------------------------
+        | CURRENT SESSION CONVERSATION
+        |--------------------------------------------------------------------------
+        */
+
         if ($conversationId) {
             $conversation =
                 ChatConversation::query()
@@ -396,10 +495,17 @@ class ChatController extends Controller
                     )
                     ->first();
 
+
             if ($conversation) {
                 return $conversation;
             }
 
+
+            /*
+             * Session có ID không hợp lệ
+             * hoặc conversation không thuộc
+             * user hiện tại.
+             */
             $request
                 ->session()
                 ->forget(
@@ -407,41 +513,37 @@ class ChatController extends Controller
                 );
         }
 
+
         /*
-         * GET /chat:
-         * mở cuộc hội thoại gần nhất.
-         */
+        |--------------------------------------------------------------------------
+        | DISPLAY EMPTY CHAT
+        |--------------------------------------------------------------------------
+        |
+        | GET /chat khi session không có
+        | conversation:
+        |
+        | trả null.
+        |
+        | Không được tự load conversation
+        | cũ từ database.
+        |
+        */
+
         if (!$createIfMissing) {
-            $conversation =
-                ChatConversation::query()
-                    ->where(
-                        'user_id',
-                        $user->id
-                    )
-                    ->latest(
-                        'last_message_at'
-                    )
-                    ->latest('id')
-                    ->first();
-
-            if ($conversation) {
-                $request
-                    ->session()
-                    ->put(
-                        'chat_conversation_id',
-                        $conversation->id
-                    );
-
-                return $conversation;
-            }
-
             return null;
         }
 
+
         /*
-         * Tin nhắn đầu tiên:
-         * tạo conversation mới.
-         */
+        |--------------------------------------------------------------------------
+        | CREATE NEW CONVERSATION
+        |--------------------------------------------------------------------------
+        |
+        | Chỉ tạo khi user thực sự gửi
+        | message đầu tiên.
+        |
+        */
+
         $conversation =
             ChatConversation::create([
                 'user_id' =>
@@ -459,12 +561,19 @@ class ChatController extends Controller
                     now(),
             ]);
 
+
+        /*
+         * Ghi conversation vào session
+         * hiện tại để refresh trang vẫn
+         * tiếp tục đúng conversation.
+         */
         $request
             ->session()
             ->put(
                 'chat_conversation_id',
                 $conversation->id
             );
+
 
         return $conversation;
     }

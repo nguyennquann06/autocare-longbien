@@ -28,16 +28,57 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Conversation Memory
+    |--------------------------------------------------------------------------
+    |
+    | Chỉ giữ một lượng lịch sử ngắn
+    | trong prompt để tránh tăng token
+    | vô hạn khi conversation dài.
+    |
+    */
+
+    'conversation' => [
+
+        /*
+         * Số message gần nhất
+         * đưa trực tiếp vào LLM.
+         *
+         * 8 messages ~ khoảng 4 lượt hỏi đáp.
+         */
+        'history_message_limit' => (int) env(
+            'AI_HISTORY_MESSAGE_LIMIT',
+            8
+        ),
+
+        /*
+         * Số message gần nhất dùng
+         * hỗ trợ intent / pronoun resolution.
+         */
+        'routing_history_message_limit' => (int) env(
+            'AI_ROUTING_HISTORY_MESSAGE_LIMIT',
+            4
+        ),
+
+        /*
+         * Giới hạn ký tự cho từng message
+         * trước khi đưa vào prompt.
+         */
+        'max_message_chars' => (int) env(
+            'AI_HISTORY_MAX_MESSAGE_CHARS',
+            1800
+        ),
+
+    ],
+
+
+    /*
+    |--------------------------------------------------------------------------
     | RAG Settings
     |--------------------------------------------------------------------------
     */
 
     'rag' => [
 
-        /*
-         * Số tài liệu tối đa
-         * đưa vào LLM context.
-         */
         'top_k' => (int) env(
             'AI_RAG_TOP_K',
             5
@@ -45,16 +86,6 @@ return [
 
         'active_only' => true,
 
-
-        /*
-         * Hybrid Retrieval
-         *
-         * Semantic giữ vai trò chính.
-         * Lexical hỗ trợ các trường hợp:
-         * - tên dịch vụ cụ thể
-         * - từ khóa chính xác
-         * - giá / mã / tên nghiệp vụ
-         */
         'semantic_weight' => (float) env(
             'AI_RAG_SEMANTIC_WEIGHT',
             0.75
@@ -65,21 +96,11 @@ return [
             0.25
         ),
 
-
-        /*
-         * Cosine similarity tối thiểu
-         * để coi một document là
-         * có liên quan về ngữ nghĩa.
-         */
         'semantic_min_score' => (float) env(
             'AI_RAG_SEMANTIC_MIN_SCORE',
             0.35
         ),
 
-
-        /*
-         * Điểm hybrid tối thiểu.
-         */
         'hybrid_min_score' => (float) env(
             'AI_RAG_HYBRID_MIN_SCORE',
             0.20
