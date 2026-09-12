@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CustomerDashboardController;
 use App\Http\Controllers\CustomerInvoiceController;
 use App\Http\Controllers\MaintenanceHistoryController;
@@ -82,6 +83,30 @@ Route::post(
 )
     ->middleware('auth')
     ->name('logout');
+
+
+/*
+|--------------------------------------------------------------------------
+| AI CHATBOT
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/chat',
+    [ChatController::class, 'index']
+)
+    ->middleware('auth')
+    ->name('chat.index');
+
+Route::post(
+    '/chat/messages',
+    [
+        ChatController::class,
+        'storeMessage',
+    ]
+)
+    ->middleware('auth')
+    ->name('chat.messages.store');
 
 
 /*
