@@ -18,12 +18,11 @@ class ChatController extends Controller
     public function index(
         Request $request
     ) {
-        /*
-         * Tạo cuộc trò chuyện mới.
-         *
-         * GET /chat?new=1
-         */
-        if ($request->boolean('new')) {
+        if (
+            $request->boolean(
+                'new'
+            )
+        ) {
             $request
                 ->session()
                 ->forget(
@@ -31,23 +30,24 @@ class ChatController extends Controller
                 );
         }
 
-
         $conversation =
             $this->resolveConversation(
                 $request,
                 false
             );
 
-
         $messages =
             $conversation
                 ? $conversation
                     ->messages()
-                    ->orderBy('created_at')
-                    ->orderBy('id')
+                    ->orderBy(
+                        'created_at'
+                    )
+                    ->orderBy(
+                        'id'
+                    )
                     ->get()
                 : collect();
-
 
         return view(
             'chat.index',
@@ -63,8 +63,8 @@ class ChatController extends Controller
 
 
     /**
-     * Nhận tin nhắn người dùng và
-     * trả về phản hồi chatbot.
+     * Nhận tin nhắn và trả
+     * phản hồi AutoCare AI.
      */
     public function storeMessage(
         Request $request,
@@ -79,15 +79,15 @@ class ChatController extends Controller
                 ],
             ]);
 
-
         $user =
             $request->user();
 
         $message =
             trim(
-                $validated['message']
+                $validated[
+                    'message'
+                ]
             );
-
 
         $conversation =
             $this->resolveConversation(
@@ -95,10 +95,12 @@ class ChatController extends Controller
                 true
             );
 
-
         /*
-         * Lưu tin nhắn người dùng.
-         */
+        |--------------------------------------------------------------------------
+        | USER MESSAGE
+        |--------------------------------------------------------------------------
+        */
+
         $userMessage =
             $conversation
                 ->messages()
@@ -116,6 +118,11 @@ class ChatController extends Controller
                         null,
                 ]);
 
+        /*
+        |--------------------------------------------------------------------------
+        | ASSISTANT RESPONSE
+        |--------------------------------------------------------------------------
+        */
 
         try {
             $result =
@@ -123,30 +130,103 @@ class ChatController extends Controller
                     $message,
                     $user
                 );
-        }
-        catch (Throwable $exception) {
+        } catch (Throwable $exception) {
             report($exception);
 
-
             $result = [
-                'content' => implode(
-                    ' ',
-                    [
-                        'AutoCare AI đang gặp sự cố khi xử lý câu hỏi.',
-                        'Vui lòng thử lại sau ít phút.',
-                    ]
-                ),
+                'content' =>
+                    implode(
+                        ' ',
+                        [
+                            'AutoCare AI đang gặp sự cố khi xử lý câu hỏi.',
+                            'Vui lòng thử lại sau ít phút.',
+                        ]
+                    ),
 
                 'sources' => [],
 
-                'mode' => 'error',
+                'mode' =>
+                    'error',
+
+                'provider' =>
+                    null,
+
+                'model' =>
+                    null,
+
+                'token_count' =>
+                    null,
+
+                'llm_metadata' =>
+                    [],
             ];
         }
 
-
         /*
-         * Lưu phản hồi chatbot.
-         */
+        |--------------------------------------------------------------------------
+        | ASSISTANT MESSAGE
+        |--------------------------------------------------------------------------
+        */
+
+        $assistantMetadata = [
+            'mode' =>
+                $result[
+                    'mode'
+                ]
+                ?? 'unknown',
+
+            'sources' =>
+                $result[
+                    'sources'
+                ]
+                ?? [],
+        ];
+
+        if (
+            !empty(
+                $result[
+                    'provider'
+                ]
+            )
+        ) {
+            $assistantMetadata[
+                'provider'
+            ] =
+                $result[
+                    'provider'
+                ];
+        }
+
+        if (
+            !empty(
+                $result[
+                    'model'
+                ]
+            )
+        ) {
+            $assistantMetadata[
+                'model'
+            ] =
+                $result[
+                    'model'
+                ];
+        }
+
+        if (
+            !empty(
+                $result[
+                    'llm_metadata'
+                ]
+            )
+        ) {
+            $assistantMetadata[
+                'llm'
+            ] =
+                $result[
+                    'llm_metadata'
+                ];
+        }
+
         $assistantMessage =
             $conversation
                 ->messages()
@@ -155,27 +235,36 @@ class ChatController extends Controller
                         ChatMessage::ROLE_ASSISTANT,
 
                     'content' =>
-                        $result['content'],
+                        $result[
+                            'content'
+                        ],
 
-                    'metadata' => [
-                        'mode' =>
-                            $result['mode']
-                            ?? 'fallback',
-
-                        'sources' =>
-                            $result['sources']
-                            ?? [],
-                    ],
+                    'metadata' =>
+                        $assistantMetadata,
 
                     'token_count' =>
-                        null,
+                        isset(
+                            $result[
+                                'token_count'
+                            ]
+                        )
+                        &&
+                        $result[
+                            'token_count'
+                        ] !== null
+                            ? (int)
+                                $result[
+                                    'token_count'
+                                ]
+                            : null,
                 ]);
 
-
         /*
-         * Tin nhắn đầu tiên được dùng
-         * làm tiêu đề cuộc trò chuyện.
-         */
+        |--------------------------------------------------------------------------
+        | CONVERSATION
+        |--------------------------------------------------------------------------
+        */
+
         if (!$conversation->title) {
             $conversation->title =
                 Str::limit(
@@ -184,15 +273,21 @@ class ChatController extends Controller
                 );
         }
 
-
-        $conversation->last_message_at =
+        $conversation
+            ->last_message_at =
             now();
 
         $conversation->save();
 
+        /*
+        |--------------------------------------------------------------------------
+        | JSON RESPONSE
+        |--------------------------------------------------------------------------
+        */
 
         return response()->json([
-            'success' => true,
+            'success' =>
+                true,
 
             'conversation_id' =>
                 $conversation->id,
@@ -210,7 +305,9 @@ class ChatController extends Controller
                 'created_at' =>
                     $userMessage
                         ->created_at
-                        ->format('H:i'),
+                        ->format(
+                            'H:i'
+                        ),
             ],
 
             'assistant_message' => [
@@ -221,27 +318,52 @@ class ChatController extends Controller
                     $assistantMessage->role,
 
                 'content' =>
-                    $assistantMessage->content,
+                    $assistantMessage
+                        ->content,
 
                 'created_at' =>
                     $assistantMessage
                         ->created_at
-                        ->format('H:i'),
+                        ->format(
+                            'H:i'
+                        ),
 
                 'sources' =>
-                    $result['sources']
+                    $result[
+                        'sources'
+                    ]
                     ?? [],
 
                 'mode' =>
-                    $result['mode']
-                    ?? 'fallback',
+                    $result[
+                        'mode'
+                    ]
+                    ?? 'unknown',
+
+                'provider' =>
+                    $result[
+                        'provider'
+                    ]
+                    ?? null,
+
+                'model' =>
+                    $result[
+                        'model'
+                    ]
+                    ?? null,
+
+                'token_count' =>
+                    $result[
+                        'token_count'
+                    ]
+                    ?? null,
             ],
         ]);
     }
 
 
     /**
-     * Lấy conversation hiện tại.
+     * Conversation hiện tại.
      */
     private function resolveConversation(
         Request $request,
@@ -250,7 +372,6 @@ class ChatController extends Controller
         $user =
             $request->user();
 
-
         $conversationId =
             $request
                 ->session()
@@ -258,11 +379,9 @@ class ChatController extends Controller
                     'chat_conversation_id'
                 );
 
-
         /*
-         * Ưu tiên conversation đang lưu
-         * trong session nhưng bắt buộc
-         * phải thuộc user hiện tại.
+         * Chỉ được mở conversation
+         * của chính user hiện tại.
          */
         if ($conversationId) {
             $conversation =
@@ -277,11 +396,9 @@ class ChatController extends Controller
                     )
                     ->first();
 
-
             if ($conversation) {
                 return $conversation;
             }
-
 
             $request
                 ->session()
@@ -290,10 +407,9 @@ class ChatController extends Controller
                 );
         }
 
-
         /*
-         * Khi vào /chat bình thường,
-         * mở lại cuộc hội thoại gần nhất.
+         * GET /chat:
+         * mở cuộc hội thoại gần nhất.
          */
         if (!$createIfMissing) {
             $conversation =
@@ -308,7 +424,6 @@ class ChatController extends Controller
                     ->latest('id')
                     ->first();
 
-
             if ($conversation) {
                 $request
                     ->session()
@@ -317,18 +432,15 @@ class ChatController extends Controller
                         $conversation->id
                     );
 
-
                 return $conversation;
             }
-
 
             return null;
         }
 
-
         /*
-         * Tạo conversation khi user
-         * gửi tin nhắn đầu tiên.
+         * Tin nhắn đầu tiên:
+         * tạo conversation mới.
          */
         $conversation =
             ChatConversation::create([
@@ -347,14 +459,12 @@ class ChatController extends Controller
                     now(),
             ]);
 
-
         $request
             ->session()
             ->put(
                 'chat_conversation_id',
                 $conversation->id
             );
-
 
         return $conversation;
     }

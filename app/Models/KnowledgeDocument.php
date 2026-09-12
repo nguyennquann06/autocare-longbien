@@ -22,6 +22,7 @@ class KnowledgeDocument extends Model
     protected function casts(): array
     {
         return [
+            'embedding' => 'array',
             'metadata' => 'array',
             'is_active' => 'boolean',
         ];
