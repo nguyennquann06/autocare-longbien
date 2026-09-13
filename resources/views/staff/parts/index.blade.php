@@ -58,7 +58,11 @@
         margin: 0;
         color: white;
         font-size:
-            clamp(2rem, 4vw, 3.3rem);
+            clamp(
+                2rem,
+                4vw,
+                3.3rem
+            );
         font-weight: 900;
         letter-spacing: -.055em;
     }
@@ -73,7 +77,10 @@
     .inventory-summary {
         display: grid;
         grid-template-columns:
-            repeat(4, minmax(0, 1fr));
+            repeat(
+                4,
+                minmax(0, 1fr)
+            );
         gap: 15px;
         margin-bottom: 22px;
     }
@@ -163,7 +170,9 @@
 
     .inventory-table td {
         padding: 14px;
-        border-bottom: 1px solid #edf1f6;
+        border-bottom:
+            1px solid
+            #edf1f6;
         color: #334155;
         font-size: 12px;
         vertical-align: middle;
@@ -201,6 +210,18 @@
             );
         font-size: 10px;
         font-weight: 850;
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease;
+    }
+
+    .inventory-action:hover {
+        color: white;
+        transform:
+            translateY(-2px);
+        box-shadow:
+            0 8px 20px
+            rgba(37, 99, 235, .22);
     }
 
     .inventory-back {
@@ -216,13 +237,17 @@
     @media (max-width: 991px) {
         .inventory-summary {
             grid-template-columns:
-                repeat(2, 1fr);
+                repeat(
+                    2,
+                    1fr
+                );
         }
     }
 
     @media (max-width: 575px) {
         .inventory-summary {
-            grid-template-columns: 1fr;
+            grid-template-columns:
+                1fr;
         }
     }
 </style>
@@ -234,7 +259,10 @@
 
 <div class="container inventory-page">
 
-    <section class="inventory-hero" data-reveal="zoom">
+    <section
+        class="inventory-hero"
+        data-reveal="zoom"
+    >
 
         <div class="inventory-hero-content">
 
@@ -243,9 +271,12 @@
             </h1>
 
             <p>
+
                 Theo dõi danh mục phụ tùng,
-                giá nhập, giá bán và số lượng tồn kho
-                phục vụ quá trình bảo dưỡng ô tô.
+                giá nhập, giá bán và số lượng
+                tồn kho phục vụ quá trình
+                bảo dưỡng ô tô.
+
             </p>
 
         </div>
@@ -253,30 +284,18 @@
     </section>
 
 
-    @if (session('success'))
-
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-
-    @endif
-
-
-    @if (session('error'))
-
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-
-    @endif
-
-
     <section class="inventory-summary">
 
-        <div class="summary-card" data-reveal data-tilt>
+        <div
+            class="summary-card"
+            data-reveal
+            data-tilt
+        >
 
             <div class="summary-icon">
+
                 <i class="bi bi-box-seam"></i>
+
             </div>
 
             <div class="summary-label">
@@ -290,10 +309,16 @@
         </div>
 
 
-        <div class="summary-card" data-reveal data-tilt>
+        <div
+            class="summary-card"
+            data-reveal
+            data-tilt
+        >
 
             <div class="summary-icon">
+
                 <i class="bi bi-boxes"></i>
+
             </div>
 
             <div class="summary-label">
@@ -301,13 +326,26 @@
             </div>
 
             <div class="summary-value">
-                {{ number_format($totalStockQuantity) }}
+
+                {{
+                    number_format(
+                        $totalStockQuantity,
+                        0,
+                        ',',
+                        '.'
+                    )
+                }}
+
             </div>
 
         </div>
 
 
-        <div class="summary-card" data-reveal data-tilt>
+        <div
+            class="summary-card"
+            data-reveal
+            data-tilt
+        >
 
             <div
                 class="summary-icon"
@@ -316,7 +354,9 @@
                     background: #fff7ed;
                 "
             >
+
                 <i class="bi bi-exclamation-triangle"></i>
+
             </div>
 
             <div class="summary-label">
@@ -330,7 +370,11 @@
         </div>
 
 
-        <div class="summary-card" data-reveal data-tilt>
+        <div
+            class="summary-card"
+            data-reveal
+            data-tilt
+        >
 
             <div
                 class="summary-icon"
@@ -339,7 +383,9 @@
                     background: #ecfdf5;
                 "
             >
+
                 <i class="bi bi-cash-stack"></i>
+
             </div>
 
             <div class="summary-label">
@@ -355,7 +401,8 @@
                         ',',
                         '.'
                     )
-                }} đ
+                }}
+                đ
 
             </div>
 
@@ -369,10 +416,15 @@
         <i class="bi bi-info-circle-fill"></i>
 
         <div>
-            <strong>Quy tắc cảnh báo:</strong>
-            phụ tùng được coi là sắp hết
-            khi số lượng tồn nhỏ hơn hoặc bằng
-            mức tồn tối thiểu.
+
+            <strong>
+                Quy tắc cảnh báo:
+            </strong>
+
+            phụ tùng đang hoạt động được coi
+            là sắp hết khi số lượng tồn
+            nhỏ hơn hoặc bằng mức tồn tối thiểu.
+
         </div>
 
     </div>
@@ -383,7 +435,9 @@
         <div class="empty-state">
 
             <div class="empty-state-icon">
+
                 <i class="bi bi-box-seam"></i>
+
             </div>
 
             <h3>
@@ -391,8 +445,10 @@
             </h3>
 
             <p>
+
                 Hãy seed hoặc thêm dữ liệu
                 phụ tùng trước khi sử dụng.
+
             </p>
 
         </div>
@@ -411,6 +467,7 @@
                     <thead>
 
                         <tr>
+
                             <th>Phụ tùng</th>
                             <th>Nhóm</th>
                             <th>ĐVT</th>
@@ -420,6 +477,7 @@
                             <th>Tồn tối thiểu</th>
                             <th>Trạng thái</th>
                             <th>Thao tác</th>
+
                         </tr>
 
                     </thead>
@@ -427,27 +485,35 @@
 
                     <tbody>
 
-                        @foreach ($parts as $part)
+                        @foreach (
+                            $parts
+                            as $part
+                        )
 
                             @php
-                                if (!$part->is_active) {
+                                if (
+                                    !$part->is_active
+                                ) {
                                     $stockText =
                                         'Ngừng sử dụng';
 
                                     $stockClass =
                                         'text-bg-secondary';
-
                                 } elseif (
-                                    $part->stock_quantity === 0
+                                    (int)
+                                    $part->stock_quantity
+                                    === 0
                                 ) {
                                     $stockText =
                                         'Hết hàng';
 
                                     $stockClass =
                                         'text-bg-danger';
-
                                 } elseif (
-                                    $part->stock_quantity <=
+                                    (int)
+                                    $part->stock_quantity
+                                    <=
+                                    (int)
                                     $part->minimum_stock
                                 ) {
                                     $stockText =
@@ -455,7 +521,6 @@
 
                                     $stockClass =
                                         'text-bg-warning';
-
                                 } else {
                                     $stockText =
                                         'Đủ hàng';
@@ -480,15 +545,24 @@
 
                                 </td>
 
+
                                 <td>
-                                    {{ $part->category ?? 'Khác' }}
+
+                                    {{
+                                        $part->category
+                                        ?? 'Khác'
+                                    }}
+
                                 </td>
+
 
                                 <td>
                                     {{ $part->unit }}
                                 </td>
 
+
                                 <td>
+
                                     {{
                                         number_format(
                                             $part->cost_price,
@@ -496,10 +570,14 @@
                                             ',',
                                             '.'
                                         )
-                                    }} đ
+                                    }}
+                                    đ
+
                                 </td>
 
+
                                 <td>
+
                                     {{
                                         number_format(
                                             $part->selling_price,
@@ -507,26 +585,43 @@
                                             ',',
                                             '.'
                                         )
-                                    }} đ
+                                    }}
+                                    đ
+
                                 </td>
+
 
                                 <td class="stock-value">
+
                                     {{
                                         number_format(
-                                            $part->stock_quantity
+                                            $part->stock_quantity,
+                                            0,
+                                            ',',
+                                            '.'
                                         )
                                     }}
+
                                     {{ $part->unit }}
+
                                 </td>
 
+
                                 <td>
+
                                     {{
                                         number_format(
-                                            $part->minimum_stock
+                                            $part->minimum_stock,
+                                            0,
+                                            ',',
+                                            '.'
                                         )
                                     }}
+
                                     {{ $part->unit }}
+
                                 </td>
+
 
                                 <td>
 
@@ -537,14 +632,19 @@
                                             {{ $stockClass }}
                                         "
                                     >
+
                                         {{ $stockText }}
+
                                     </span>
 
                                 </td>
 
+
                                 <td>
 
-                                    @if ($part->is_active)
+                                    @if (
+                                        $part->is_active
+                                    )
 
                                         <a
                                             href="{{ route(
@@ -553,8 +653,11 @@
                                             ) }}"
                                             class="inventory-action"
                                         >
+
                                             <i class="bi bi-box-arrow-in-down"></i>
+
                                             Nhập kho
+
                                         </a>
 
                                     @else
@@ -565,7 +668,9 @@
                                                 text-bg-secondary
                                             "
                                         >
+
                                             Ngừng sử dụng
+
                                         </span>
 
                                     @endif
@@ -588,11 +693,16 @@
 
 
     <a
-        href="{{ route('staff.dashboard') }}"
+        href="{{ route(
+            'staff.dashboard'
+        ) }}"
         class="inventory-back"
     >
+
         <i class="bi bi-arrow-left"></i>
+
         Quay lại Dashboard
+
     </a>
 
 </div>

@@ -7,6 +7,7 @@ use App\Models\Part;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class StaffPartController extends Controller
 {
@@ -17,48 +18,67 @@ class StaffPartController extends Controller
     {
         $this->authorizeStaff();
 
-        $parts = Part::query()
-            ->orderBy('category')
-            ->orderBy('name')
-            ->get();
+
+        $parts =
+            Part::query()
+                ->orderBy('category')
+                ->orderBy('name')
+                ->get();
+
 
         /**
          * Tổng số loại phụ tùng.
          */
-        $totalParts = $parts->count();
+        $totalParts =
+            $parts->count();
+
 
         /**
          * Tổng số lượng phụ tùng đang tồn.
          */
-        $totalStockQuantity = $parts->sum(
-            'stock_quantity'
-        );
+        $totalStockQuantity =
+            $parts->sum(
+                'stock_quantity'
+            );
+
 
         /**
-         * Số loại phụ tùng cần chú ý.
+         * Số loại phụ tùng đang hoạt động
+         * cần chú ý vì tồn kho <= tồn tối thiểu.
          */
-        $lowStockCount = $parts
-            ->filter(
-                function ($part) {
-                    return
-                        $part->stock_quantity <=
-                        $part->minimum_stock;
-                }
-            )
-            ->count();
+        $lowStockCount =
+            $parts
+                ->filter(
+                    function ($part) {
+                        return
+                            $part->is_active
+                            &&
+                            (int)
+                            $part->stock_quantity
+                            <=
+                            (int)
+                            $part->minimum_stock;
+                    }
+                )
+                ->count();
+
 
         /**
          * Giá trị tồn kho hiện tại
          * tính theo giá nhập gần nhất.
          */
-        $inventoryCostValue = $parts->sum(
-            function ($part) {
-                return
-                    (float) $part->cost_price
-                    *
-                    (int) $part->stock_quantity;
-            }
-        );
+        $inventoryCostValue =
+            $parts->sum(
+                function ($part) {
+                    return
+                        (float)
+                        $part->cost_price
+                        *
+                        (int)
+                        $part->stock_quantity;
+                }
+            );
+
 
         return view(
             'staff.parts.index',
@@ -81,18 +101,24 @@ class StaffPartController extends Controller
     ) {
         $this->authorizeStaff();
 
+
         /**
          * Phụ tùng ngừng sử dụng
          * không cho nhập kho.
          */
-        if (!$part->is_active) {
+        if (
+            !$part->is_active
+        ) {
             return redirect()
-                ->route('staff.parts.index')
+                ->route(
+                    'staff.parts.index'
+                )
                 ->with(
                     'error',
                     'Không thể nhập kho cho phụ tùng đã ngừng sử dụng.'
                 );
         }
+
 
         return view(
             'staff.parts.stock-in',
@@ -110,60 +136,135 @@ class StaffPartController extends Controller
     ) {
         $this->authorizeStaff();
 
-        if (!$part->is_active) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | BUSINESS GUARD
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            !$part->is_active
+        ) {
             return redirect()
-                ->route('staff.parts.index')
+                ->route(
+                    'staff.parts.index'
+                )
                 ->with(
                     'error',
                     'Không thể nhập kho cho phụ tùng đã ngừng sử dụng.'
                 );
         }
 
-        $validated = $request->validate(
-            [
-                'quantity' => [
-                    'required',
-                    'integer',
-                    'min:1',
+
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE INPUT
+        |--------------------------------------------------------------------------
+        */
+
+        $request->merge([
+            'note' =>
+                $this->normalizeNullableText(
+                    $request->input(
+                        'note'
+                    )
+                ),
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        $validated =
+            $request->validate(
+                [
+                    'quantity' => [
+                        'bail',
+                        'required',
+                        'integer',
+                        'min:1',
+                    ],
+
+                    'unit_cost' => [
+                        'bail',
+                        'required',
+                        'numeric',
+                        'min:0.01',
+                    ],
+
+                    'note' => [
+                        'bail',
+                        'nullable',
+                        'string',
+                        'max:1000',
+                    ],
                 ],
+                [
+                    /*
+                    |--------------------------------------------------------------------------
+                    | QUANTITY
+                    |--------------------------------------------------------------------------
+                    */
 
-                'unit_cost' => [
-                    'required',
-                    'numeric',
-                    'min:0.01',
-                ],
+                    'quantity.required' =>
+                        'Vui lòng nhập số lượng phụ tùng cần nhập.',
 
-                'note' => [
-                    'nullable',
-                    'string',
-                    'max:1000',
-                ],
-            ],
-            [
-                'quantity.required' =>
-                    'Vui lòng nhập số lượng.',
+                    'quantity.integer' =>
+                        'Số lượng nhập kho phải là số nguyên.',
 
-                'quantity.integer' =>
-                    'Số lượng phải là số nguyên.',
+                    'quantity.min' =>
+                        'Số lượng nhập kho phải từ 1 trở lên.',
 
-                'quantity.min' =>
-                    'Số lượng nhập phải lớn hơn 0.',
 
-                'unit_cost.required' =>
-                    'Vui lòng nhập giá nhập.',
+                    /*
+                    |--------------------------------------------------------------------------
+                    | UNIT COST
+                    |--------------------------------------------------------------------------
+                    */
 
-                'unit_cost.numeric' =>
-                    'Giá nhập phải là số.',
+                    'unit_cost.required' =>
+                        'Vui lòng nhập giá nhập trên mỗi đơn vị.',
 
-                'unit_cost.min' =>
-                    'Giá nhập phải lớn hơn 0.',
+                    'unit_cost.numeric' =>
+                        'Giá nhập phải là một giá trị số hợp lệ.',
 
-                'note.max' =>
-                    'Ghi chú không được vượt quá 1000 ký tự.',
-            ]
-        );
+                    'unit_cost.min' =>
+                        'Giá nhập phải lớn hơn 0.',
 
-        $user = Auth::user();
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NOTE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    'note.string' =>
+                        'Ghi chú nhập kho không hợp lệ.',
+
+                    'note.max' =>
+                        'Ghi chú nhập kho không được vượt quá 1000 ký tự.',
+                ]
+            );
+
+
+        $user =
+            Auth::user();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | STOCK TRANSACTION
+        |--------------------------------------------------------------------------
+        |
+        | Lock bản ghi Part để tránh hai nhân viên
+        | cùng đọc một stock_quantity cũ và cập nhật
+        | sai tồn kho.
+        |
+        */
 
         DB::transaction(
             function () use (
@@ -171,54 +272,82 @@ class StaffPartController extends Controller
                 $validated,
                 $user
             ) {
-                /**
-                 * Đọc lại bản ghi và khóa
-                 * cho tới khi transaction kết thúc.
-                 *
-                 * Việc này giúp tránh hai nhân viên
-                 * cùng cập nhật tồn kho sai lệch.
-                 */
-                $lockedPart = Part::whereKey(
-                    $part->id
-                )
-                    ->lockForUpdate()
-                    ->firstOrFail();
+                $lockedPart =
+                    Part::query()
+                        ->whereKey(
+                            $part->id
+                        )
+                        ->lockForUpdate()
+                        ->first();
 
-                /**
-                 * Kiểm tra lại sau khi khóa.
-                 */
-                if (!$lockedPart->is_active) {
-                    abort(
-                        422,
-                        'Phụ tùng đã ngừng sử dụng.'
-                    );
+
+                if (
+                    !$lockedPart
+                ) {
+                    throw ValidationException::withMessages([
+                        'part' =>
+                            'Phụ tùng không còn tồn tại trong hệ thống.',
+                    ]);
                 }
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | RECHECK ACTIVE STATUS
+                |--------------------------------------------------------------------------
+                |
+                | Phải kiểm tra lại sau khi lock,
+                | vì trạng thái có thể đã thay đổi
+                | sau thời điểm form được mở.
+                |
+                */
+
+                if (
+                    !$lockedPart->is_active
+                ) {
+                    throw ValidationException::withMessages([
+                        'part' =>
+                            'Phụ tùng này đã ngừng sử dụng nên không thể nhập kho.',
+                    ]);
+                }
+
+
                 $quantityBefore =
-                    (int) $lockedPart
+                    (int)
+                    $lockedPart
                         ->stock_quantity;
 
+
                 $quantityAdded =
-                    (int) $validated[
+                    (int)
+                    $validated[
                         'quantity'
                     ];
+
 
                 $quantityAfter =
                     $quantityBefore
                     +
                     $quantityAdded;
 
+
                 $unitCost =
-                    (float) $validated[
+                    (float)
+                    $validated[
                         'unit_cost'
                     ];
 
-                /**
-                 * Cập nhật tồn kho.
-                 *
-                 * cost_price được coi là
-                 * giá nhập gần nhất.
-                 */
+
+                /*
+                |--------------------------------------------------------------------------
+                | UPDATE STOCK
+                |--------------------------------------------------------------------------
+                |
+                | cost_price được sử dụng như
+                | giá nhập gần nhất.
+                |
+                */
+
                 $lockedPart->update([
                     'stock_quantity' =>
                         $quantityAfter,
@@ -227,9 +356,13 @@ class StaffPartController extends Controller
                         $unitCost,
                 ]);
 
-                /**
-                 * Ghi nhật ký nhập kho.
-                 */
+
+                /*
+                |--------------------------------------------------------------------------
+                | INVENTORY TRANSACTION
+                |--------------------------------------------------------------------------
+                */
+
                 InventoryTransaction::create([
                     'part_id' =>
                         $lockedPart->id,
@@ -256,14 +389,10 @@ class StaffPartController extends Controller
                         $unitCost,
 
                     'note' =>
-                        !empty(
-                            $validated['note']
-                            ?? null
-                        )
-                            ? trim(
-                                $validated['note']
-                            )
-                            : null,
+                        $validated[
+                            'note'
+                        ]
+                        ?? null,
 
                     'transaction_at' =>
                         now(),
@@ -271,8 +400,11 @@ class StaffPartController extends Controller
             }
         );
 
+
         return redirect()
-            ->route('staff.parts.index')
+            ->route(
+                'staff.parts.index'
+            )
             ->with(
                 'success',
                 'Nhập kho phụ tùng thành công.'
@@ -286,10 +418,13 @@ class StaffPartController extends Controller
      */
     private function authorizeStaff(): void
     {
-        $user = Auth::user();
+        $user =
+            Auth::user();
+
 
         if (
-            !$user ||
+            !$user
+            ||
             !$user->role
         ) {
             abort(
@@ -297,6 +432,7 @@ class StaffPartController extends Controller
                 'Bạn không có quyền truy cập.'
             );
         }
+
 
         if (
             !in_array(
@@ -313,5 +449,34 @@ class StaffPartController extends Controller
                 'Bạn không có quyền truy cập khu vực quản lý kho.'
             );
         }
+    }
+
+
+    /**
+     * Chuẩn hóa text nullable.
+     *
+     * Giữ nguyên xuống dòng,
+     * chỉ loại khoảng trắng đầu/cuối.
+     */
+    private function normalizeNullableText(
+        mixed $value
+    ): ?string {
+        if (
+            $value === null
+        ) {
+            return null;
+        }
+
+
+        $value =
+            trim(
+                (string)
+                $value
+            );
+
+
+        return $value !== ''
+            ? $value
+            : null;
     }
 }
