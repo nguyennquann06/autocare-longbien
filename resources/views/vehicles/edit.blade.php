@@ -94,7 +94,8 @@
             rgba(255, 255, 255, 0.92);
         box-shadow:
             var(--ac-shadow);
-        backdrop-filter: blur(16px);
+        backdrop-filter:
+            blur(16px);
     }
 
     .vehicle-edit-body {
@@ -133,8 +134,7 @@
 
     .vehicle-edit-panel {
         padding: 21px;
-        border:
-            1px solid #e5ecf4;
+        border: 1px solid #e5ecf4;
         border-radius: 16px;
         background:
             linear-gradient(
@@ -160,6 +160,22 @@
 
     .vehicle-edit-control {
         min-height: 48px;
+    }
+
+    .vehicle-edit-control.is-invalid,
+    .vehicle-edit-note.is-invalid {
+        border-color: #f87171;
+        background-color: #fffafa;
+        box-shadow:
+            0 0 0 3px
+            rgba(239, 68, 68, 0.07);
+    }
+
+    .vehicle-edit-hint {
+        margin-top: 6px;
+        color: #7c8da4;
+        font-size: 10px;
+        line-height: 1.5;
     }
 
     .vehicle-save-button {
@@ -224,33 +240,6 @@
 
 <div class="container vehicle-edit-page">
 
-    @if ($errors->any())
-
-        <div class="alert alert-danger">
-
-            <strong>
-                <i class="bi bi-exclamation-triangle-fill me-1"></i>
-
-                Vui lòng kiểm tra lại thông tin:
-            </strong>
-
-            <ul class="mb-0 mt-2">
-
-                @foreach ($errors->all() as $error)
-
-                    <li>
-                        {{ $error }}
-                    </li>
-
-                @endforeach
-
-            </ul>
-
-        </div>
-
-    @endif
-
-
     <section
         class="vehicle-edit-hero"
         data-reveal="zoom"
@@ -299,6 +288,7 @@
                     'vehicles.update',
                     $vehicle->id
                 ) }}"
+                novalidate
             >
 
                 @csrf
@@ -310,7 +300,9 @@
                     <div class="vehicle-edit-section-title">
 
                         <span class="vehicle-edit-section-icon">
+
                             <i class="bi bi-car-front-fill"></i>
+
                         </span>
 
                         Thông tin phương tiện
@@ -342,8 +334,15 @@
                                     class="
                                         form-select
                                         vehicle-edit-control
+                                        @error('brand_id')
+                                            is-invalid
+                                        @enderror
                                     "
-                                    required
+                                    aria-invalid="{{
+                                        $errors->has('brand_id')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
 
                                     <option value="">
@@ -359,7 +358,8 @@
                                                 old(
                                                     'brand_id',
                                                     $vehicle->brand_id
-                                                ) == $brand->id
+                                                )
+                                                == $brand->id
                                                     ? 'selected'
                                                     : ''
                                             }}
@@ -394,8 +394,16 @@
                                     class="
                                         form-select
                                         vehicle-edit-control
+                                        @error('model_id')
+                                            is-invalid
+                                        @enderror
                                     "
-                                    required
+                                    disabled
+                                    aria-invalid="{{
+                                        $errors->has('model_id')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
 
                                     <option value="">
@@ -428,13 +436,29 @@
                                     class="
                                         form-control
                                         vehicle-edit-control
+                                        @error('license_plate')
+                                            is-invalid
+                                        @enderror
                                     "
                                     value="{{ old(
                                         'license_plate',
                                         $vehicle->license_plate
                                     ) }}"
-                                    required
+                                    maxlength="12"
+                                    autocomplete="off"
+                                    aria-invalid="{{
+                                        $errors->has('license_plate')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
+
+
+                                <div class="vehicle-edit-hint">
+                                    Ví dụ: 30H-123.45.
+                                    Có thể nhập 30H12345,
+                                    hệ thống sẽ tự chuẩn hóa.
+                                </div>
 
                             </div>
 
@@ -460,12 +484,28 @@
                                     class="
                                         form-control
                                         vehicle-edit-control
+                                        @error('vin')
+                                            is-invalid
+                                        @enderror
                                     "
                                     value="{{ old(
                                         'vin',
                                         $vehicle->vin
                                     ) }}"
+                                    maxlength="17"
+                                    autocomplete="off"
+                                    aria-invalid="{{
+                                        $errors->has('vin')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
+
+
+                                <div class="vehicle-edit-hint">
+                                    VIN gồm đúng 17 ký tự,
+                                    không sử dụng I, O hoặc Q.
+                                </div>
 
                             </div>
 
@@ -491,13 +531,22 @@
                                     class="
                                         form-control
                                         vehicle-edit-control
+                                        @error('manufacture_year')
+                                            is-invalid
+                                        @enderror
                                     "
                                     value="{{ old(
                                         'manufacture_year',
                                         $vehicle->manufacture_year
                                     ) }}"
                                     min="1980"
-                                    max="{{ date('Y') + 1 }}"
+                                    max="{{ now()->year + 1 }}"
+                                    step="1"
+                                    aria-invalid="{{
+                                        $errors->has('manufacture_year')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
 
                             </div>
@@ -524,11 +573,20 @@
                                     class="
                                         form-control
                                         vehicle-edit-control
+                                        @error('color')
+                                            is-invalid
+                                        @enderror
                                     "
                                     value="{{ old(
                                         'color',
                                         $vehicle->color
                                     ) }}"
+                                    maxlength="50"
+                                    aria-invalid="{{
+                                        $errors->has('color')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
 
                             </div>
@@ -537,10 +595,11 @@
                             <div class="col-md-4">
 
                                 @php
-                                    $fuelType = old(
-                                        'fuel_type',
-                                        $vehicle->fuel_type
-                                    );
+                                    $fuelType =
+                                        old(
+                                            'fuel_type',
+                                            $vehicle->fuel_type
+                                        );
                                 @endphp
 
 
@@ -562,7 +621,15 @@
                                     class="
                                         form-select
                                         vehicle-edit-control
+                                        @error('fuel_type')
+                                            is-invalid
+                                        @enderror
                                     "
+                                    aria-invalid="{{
+                                        $errors->has('fuel_type')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
 
                                     <option value="">
@@ -627,7 +694,7 @@
 
                                     <i class="bi bi-speedometer2"></i>
 
-                                    Số km hiện tại *
+                                    ODO hiện tại *
 
                                 </label>
 
@@ -641,20 +708,43 @@
                                         class="
                                             form-control
                                             vehicle-edit-control
+                                            @error('current_mileage')
+                                                is-invalid
+                                            @enderror
                                         "
                                         value="{{ old(
                                             'current_mileage',
                                             $vehicle->current_mileage
                                         ) }}"
-                                        min="0"
-                                        placeholder="Ví dụ: 35000"
-                                        required
+                                        min="{{ $vehicle->current_mileage }}"
+                                        max="5000000"
+                                        step="1"
+                                        inputmode="numeric"
+                                        aria-invalid="{{
+                                            $errors->has('current_mileage')
+                                                ? 'true'
+                                                : 'false'
+                                        }}"
                                     >
 
                                     <span class="input-group-text">
                                         km
                                     </span>
 
+                                </div>
+
+
+                                <div class="vehicle-edit-hint">
+                                    ODO hiện tại đang lưu:
+                                    {{
+                                        number_format(
+                                            $vehicle->current_mileage,
+                                            0,
+                                            ',',
+                                            '.'
+                                        )
+                                    }}
+                                    km. ODO mới không được nhỏ hơn giá trị này.
                                 </div>
 
                             </div>
@@ -671,7 +761,9 @@
                     <div class="vehicle-edit-section-title">
 
                         <span class="vehicle-edit-section-icon">
+
                             <i class="bi bi-chat-left-text"></i>
+
                         </span>
 
                         Ghi chú
@@ -684,13 +776,29 @@
                         <textarea
                             id="note"
                             name="note"
-                            class="form-control"
+                            class="
+                                form-control
+                                vehicle-edit-note
+                                @error('note')
+                                    is-invalid
+                                @enderror
+                            "
                             rows="5"
-                            maxlength="2000"
+                            maxlength="1000"
+                            aria-invalid="{{
+                                $errors->has('note')
+                                    ? 'true'
+                                    : 'false'
+                            }}"
                         >{{ old(
                             'note',
                             $vehicle->note
                         ) }}</textarea>
+
+
+                        <div class="vehicle-edit-hint">
+                            Tối đa 1000 ký tự.
+                        </div>
 
                     </div>
 
@@ -761,7 +869,9 @@
         brandId,
         selectedModelId = null
     ) {
-        modelSelect.disabled = true;
+        modelSelect.disabled =
+            true;
+
 
         modelSelect.innerHTML = `
             <option value="">
@@ -782,9 +892,10 @@
 
 
         try {
-            const response = await fetch(
-                `/vehicle-models/${brandId}`
-            );
+            const response =
+                await fetch(
+                    `/vehicle-models/${brandId}`
+                );
 
 
             if (!response.ok) {
@@ -805,14 +916,17 @@
             `;
 
 
-            if (models.length === 0) {
+            if (
+                models.length === 0
+            ) {
                 modelSelect.innerHTML = `
                     <option value="">
                         Chưa có dòng xe
                     </option>
                 `;
 
-                modelSelect.disabled = true;
+                modelSelect.disabled =
+                    true;
 
                 return;
             }
@@ -837,25 +951,35 @@
 
 
                     if (
-                        String(model.id)
+                        String(
+                            model.id
+                        )
                         ===
-                        String(selectedModelId)
+                        String(
+                            selectedModelId
+                        )
                     ) {
-                        option.selected = true;
+                        option.selected =
+                            true;
                     }
 
 
-                    modelSelect.appendChild(
-                        option
-                    );
+                    modelSelect
+                        .appendChild(
+                            option
+                        );
                 }
             );
 
 
-            modelSelect.disabled = false;
+            modelSelect.disabled =
+                false;
         }
         catch (error) {
-            console.error(error);
+            console.error(
+                error
+            );
+
 
             modelSelect.innerHTML = `
                 <option value="">
@@ -863,7 +987,9 @@
                 </option>
             `;
 
-            modelSelect.disabled = true;
+
+            modelSelect.disabled =
+                true;
         }
     }
 
@@ -882,6 +1008,44 @@
         brandSelect.value,
         currentModelId
     );
+
+
+    const licensePlateInput =
+        document.getElementById(
+            'license_plate'
+        );
+
+
+    const vinInput =
+        document.getElementById(
+            'vin'
+        );
+
+
+    licensePlateInput
+        ?.addEventListener(
+            'input',
+            function () {
+                this.value =
+                    this.value
+                        .toUpperCase();
+            }
+        );
+
+
+    vinInput
+        ?.addEventListener(
+            'input',
+            function () {
+                this.value =
+                    this.value
+                        .toUpperCase()
+                        .replace(
+                            /\s+/g,
+                            ''
+                        );
+            }
+        );
 </script>
 
 @endpush

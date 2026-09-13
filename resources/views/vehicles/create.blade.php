@@ -123,8 +123,7 @@
             rgba(255, 255, 255, 0.92);
         box-shadow:
             var(--ac-shadow);
-        backdrop-filter:
-            blur(16px);
+        backdrop-filter: blur(16px);
     }
 
     .vehicle-form-body {
@@ -167,8 +166,7 @@
 
     .vehicle-form-panel {
         padding: 21px;
-        border:
-            1px solid #e5ecf4;
+        border: 1px solid #e5ecf4;
         border-radius: 16px;
         background:
             linear-gradient(
@@ -194,6 +192,22 @@
 
     .vehicle-form-control {
         min-height: 48px;
+    }
+
+    .vehicle-form-control.is-invalid,
+    .vehicle-note-control.is-invalid {
+        border-color: #f87171;
+        background-color: #fffafa;
+        box-shadow:
+            0 0 0 3px
+            rgba(239, 68, 68, 0.07);
+    }
+
+    .vehicle-field-hint {
+        margin-top: 6px;
+        color: #7c8da4;
+        font-size: 10px;
+        line-height: 1.5;
     }
 
     .vehicle-submit {
@@ -236,11 +250,6 @@
         font-weight: 750;
     }
 
-    .vehicle-model-loading {
-        color: #64748b;
-        font-size: 11px;
-    }
-
     @media (max-width: 575px) {
         .vehicle-form-hero {
             padding: 25px;
@@ -262,46 +271,6 @@
 @section('content')
 
 <div class="container vehicle-form-page">
-
-    @if (session('success'))
-
-        <div class="alert alert-success">
-
-            <i class="bi bi-check-circle-fill me-2"></i>
-
-            {{ session('success') }}
-
-        </div>
-
-    @endif
-
-
-    @if ($errors->any())
-
-        <div class="alert alert-danger">
-
-            <strong>
-                <i class="bi bi-exclamation-triangle-fill me-1"></i>
-
-                Vui lòng kiểm tra lại thông tin:
-            </strong>
-
-            <ul class="mb-0 mt-2">
-
-                @foreach ($errors->all() as $error)
-
-                    <li>
-                        {{ $error }}
-                    </li>
-
-                @endforeach
-
-            </ul>
-
-        </div>
-
-    @endif
-
 
     <section
         class="vehicle-form-hero"
@@ -348,6 +317,7 @@
             <form
                 method="POST"
                 action="{{ route('vehicles.store') }}"
+                novalidate
             >
 
                 @csrf
@@ -392,8 +362,15 @@
                                     class="
                                         form-select
                                         vehicle-form-control
+                                        @error('brand_id')
+                                            is-invalid
+                                        @enderror
                                     "
-                                    required
+                                    aria-invalid="{{
+                                        $errors->has('brand_id')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
 
                                     <option value="">
@@ -442,9 +419,16 @@
                                     class="
                                         form-select
                                         vehicle-form-control
+                                        @error('model_id')
+                                            is-invalid
+                                        @enderror
                                     "
-                                    required
                                     disabled
+                                    aria-invalid="{{
+                                        $errors->has('model_id')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
 
                                     <option value="">
@@ -477,11 +461,26 @@
                                     class="
                                         form-control
                                         vehicle-form-control
+                                        @error('license_plate')
+                                            is-invalid
+                                        @enderror
                                     "
                                     value="{{ old('license_plate') }}"
                                     placeholder="Ví dụ: 30H-123.45"
-                                    required
+                                    maxlength="12"
+                                    autocomplete="off"
+                                    aria-invalid="{{
+                                        $errors->has('license_plate')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
+
+
+                                <div class="vehicle-field-hint">
+                                    Có thể nhập 30H-123.45 hoặc 30H12345;
+                                    hệ thống sẽ tự chuẩn hóa.
+                                </div>
 
                             </div>
 
@@ -507,10 +506,26 @@
                                     class="
                                         form-control
                                         vehicle-form-control
+                                        @error('vin')
+                                            is-invalid
+                                        @enderror
                                     "
                                     value="{{ old('vin') }}"
-                                    placeholder="Có thể để trống"
+                                    placeholder="Ví dụ: KMHCT41D0HU123456"
+                                    maxlength="17"
+                                    autocomplete="off"
+                                    aria-invalid="{{
+                                        $errors->has('vin')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
+
+
+                                <div class="vehicle-field-hint">
+                                    VIN gồm đúng 17 ký tự và không sử dụng
+                                    I, O hoặc Q.
+                                </div>
 
                             </div>
 
@@ -536,11 +551,20 @@
                                     class="
                                         form-control
                                         vehicle-form-control
+                                        @error('manufacture_year')
+                                            is-invalid
+                                        @enderror
                                     "
                                     value="{{ old('manufacture_year') }}"
                                     min="1980"
-                                    max="{{ date('Y') + 1 }}"
+                                    max="{{ now()->year + 1 }}"
+                                    step="1"
                                     placeholder="Ví dụ: 2022"
+                                    aria-invalid="{{
+                                        $errors->has('manufacture_year')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
 
                             </div>
@@ -567,9 +591,18 @@
                                     class="
                                         form-control
                                         vehicle-form-control
+                                        @error('color')
+                                            is-invalid
+                                        @enderror
                                     "
                                     value="{{ old('color') }}"
+                                    maxlength="50"
                                     placeholder="Ví dụ: Trắng"
+                                    aria-invalid="{{
+                                        $errors->has('color')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
 
                             </div>
@@ -595,7 +628,15 @@
                                     class="
                                         form-select
                                         vehicle-form-control
+                                        @error('fuel_type')
+                                            is-invalid
+                                        @enderror
                                     "
+                                    aria-invalid="{{
+                                        $errors->has('fuel_type')
+                                            ? 'true'
+                                            : 'false'
+                                    }}"
                                 >
 
                                     <option value="">
@@ -660,7 +701,7 @@
 
                                     <i class="bi bi-speedometer2"></i>
 
-                                    Số km hiện tại *
+                                    ODO hiện tại *
 
                                 </label>
 
@@ -674,19 +715,35 @@
                                         class="
                                             form-control
                                             vehicle-form-control
+                                            @error('current_mileage')
+                                                is-invalid
+                                            @enderror
                                         "
                                         value="{{ old(
                                             'current_mileage',
                                             0
                                         ) }}"
                                         min="0"
-                                        required
+                                        max="5000000"
+                                        step="1"
+                                        inputmode="numeric"
+                                        aria-invalid="{{
+                                            $errors->has('current_mileage')
+                                                ? 'true'
+                                                : 'false'
+                                        }}"
                                     >
 
                                     <span class="input-group-text">
                                         km
                                     </span>
 
+                                </div>
+
+
+                                <div class="vehicle-field-hint">
+                                    Nhập số km thực tế đang hiển thị
+                                    trên đồng hồ ODO của xe.
                                 </div>
 
                             </div>
@@ -730,11 +787,27 @@
                         <textarea
                             id="note"
                             name="note"
-                            class="form-control"
+                            class="
+                                form-control
+                                vehicle-note-control
+                                @error('note')
+                                    is-invalid
+                                @enderror
+                            "
                             rows="5"
-                            maxlength="2000"
+                            maxlength="1000"
                             placeholder="Thông tin bổ sung về phương tiện..."
+                            aria-invalid="{{
+                                $errors->has('note')
+                                    ? 'true'
+                                    : 'false'
+                            }}"
                         >{{ old('note') }}</textarea>
+
+
+                        <div class="vehicle-field-hint">
+                            Tối đa 1000 ký tự.
+                        </div>
 
                     </div>
 
@@ -799,10 +872,13 @@
         brandId,
         selectedModelId = null
     ) {
-        modelSelect.innerHTML = '';
+        modelSelect.innerHTML =
+            '';
+
 
         if (!brandId) {
-            modelSelect.disabled = true;
+            modelSelect.disabled =
+                true;
 
             modelSelect.innerHTML = `
                 <option value="">
@@ -814,7 +890,8 @@
         }
 
 
-        modelSelect.disabled = true;
+        modelSelect.disabled =
+            true;
 
         modelSelect.innerHTML = `
             <option value="">
@@ -824,9 +901,11 @@
 
 
         try {
-            const response = await fetch(
-                `/vehicle-models/${brandId}`
-            );
+            const response =
+                await fetch(
+                    `/vehicle-models/${brandId}`
+                );
+
 
             if (!response.ok) {
                 throw new Error(
@@ -846,14 +925,17 @@
             `;
 
 
-            if (models.length === 0) {
+            if (
+                models.length === 0
+            ) {
                 modelSelect.innerHTML = `
                     <option value="">
                         Chưa có dòng xe
                     </option>
                 `;
 
-                modelSelect.disabled = true;
+                modelSelect.disabled =
+                    true;
 
                 return;
             }
@@ -880,25 +962,35 @@
                     if (
                         selectedModelId
                         &&
-                        String(selectedModelId)
+                        String(
+                            selectedModelId
+                        )
                         ===
-                        String(model.id)
+                        String(
+                            model.id
+                        )
                     ) {
-                        option.selected = true;
+                        option.selected =
+                            true;
                     }
 
 
-                    modelSelect.appendChild(
-                        option
-                    );
+                    modelSelect
+                        .appendChild(
+                            option
+                        );
                 }
             );
 
 
-            modelSelect.disabled = false;
+            modelSelect.disabled =
+                false;
         }
         catch (error) {
-            console.error(error);
+            console.error(
+                error
+            );
+
 
             modelSelect.innerHTML = `
                 <option value="">
@@ -906,7 +998,9 @@
                 </option>
             `;
 
-            modelSelect.disabled = true;
+
+            modelSelect.disabled =
+                true;
         }
     }
 
@@ -927,6 +1021,44 @@
             oldModelId
         );
     }
+
+
+    const licensePlateInput =
+        document.getElementById(
+            'license_plate'
+        );
+
+
+    const vinInput =
+        document.getElementById(
+            'vin'
+        );
+
+
+    licensePlateInput
+        ?.addEventListener(
+            'input',
+            function () {
+                this.value =
+                    this.value
+                        .toUpperCase();
+            }
+        );
+
+
+    vinInput
+        ?.addEventListener(
+            'input',
+            function () {
+                this.value =
+                    this.value
+                        .toUpperCase()
+                        .replace(
+                            /\s+/g,
+                            ''
+                        );
+            }
+        );
 </script>
 
 @endpush
