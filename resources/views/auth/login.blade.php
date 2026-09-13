@@ -45,10 +45,6 @@
     }
 
 
-    /* =====================================================
-       LEFT SHOWCASE
-       ===================================================== */
-
     .auth-showcase {
         position: relative;
         overflow: hidden;
@@ -188,7 +184,11 @@
         color: white;
 
         font-size:
-            clamp(2.5rem, 5vw, 4.7rem);
+            clamp(
+                2.5rem,
+                5vw,
+                4.7rem
+            );
 
         font-weight: 900;
 
@@ -232,7 +232,10 @@
         display: grid;
 
         grid-template-columns:
-            repeat(2, minmax(0, 1fr));
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
 
         gap: 14px;
 
@@ -331,10 +334,6 @@
     }
 
 
-    /* =====================================================
-       RIGHT FORM
-       ===================================================== */
-
     .auth-form-panel {
         position: relative;
 
@@ -404,65 +403,6 @@
         color: #64748b;
 
         line-height: 1.65;
-    }
-
-
-    .auth-alert {
-        display: flex;
-
-        align-items: flex-start;
-
-        gap: 11px;
-
-        padding: 14px 16px;
-
-        margin-bottom: 20px;
-
-        border-radius: 14px;
-
-        font-size: 13px;
-
-        line-height: 1.55;
-    }
-
-
-    .auth-alert-success {
-        color: #065f46;
-
-        background:
-            linear-gradient(
-                135deg,
-                #ecfdf5,
-                #f0fdf4
-            );
-
-        border:
-            1px solid
-            #bbf7d0;
-    }
-
-
-    .auth-alert-danger {
-        color: #991b1b;
-
-        background:
-            linear-gradient(
-                135deg,
-                #fef2f2,
-                #fff7f7
-            );
-
-        border:
-            1px solid
-            #fecaca;
-    }
-
-
-    .auth-alert ul {
-        margin:
-            6px 0 0;
-
-        padding-left: 18px;
     }
 
 
@@ -566,6 +506,17 @@
     }
 
 
+    .auth-control.is-invalid {
+        border-color: #f87171;
+
+        background: #fffafa;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(239, 68, 68, 0.07);
+    }
+
+
     .auth-password-toggle {
         position: absolute;
 
@@ -578,7 +529,9 @@
         height: 36px;
 
         display: flex;
+
         align-items: center;
+
         justify-content: center;
 
         transform:
@@ -652,7 +605,9 @@
         height: 53px;
 
         display: flex;
+
         align-items: center;
+
         justify-content: center;
 
         gap: 9px;
@@ -858,10 +813,6 @@
     }
 
 
-    /* =====================================================
-       RESPONSIVE
-       ===================================================== */
-
     @media (max-width: 991px) {
         .auth-shell {
             grid-template-columns: 1fr;
@@ -1008,9 +959,6 @@
 
     <section class="auth-shell">
 
-        {{-- =========================================
-            SHOWCASE
-        ========================================== --}}
         <div class="auth-showcase">
 
             <div class="auth-showcase-content">
@@ -1109,8 +1057,8 @@
                         </div>
 
                         <div class="auth-feature-text">
-                            Sẵn sàng tích hợp tư vấn
-                            bảo dưỡng bằng AI.
+                            Hỗ trợ tra cứu và tư vấn
+                            bảo dưỡng với AutoCare AI.
                         </div>
 
                     </div>
@@ -1129,9 +1077,6 @@
         </div>
 
 
-        {{-- =========================================
-            LOGIN FORM
-        ========================================== --}}
         <div class="auth-form-panel">
 
             <div class="auth-form-container">
@@ -1154,65 +1099,10 @@
                 </p>
 
 
-                @if (session('success'))
-
-                    <div
-                        class="
-                            auth-alert
-                            auth-alert-success
-                        "
-                    >
-
-                        <i class="bi bi-check-circle-fill"></i>
-
-                        <div>
-                            {{ session('success') }}
-                        </div>
-
-                    </div>
-
-                @endif
-
-
-                @if ($errors->any())
-
-                    <div
-                        class="
-                            auth-alert
-                            auth-alert-danger
-                        "
-                    >
-
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-
-                        <div>
-
-                            <strong>
-                                Không thể đăng nhập
-                            </strong>
-
-                            <ul>
-
-                                @foreach ($errors->all() as $error)
-
-                                    <li>
-                                        {{ $error }}
-                                    </li>
-
-                                @endforeach
-
-                            </ul>
-
-                        </div>
-
-                    </div>
-
-                @endif
-
-
                 <form
                     method="POST"
                     action="{{ route('login.submit') }}"
+                    novalidate
                 >
 
                     @csrf
@@ -1244,12 +1134,22 @@
                                 type="email"
                                 id="email"
                                 name="email"
-                                class="auth-control"
+                                class="
+                                    auth-control
+                                    @error('email')
+                                        is-invalid
+                                    @enderror
+                                "
                                 value="{{ old('email') }}"
                                 placeholder="example@email.com"
                                 autocomplete="email"
-                                required
+                                maxlength="254"
                                 autofocus
+                                aria-invalid="{{
+                                    $errors->has('email')
+                                        ? 'true'
+                                        : 'false'
+                                }}"
                             >
 
                         </div>
@@ -1283,10 +1183,20 @@
                                 type="password"
                                 id="password"
                                 name="password"
-                                class="auth-control"
+                                class="
+                                    auth-control
+                                    @error('password')
+                                        is-invalid
+                                    @enderror
+                                "
                                 placeholder="Nhập mật khẩu"
                                 autocomplete="current-password"
-                                required
+                                maxlength="72"
+                                aria-invalid="{{
+                                    $errors->has('password')
+                                        ? 'true'
+                                        : 'false'
+                                }}"
                             >
 
 
@@ -1314,6 +1224,9 @@
                                 type="checkbox"
                                 id="remember"
                                 name="remember"
+                                @checked(
+                                    old('remember')
+                                )
                             >
 
                             <span>
@@ -1342,9 +1255,11 @@
 
 
                 <div class="auth-divider">
+
                     <span>
                         Chưa có tài khoản?
                     </span>
+
                 </div>
 
 
@@ -1391,20 +1306,20 @@
         )
         .forEach(
             function (button) {
-
                 button.addEventListener(
                     'click',
                     function () {
-
                         const inputId =
                             button.getAttribute(
                                 'data-password-toggle'
                             );
 
+
                         const input =
                             document.getElementById(
                                 inputId
                             );
+
 
                         const icon =
                             button.querySelector(
@@ -1419,10 +1334,8 @@
 
                         if (
                             input.type
-                            ===
-                            'password'
+                            === 'password'
                         ) {
-
                             input.type =
                                 'text';
 
@@ -1433,9 +1346,7 @@
                                 'aria-label',
                                 'Ẩn mật khẩu'
                             );
-
                         } else {
-
                             input.type =
                                 'password';
 
@@ -1446,12 +1357,9 @@
                                 'aria-label',
                                 'Hiển thị mật khẩu'
                             );
-
                         }
-
                     }
                 );
-
             }
         );
 </script>

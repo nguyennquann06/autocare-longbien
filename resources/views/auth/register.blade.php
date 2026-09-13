@@ -51,10 +51,6 @@
     }
 
 
-    /* =====================================================
-       LEFT SHOWCASE
-       ===================================================== */
-
     .register-showcase {
         position: relative;
 
@@ -184,7 +180,8 @@
         background: #67e8f9;
 
         box-shadow:
-            0 0 14px #67e8f9;
+            0 0 14px
+            #67e8f9;
 
         animation:
             registerPulse
@@ -244,10 +241,6 @@
     }
 
 
-    /* =====================================================
-       ROADMAP
-       ===================================================== */
-
     .register-roadmap {
         margin-top: 30px;
     }
@@ -277,13 +270,20 @@
         width: 2px;
 
         height:
-            calc(100% - 17px);
+            calc(
+                100% - 17px
+            );
 
         background:
             linear-gradient(
                 to bottom,
                 #38bdf8,
-                rgba(56, 189, 248, 0.08)
+                rgba(
+                    56,
+                    189,
+                    248,
+                    0.08
+                )
             );
     }
 
@@ -359,10 +359,6 @@
         text-transform: uppercase;
     }
 
-
-    /* =====================================================
-       FORM PANEL
-       ===================================================== */
 
     .register-form-panel {
         display: flex;
@@ -440,74 +436,6 @@
         line-height: 1.65;
     }
 
-
-    /* =====================================================
-       ALERT
-       ===================================================== */
-
-    .register-alert {
-        display: flex;
-
-        align-items: flex-start;
-
-        gap: 11px;
-
-        padding:
-            14px 16px;
-
-        margin-bottom: 20px;
-
-        border-radius: 14px;
-
-        font-size: 13px;
-
-        line-height: 1.55;
-    }
-
-
-    .register-alert-success {
-        color: #065f46;
-
-        background:
-            linear-gradient(
-                135deg,
-                #ecfdf5,
-                #f0fdf4
-            );
-
-        border:
-            1px solid
-            #bbf7d0;
-    }
-
-
-    .register-alert-danger {
-        color: #991b1b;
-
-        background:
-            linear-gradient(
-                135deg,
-                #fef2f2,
-                #fff7f7
-            );
-
-        border:
-            1px solid
-            #fecaca;
-    }
-
-
-    .register-alert ul {
-        margin:
-            6px 0 0;
-
-        padding-left: 18px;
-    }
-
-
-    /* =====================================================
-       FORM
-       ===================================================== */
 
     .register-field {
         margin-bottom: 17px;
@@ -610,6 +538,17 @@
     }
 
 
+    .register-control.is-invalid {
+        border-color: #f87171;
+
+        background: #fffafa;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(239, 68, 68, 0.07);
+    }
+
+
     .register-password-toggle {
         position: absolute;
 
@@ -652,10 +591,6 @@
     }
 
 
-    /* =====================================================
-       PASSWORD STRENGTH
-       ===================================================== */
-
     .password-strength {
         margin-top: 9px;
     }
@@ -696,10 +631,6 @@
         font-weight: 700;
     }
 
-
-    /* =====================================================
-       SUBMIT
-       ===================================================== */
 
     .register-submit {
         position: relative;
@@ -797,10 +728,6 @@
         left: 120%;
     }
 
-
-    /* =====================================================
-       FOOT LINKS
-       ===================================================== */
 
     .register-divider {
         position: relative;
@@ -925,12 +852,7 @@
     }
 
 
-    /* =====================================================
-       RESPONSIVE
-       ===================================================== */
-
     @media (max-width: 991px) {
-
         .register-shell {
             grid-template-columns: 1fr;
         }
@@ -944,12 +866,10 @@
         .register-form-panel {
             padding: 44px;
         }
-
     }
 
 
     @media (max-width: 575px) {
-
         .register-wrapper {
             padding:
                 0 12px 20px;
@@ -983,16 +903,10 @@
         .register-form-title {
             font-size: 29px;
         }
-
     }
 
 
-    /* =====================================================
-       ANIMATION
-       ===================================================== */
-
     @keyframes registerPulse {
-
         0%,
         100% {
             opacity: 0.6;
@@ -1007,12 +921,10 @@
             transform:
                 scale(1.15);
         }
-
     }
 
 
     @keyframes registerFloatOne {
-
         0%,
         100% {
             transform:
@@ -1031,12 +943,10 @@
                     0
                 );
         }
-
     }
 
 
     @keyframes registerFloatTwo {
-
         0%,
         100% {
             transform:
@@ -1055,7 +965,6 @@
                     0
                 );
         }
-
     }
 </style>
 
@@ -1071,9 +980,6 @@
 
     <section class="register-shell">
 
-        {{-- =========================================
-            SHOWCASE
-        ========================================== --}}
         <div class="register-showcase">
 
             <div class="register-showcase-content">
@@ -1188,8 +1094,8 @@
                             </div>
 
                             <div class="register-roadmap-text">
-                                Hướng tới trải nghiệm hỗ trợ
-                                và tư vấn bảo dưỡng bằng AI.
+                                Hỗ trợ tra cứu và tư vấn
+                                bảo dưỡng với AutoCare AI.
                             </div>
 
                         </div>
@@ -1210,9 +1116,6 @@
         </div>
 
 
-        {{-- =========================================
-            REGISTER FORM
-        ========================================== --}}
         <div class="register-form-panel">
 
             <div class="register-form-container">
@@ -1237,72 +1140,15 @@
                 </p>
 
 
-                @if (session('success'))
-
-                    <div
-                        class="
-                            register-alert
-                            register-alert-success
-                        "
-                    >
-
-                        <i class="bi bi-check-circle-fill"></i>
-
-                        <div>
-                            {{ session('success') }}
-                        </div>
-
-                    </div>
-
-                @endif
-
-
-                @if ($errors->any())
-
-                    <div
-                        class="
-                            register-alert
-                            register-alert-danger
-                        "
-                    >
-
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-
-                        <div>
-
-                            <strong>
-                                Vui lòng kiểm tra lại thông tin
-                            </strong>
-
-
-                            <ul>
-
-                                @foreach ($errors->all() as $error)
-
-                                    <li>
-                                        {{ $error }}
-                                    </li>
-
-                                @endforeach
-
-                            </ul>
-
-                        </div>
-
-                    </div>
-
-                @endif
-
-
                 <form
                     method="POST"
                     action="{{ route('register.submit') }}"
+                    novalidate
                 >
 
                     @csrf
 
 
-                    {{-- HỌ TÊN --}}
                     <div class="register-field">
 
                         <label
@@ -1332,12 +1178,22 @@
                                 type="text"
                                 id="name"
                                 name="name"
-                                class="register-control"
+                                class="
+                                    register-control
+                                    @error('name')
+                                        is-invalid
+                                    @enderror
+                                "
                                 value="{{ old('name') }}"
                                 placeholder="Nguyễn Văn A"
                                 autocomplete="name"
-                                required
+                                maxlength="100"
                                 autofocus
+                                aria-invalid="{{
+                                    $errors->has('name')
+                                        ? 'true'
+                                        : 'false'
+                                }}"
                             >
 
                         </div>
@@ -1345,7 +1201,6 @@
                     </div>
 
 
-                    {{-- EMAIL --}}
                     <div class="register-field">
 
                         <label
@@ -1375,11 +1230,21 @@
                                 type="email"
                                 id="email"
                                 name="email"
-                                class="register-control"
+                                class="
+                                    register-control
+                                    @error('email')
+                                        is-invalid
+                                    @enderror
+                                "
                                 value="{{ old('email') }}"
                                 placeholder="example@email.com"
                                 autocomplete="email"
-                                required
+                                maxlength="254"
+                                aria-invalid="{{
+                                    $errors->has('email')
+                                        ? 'true'
+                                        : 'false'
+                                }}"
                             >
 
                         </div>
@@ -1387,7 +1252,6 @@
                     </div>
 
 
-                    {{-- PASSWORD --}}
                     <div class="register-field">
 
                         <label
@@ -1417,10 +1281,20 @@
                                 type="password"
                                 id="password"
                                 name="password"
-                                class="register-control"
-                                placeholder="Tối thiểu 6 ký tự"
+                                class="
+                                    register-control
+                                    @error('password')
+                                        is-invalid
+                                    @enderror
+                                "
+                                placeholder="Tối thiểu 8 ký tự, gồm chữ và số"
                                 autocomplete="new-password"
-                                required
+                                maxlength="72"
+                                aria-invalid="{{
+                                    $errors->has('password')
+                                        ? 'true'
+                                        : 'false'
+                                }}"
                             >
 
 
@@ -1454,7 +1328,7 @@
                                 id="passwordStrengthText"
                                 class="password-strength-text"
                             >
-                                Nhập ít nhất 6 ký tự.
+                                Ít nhất 8 ký tự, gồm chữ và số.
                             </div>
 
                         </div>
@@ -1462,7 +1336,6 @@
                     </div>
 
 
-                    {{-- PASSWORD CONFIRMATION --}}
                     <div class="register-field">
 
                         <label
@@ -1492,10 +1365,28 @@
                                 type="password"
                                 id="password_confirmation"
                                 name="password_confirmation"
-                                class="register-control"
+                                class="
+                                    register-control
+                                    @error('password_confirmation')
+                                        is-invalid
+                                    @enderror
+                                    @if (
+                                        $errors->has('password')
+                                        &&
+                                        old('email')
+                                    )
+                                    @endif
+                                "
                                 placeholder="Nhập lại mật khẩu"
                                 autocomplete="new-password"
-                                required
+                                maxlength="72"
+                                aria-invalid="{{
+                                    $errors->has(
+                                        'password_confirmation'
+                                    )
+                                        ? 'true'
+                                        : 'false'
+                                }}"
                             >
 
 
@@ -1583,11 +1474,9 @@
         )
         .forEach(
             function (button) {
-
                 button.addEventListener(
                     'click',
                     function () {
-
                         const inputId =
                             button.getAttribute(
                                 'data-password-toggle'
@@ -1601,7 +1490,9 @@
 
 
                         const icon =
-                            button.querySelector('i');
+                            button.querySelector(
+                                'i'
+                            );
 
 
                         if (!input) {
@@ -1610,26 +1501,33 @@
 
 
                         if (
-                            input.type === 'password'
+                            input.type
+                            === 'password'
                         ) {
-
-                            input.type = 'text';
+                            input.type =
+                                'text';
 
                             icon.className =
                                 'bi bi-eye-slash';
 
+                            button.setAttribute(
+                                'aria-label',
+                                'Ẩn mật khẩu'
+                            );
                         } else {
-
-                            input.type = 'password';
+                            input.type =
+                                'password';
 
                             icon.className =
                                 'bi bi-eye';
 
+                            button.setAttribute(
+                                'aria-label',
+                                'Hiển thị mật khẩu'
+                            );
                         }
-
                     }
                 );
-
             }
         );
 
@@ -1659,65 +1557,96 @@
         &&
         strengthText
     ) {
-
         passwordInput.addEventListener(
             'input',
             function () {
-
                 const value =
                     passwordInput.value;
 
 
-                let score = 0;
+                let score =
+                    0;
 
 
-                if (value.length >= 6) {
-                    score++;
-                }
+                const hasMinimumLength =
+                    value.length >= 8;
 
 
-                if (value.length >= 10) {
-                    score++;
-                }
+                const hasGoodLength =
+                    value.length >= 12;
 
 
-                if (
+                const hasLetter =
+                    /[A-Za-z]/.test(
+                        value
+                    );
+
+
+                const hasNumber =
+                    /\d/.test(
+                        value
+                    );
+
+
+                const hasUpperAndLower =
                     /[A-Z]/.test(value)
                     &&
-                    /[a-z]/.test(value)
-                ) {
+                    /[a-z]/.test(value);
+
+
+                const hasSpecialCharacter =
+                    /[^A-Za-z0-9]/.test(
+                        value
+                    );
+
+
+                if (hasMinimumLength) {
+                    score++;
+                }
+
+
+                if (hasGoodLength) {
                     score++;
                 }
 
 
                 if (
-                    /\d/.test(value)
+                    hasLetter
+                    &&
+                    hasNumber
                 ) {
                     score++;
                 }
 
 
-                if (
-                    /[^A-Za-z0-9]/.test(value)
-                ) {
+                if (hasUpperAndLower) {
+                    score++;
+                }
+
+
+                if (hasSpecialCharacter) {
                     score++;
                 }
 
 
                 if (!value.length) {
-
                     strengthBar.style.width =
                         '0%';
 
                     strengthText.textContent =
-                        'Nhập ít nhất 6 ký tự.';
+                        'Ít nhất 8 ký tự, gồm chữ và số.';
 
                     return;
                 }
 
 
-                if (score <= 1) {
-
+                if (
+                    !hasMinimumLength
+                    ||
+                    !hasLetter
+                    ||
+                    !hasNumber
+                ) {
                     strengthBar.style.width =
                         '25%';
 
@@ -1725,10 +1654,13 @@
                         '#ef4444';
 
                     strengthText.textContent =
-                        'Mật khẩu yếu';
+                        'Chưa đạt yêu cầu: cần ít nhất 8 ký tự, gồm chữ và số.';
 
-                } else if (score <= 3) {
+                    return;
+                }
 
+
+                if (score <= 3) {
                     strengthBar.style.width =
                         '60%';
 
@@ -1736,10 +1668,8 @@
                         '#f59e0b';
 
                     strengthText.textContent =
-                        'Mật khẩu trung bình';
-
+                        'Mật khẩu đạt yêu cầu.';
                 } else {
-
                     strengthBar.style.width =
                         '100%';
 
@@ -1747,13 +1677,10 @@
                         '#10b981';
 
                     strengthText.textContent =
-                        'Mật khẩu mạnh';
-
+                        'Mật khẩu mạnh.';
                 }
-
             }
         );
-
     }
 </script>
 

@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -24,86 +25,230 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        $validated = $request->validate(
-            [
-                'name' => [
-                    'required',
-                    'string',
-                    'max:255',
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE INPUT
+        |--------------------------------------------------------------------------
+        |
+        | - Họ tên: bỏ khoảng trắng thừa
+        | - Email: trim + lowercase
+        | - Tuyệt đối không trim password
+        |
+        */
+
+        $normalizedName =
+            preg_replace(
+                '/\s+/u',
+                ' ',
+                trim(
+                    (string)
+                    $request->input(
+                        'name',
+                        ''
+                    )
+                )
+            );
+
+
+        $normalizedEmail =
+            Str::lower(
+                trim(
+                    (string)
+                    $request->input(
+                        'email',
+                        ''
+                    )
+                )
+            );
+
+
+        $request->merge([
+            'name' =>
+                $normalizedName,
+
+            'email' =>
+                $normalizedEmail,
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        $validated =
+            $request->validate(
+                [
+                    'name' => [
+                        'required',
+                        'string',
+                        'min:2',
+                        'max:100',
+                        "regex:/^(?=.*\\pL)[\\pL\\pM .'-]+$/u",
+                    ],
+
+                    'email' => [
+                        'required',
+                        'string',
+                        'email:rfc',
+                        'max:254',
+                        'unique:users,email',
+                    ],
+
+                    'password' => [
+                        'required',
+                        'string',
+                        'min:8',
+                        'max:72',
+                        'regex:/[A-Za-z]/',
+                        'regex:/[0-9]/',
+                        'confirmed',
+                    ],
+
+                    'password_confirmation' => [
+                        'required',
+                        'string',
+                        'max:72',
+                    ],
                 ],
+                [
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NAME
+                    |--------------------------------------------------------------------------
+                    */
 
-                'email' => [
-                    'required',
-                    'email',
-                    'max:255',
-                    'unique:users,email',
-                ],
+                    'name.required' =>
+                        'Vui lòng nhập họ và tên.',
 
-                'password' => [
-                    'required',
-                    'string',
-                    'min:6',
-                    'confirmed',
-                ],
-            ],
-            [
-                'name.required' =>
-                    'Vui lòng nhập họ và tên.',
+                    'name.string' =>
+                        'Họ và tên không hợp lệ.',
 
-                'email.required' =>
-                    'Vui lòng nhập email.',
+                    'name.min' =>
+                        'Họ và tên phải có ít nhất 2 ký tự.',
 
-                'email.email' =>
-                    'Email không đúng định dạng.',
+                    'name.max' =>
+                        'Họ và tên không được vượt quá 100 ký tự.',
 
-                'email.unique' =>
-                    'Email này đã được sử dụng.',
-
-                'password.required' =>
-                    'Vui lòng nhập mật khẩu.',
-
-                'password.min' =>
-                    'Mật khẩu phải có ít nhất 6 ký tự.',
-
-                'password.confirmed' =>
-                    'Mật khẩu nhập lại không khớp.',
-            ]
-        );
+                    'name.regex' =>
+                        'Họ và tên chỉ được chứa chữ cái, khoảng trắng và một số ký tự tên hợp lệ.',
 
 
-        $customerRole = Role::where(
-            'code',
-            'CUSTOMER'
-        )->firstOrFail();
+                    /*
+                    |--------------------------------------------------------------------------
+                    | EMAIL
+                    |--------------------------------------------------------------------------
+                    */
 
+                    'email.required' =>
+                        'Vui lòng nhập địa chỉ email.',
+
+                    'email.string' =>
+                        'Email không hợp lệ.',
+
+                    'email.email' =>
+                        'Email không đúng định dạng. Ví dụ: example@email.com.',
+
+                    'email.max' =>
+                        'Email không được vượt quá 254 ký tự.',
+
+                    'email.unique' =>
+                        'Email này đã được sử dụng. Vui lòng sử dụng email khác.',
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | PASSWORD
+                    |--------------------------------------------------------------------------
+                    */
+
+                    'password.required' =>
+                        'Vui lòng nhập mật khẩu.',
+
+                    'password.string' =>
+                        'Mật khẩu không hợp lệ.',
+
+                    'password.min' =>
+                        'Mật khẩu phải có ít nhất 8 ký tự.',
+
+                    'password.max' =>
+                        'Mật khẩu không được vượt quá 72 ký tự.',
+
+                    'password.regex' =>
+                        'Mật khẩu phải có ít nhất một chữ cái và một chữ số.',
+
+                    'password.confirmed' =>
+                        'Mật khẩu nhập lại không khớp.',
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | PASSWORD CONFIRMATION
+                    |--------------------------------------------------------------------------
+                    */
+
+                    'password_confirmation.required' =>
+                        'Vui lòng nhập lại mật khẩu.',
+
+                    'password_confirmation.string' =>
+                        'Mật khẩu nhập lại không hợp lệ.',
+
+                    'password_confirmation.max' =>
+                        'Mật khẩu nhập lại không được vượt quá 72 ký tự.',
+                ]
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CUSTOMER ROLE
+        |--------------------------------------------------------------------------
+        */
+
+        $customerRole =
+            Role::where(
+                'code',
+                'CUSTOMER'
+            )->firstOrFail();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CREATE ACCOUNT
+        |--------------------------------------------------------------------------
+        */
 
         DB::transaction(
             function () use (
                 $validated,
                 $customerRole
             ) {
-                $user = User::create([
-                    'role_id' =>
-                        $customerRole->id,
+                $user =
+                    User::create([
+                        'role_id' =>
+                            $customerRole->id,
 
-                    'name' =>
-                        $validated['name'],
+                        'name' =>
+                            $validated['name'],
 
-                    'email' =>
-                        $validated['email'],
+                        'email' =>
+                            $validated['email'],
 
-                    'password' =>
-                        $validated['password'],
-                ]);
+                        'password' =>
+                            $validated['password'],
+                    ]);
 
 
-                $user->customer()->create([
-                    'full_name' =>
-                        $validated['name'],
+                $user
+                    ->customer()
+                    ->create([
+                        'full_name' =>
+                            $validated['name'],
 
-                    'email' =>
-                        $validated['email'],
-                ]);
+                        'email' =>
+                            $validated['email'],
+                    ]);
             }
         );
 
@@ -112,7 +257,7 @@ class AuthController extends Controller
             ->route('login')
             ->with(
                 'success',
-                'Đăng ký tài khoản thành công. Vui lòng đăng nhập.'
+                'Đăng ký tài khoản thành công. Bạn có thể đăng nhập ngay.'
             );
     }
 
@@ -131,38 +276,93 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $credentials = $request->validate(
-            [
-                'email' => [
-                    'required',
-                    'email',
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE EMAIL
+        |--------------------------------------------------------------------------
+        */
+
+        $request->merge([
+            'email' =>
+                Str::lower(
+                    trim(
+                        (string)
+                        $request->input(
+                            'email',
+                            ''
+                        )
+                    )
+                ),
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        |
+        | Không áp dụng min:8 khi login
+        | vì hệ thống có thể còn tài khoản cũ
+        | được tạo với mật khẩu ngắn hơn.
+        |
+        */
+
+        $credentials =
+            $request->validate(
+                [
+                    'email' => [
+                        'required',
+                        'string',
+                        'email:rfc',
+                        'max:254',
+                    ],
+
+                    'password' => [
+                        'required',
+                        'string',
+                        'max:72',
+                    ],
                 ],
+                [
+                    'email.required' =>
+                        'Vui lòng nhập địa chỉ email.',
 
-                'password' => [
-                    'required',
-                    'string',
-                ],
-            ],
-            [
-                'email.required' =>
-                    'Vui lòng nhập email.',
+                    'email.string' =>
+                        'Email không hợp lệ.',
 
-                'email.email' =>
-                    'Email không đúng định dạng.',
+                    'email.email' =>
+                        'Email không đúng định dạng. Ví dụ: example@email.com.',
 
-                'password.required' =>
-                    'Vui lòng nhập mật khẩu.',
-            ]
-        );
+                    'email.max' =>
+                        'Email không được vượt quá 254 ký tự.',
 
+                    'password.required' =>
+                        'Vui lòng nhập mật khẩu.',
+
+                    'password.string' =>
+                        'Mật khẩu không hợp lệ.',
+
+                    'password.max' =>
+                        'Mật khẩu không được vượt quá 72 ký tự.',
+                ]
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | AUTHENTICATE
+        |--------------------------------------------------------------------------
+        */
 
         if (
             Auth::attempt(
                 $credentials,
-                $request->boolean('remember')
+                $request->boolean(
+                    'remember'
+                )
             )
         ) {
-            /**
+            /*
              * Chống session fixation.
              */
             $request
@@ -170,20 +370,29 @@ class AuthController extends Controller
                 ->regenerate();
 
 
-            $user = Auth::user();
+            $user =
+                Auth::user();
 
-            $user->load('role');
+
+            $user->load(
+                'role'
+            );
 
 
-            /**
-             * User chưa được gán role.
-             */
+            /*
+            |--------------------------------------------------------------------------
+            | USER CHƯA CÓ ROLE
+            |--------------------------------------------------------------------------
+            */
+
             if (!$user->role) {
                 Auth::logout();
+
 
                 $request
                     ->session()
                     ->invalidate();
+
 
                 $request
                     ->session()
@@ -193,9 +402,11 @@ class AuthController extends Controller
                 return back()
                     ->withErrors([
                         'email' =>
-                            'Tài khoản chưa được phân quyền.',
+                            'Tài khoản chưa được phân quyền. Vui lòng liên hệ quản trị viên.',
                     ])
-                    ->onlyInput('email');
+                    ->onlyInput(
+                        'email'
+                    );
             }
 
 
@@ -206,13 +417,9 @@ class AuthController extends Controller
             */
 
             if (
-                $user->role->code ===
-                'CUSTOMER'
+                $user->role->code
+                === 'CUSTOMER'
             ) {
-                /**
-                 * Lấy URL khách định truy cập
-                 * trước khi bị chuyển tới login.
-                 */
                 $intendedUrl =
                     $request
                         ->session()
@@ -221,10 +428,6 @@ class AuthController extends Controller
                         );
 
 
-                /**
-                 * Trường hợp khách bấm
-                 * "Đặt lịch" trước khi đăng nhập.
-                 */
                 if (
                     $intendedUrl
                     &&
@@ -242,10 +445,6 @@ class AuthController extends Controller
                 }
 
 
-                /**
-                 * Đăng nhập bình thường
-                 * → Customer Dashboard.
-                 */
                 return redirect()
                     ->route(
                         'customer.dashboard'
@@ -264,13 +463,9 @@ class AuthController extends Controller
             */
 
             if (
-                $user->role->code ===
-                'STAFF'
+                $user->role->code
+                === 'STAFF'
             ) {
-                /**
-                 * Không sử dụng intended URL
-                 * của CUSTOMER cho STAFF.
-                 */
                 $request
                     ->session()
                     ->forget(
@@ -296,8 +491,8 @@ class AuthController extends Controller
             */
 
             if (
-                $user->role->code ===
-                'ADMIN'
+                $user->role->code
+                === 'ADMIN'
             ) {
                 $request
                     ->session()
@@ -306,10 +501,6 @@ class AuthController extends Controller
                     );
 
 
-                /**
-                 * Hiện ADMIN dùng chung
-                 * Dashboard quản lý với STAFF.
-                 */
                 return redirect()
                     ->route(
                         'staff.dashboard'
@@ -328,8 +519,8 @@ class AuthController extends Controller
             */
 
             if (
-                $user->role->code ===
-                'TECHNICIAN'
+                $user->role->code
+                === 'TECHNICIAN'
             ) {
                 $request
                     ->session()
@@ -349,14 +540,19 @@ class AuthController extends Controller
             }
 
 
-            /**
-             * Role không xác định.
-             */
+            /*
+            |--------------------------------------------------------------------------
+            | ROLE KHÔNG HỢP LỆ
+            |--------------------------------------------------------------------------
+            */
+
             Auth::logout();
+
 
             $request
                 ->session()
                 ->invalidate();
+
 
             $request
                 ->session()
@@ -372,15 +568,20 @@ class AuthController extends Controller
         }
 
 
-        /**
-         * Sai email hoặc mật khẩu.
-         */
+        /*
+        |--------------------------------------------------------------------------
+        | WRONG CREDENTIALS
+        |--------------------------------------------------------------------------
+        */
+
         return back()
             ->withErrors([
                 'email' =>
                     'Email hoặc mật khẩu không chính xác.',
             ])
-            ->onlyInput('email');
+            ->onlyInput(
+                'email'
+            );
     }
 
 
@@ -389,24 +590,14 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        /**
-         * Xóa trạng thái đăng nhập
-         * khỏi authentication guard.
-         */
         Auth::logout();
 
 
-        /**
-         * Hủy toàn bộ session cũ.
-         */
         $request
             ->session()
             ->invalidate();
 
 
-        /**
-         * Sinh lại CSRF token.
-         */
         $request
             ->session()
             ->regenerateToken();
