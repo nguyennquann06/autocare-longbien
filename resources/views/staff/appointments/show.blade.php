@@ -360,26 +360,6 @@
     @endphp
 
 
-    @if (session('success'))
-
-        <div class="alert alert-success">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            {{ session('success') }}
-        </div>
-
-    @endif
-
-
-    @if (session('error'))
-
-        <div class="alert alert-danger">
-            <i class="bi bi-exclamation-circle-fill me-2"></i>
-            {{ session('error') }}
-        </div>
-
-    @endif
-
-
     <section class="staff-detail-hero" data-reveal="zoom">
 
         <div class="staff-detail-hero-inner">

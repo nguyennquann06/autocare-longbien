@@ -357,38 +357,6 @@
     </section>
 
 
-    @if (session('success'))
-
-        <div
-            class="alert alert-success"
-            data-reveal
-        >
-
-            <i class="bi bi-check-circle-fill me-2"></i>
-
-            {{ session('success') }}
-
-        </div>
-
-    @endif
-
-
-    @if (session('error'))
-
-        <div
-            class="alert alert-danger"
-            data-reveal
-        >
-
-            <i class="bi bi-exclamation-circle-fill me-2"></i>
-
-            {{ session('error') }}
-
-        </div>
-
-    @endif
-
-
     @if ($appointments->isEmpty())
 
         <div

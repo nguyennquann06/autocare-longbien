@@ -352,22 +352,6 @@
 
 <div class="container vehicle-detail-page">
 
-    @if (session('success'))
-
-        <div
-            class="alert alert-success"
-            data-reveal
-        >
-
-            <i class="bi bi-check-circle-fill me-2"></i>
-
-            {{ session('success') }}
-
-        </div>
-
-    @endif
-
-
     <section
         class="vehicle-detail-hero"
         data-reveal="zoom"
