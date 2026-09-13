@@ -28,6 +28,39 @@
         default =>
             $roleCode ?? 'Tài khoản',
     };
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | BRAND URL THEO VAI TRÒ
+    |--------------------------------------------------------------------------
+    |
+    | CUSTOMER / GUEST
+    | → Trang chủ
+    |
+    | STAFF / ADMIN
+    | → Staff Dashboard
+    |
+    | TECHNICIAN
+    | → Công việc của tôi
+    |
+    */
+
+    $brandUrl = match ($roleCode) {
+        'STAFF',
+        'ADMIN' =>
+            route(
+                'staff.dashboard'
+            ),
+
+        'TECHNICIAN' =>
+            route(
+                'technician.service-orders.index'
+            ),
+
+        default =>
+            route('home'),
+    };
 @endphp
 
 
@@ -1615,7 +1648,7 @@
     <div class="app-navbar-inner">
 
         <a
-            href="{{ route('home') }}"
+            href="{{ $brandUrl }}"
             class="app-navbar-brand"
         >
 
@@ -1938,24 +1971,6 @@
                         >
                             <span class="nav-dot"></span>
                             Công việc của tôi
-                        </a>
-
-
-                        <a
-                            href="{{ route('home') }}"
-                            class="
-                                app-nav-link
-                                {{
-                                    request()->routeIs(
-                                        'home'
-                                    )
-                                        ? 'active'
-                                        : ''
-                                }}
-                            "
-                        >
-                            <span class="nav-dot"></span>
-                            Trang chủ
                         </a>
 
                     @endif

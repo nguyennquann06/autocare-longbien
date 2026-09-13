@@ -11,25 +11,191 @@ class StaffAppointmentController extends Controller
 {
     /**
      * Danh sách lịch hẹn.
+     *
+     * Thứ tự ưu tiên:
+     *
+     * 1. PENDING
+     * 2. CONFIRMED
+     * 3. IN_PROGRESS
+     * 4. COMPLETED
+     * 5. CANCELLED
      */
-    public function index()
-    {
+    public function index(
+        Request $request
+    ) {
         $this->authorizeStaff();
 
-        $appointments = Appointment::with([
-            'customer',
-            'vehicle.brand',
-            'vehicle.vehicleModel',
-            'services',
-            'serviceOrder.invoice',
-        ])
-            ->orderByDesc('appointment_date')
-            ->orderByDesc('appointment_time')
-            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER STATUS
+        |--------------------------------------------------------------------------
+        */
+
+        $allowedStatuses = [
+            'ALL',
+            'PENDING',
+            'CONFIRMED',
+            'IN_PROGRESS',
+            'COMPLETED',
+            'CANCELLED',
+        ];
+
+
+        $statusFilter =
+            strtoupper(
+                trim(
+                    (string)
+                    $request->query(
+                        'status',
+                        'ALL'
+                    )
+                )
+            );
+
+
+        if (
+            !in_array(
+                $statusFilter,
+                $allowedStatuses,
+                true
+            )
+        ) {
+            $statusFilter =
+                'ALL';
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATUS COUNTS
+        |--------------------------------------------------------------------------
+        |
+        | Đếm trên toàn bộ lịch hẹn,
+        | không phụ thuộc bộ lọc hiện tại.
+        |
+        */
+
+        $statusCounts =
+            Appointment::query()
+                ->selectRaw(
+                    'status, COUNT(*) as total'
+                )
+                ->groupBy('status')
+                ->pluck(
+                    'total',
+                    'status'
+                );
+
+
+        $totalAppointments =
+            (int)
+            $statusCounts->sum();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | APPOINTMENT QUERY
+        |--------------------------------------------------------------------------
+        */
+
+        $query =
+            Appointment::with([
+                'customer',
+                'vehicle.brand',
+                'vehicle.vehicleModel',
+                'services',
+                'serviceOrder.invoice',
+            ]);
+
+
+        if (
+            $statusFilter !== 'ALL'
+        ) {
+            $query->where(
+                'status',
+                $statusFilter
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PRIORITY SORTING
+        |--------------------------------------------------------------------------
+        |
+        | Lịch chưa xử lý được đưa lên đầu.
+        |
+        | Với lịch đang cần xử lý:
+        | → lịch có thời điểm sớm hơn được ưu tiên trước.
+        |
+        | Với lịch đã kết thúc:
+        | → lịch mới nhất hiển thị trước.
+        |
+        */
+
+        $appointments =
+            $query
+                ->orderByRaw("
+                    CASE status
+                        WHEN 'PENDING' THEN 1
+                        WHEN 'CONFIRMED' THEN 2
+                        WHEN 'IN_PROGRESS' THEN 3
+                        WHEN 'COMPLETED' THEN 4
+                        WHEN 'CANCELLED' THEN 5
+                        ELSE 6
+                    END
+                ")
+                ->orderByRaw("
+                    CASE
+                        WHEN status IN (
+                            'PENDING',
+                            'CONFIRMED',
+                            'IN_PROGRESS'
+                        )
+                        THEN appointment_date
+                    END ASC
+                ")
+                ->orderByRaw("
+                    CASE
+                        WHEN status IN (
+                            'PENDING',
+                            'CONFIRMED',
+                            'IN_PROGRESS'
+                        )
+                        THEN appointment_time
+                    END ASC
+                ")
+                ->orderByRaw("
+                    CASE
+                        WHEN status IN (
+                            'COMPLETED',
+                            'CANCELLED'
+                        )
+                        THEN appointment_date
+                    END DESC
+                ")
+                ->orderByRaw("
+                    CASE
+                        WHEN status IN (
+                            'COMPLETED',
+                            'CANCELLED'
+                        )
+                        THEN appointment_time
+                    END DESC
+                ")
+                ->orderByDesc('id')
+                ->get();
+
 
         return view(
             'staff.appointments.index',
-            compact('appointments')
+            compact(
+                'appointments',
+                'statusFilter',
+                'statusCounts',
+                'totalAppointments'
+            )
         );
     }
 
@@ -42,6 +208,7 @@ class StaffAppointmentController extends Controller
     ) {
         $this->authorizeStaff();
 
+
         $appointment->load([
             'customer',
             'vehicle.brand',
@@ -49,6 +216,7 @@ class StaffAppointmentController extends Controller
             'services',
             'serviceOrder.invoice',
         ]);
+
 
         return view(
             'staff.appointments.show',
@@ -66,39 +234,42 @@ class StaffAppointmentController extends Controller
     ) {
         $this->authorizeStaff();
 
+
         $appointment->load(
             'serviceOrder'
         );
 
-        $validated = $request->validate(
-            [
-                'status' => [
-                    'required',
 
-                    Rule::in([
-                        'CONFIRMED',
-                        'IN_PROGRESS',
-                        'COMPLETED',
-                    ]),
+        $validated =
+            $request->validate(
+                [
+                    'status' => [
+                        'required',
+
+                        Rule::in([
+                            'CONFIRMED',
+                            'IN_PROGRESS',
+                            'COMPLETED',
+                        ]),
+                    ],
+
+                    'staff_note' => [
+                        'nullable',
+                        'string',
+                        'max:1000',
+                    ],
                 ],
+                [
+                    'status.required' =>
+                        'Vui lòng chọn trạng thái.',
 
-                'staff_note' => [
-                    'nullable',
-                    'string',
-                    'max:1000',
-                ],
-            ],
-            [
-                'status.required' =>
-                    'Vui lòng chọn trạng thái.',
+                    'status.in' =>
+                        'Trạng thái không hợp lệ.',
 
-                'status.in' =>
-                    'Trạng thái không hợp lệ.',
-
-                'staff_note.max' =>
-                    'Ghi chú không được vượt quá 1000 ký tự.',
-            ]
-        );
+                    'staff_note.max' =>
+                        'Ghi chú không được vượt quá 1000 ký tự.',
+                ]
+            );
 
 
         $allowedTransitions = [
@@ -139,7 +310,8 @@ class StaffAppointmentController extends Controller
 
 
         if (
-            $validated['status'] !==
+            $validated['status']
+            !==
             $expectedStatus
         ) {
             return redirect()
@@ -159,7 +331,8 @@ class StaffAppointmentController extends Controller
          * bắt buộc phải có Service Order.
          */
         if (
-            $appointment->status === 'CONFIRMED'
+            $appointment->status
+            === 'CONFIRMED'
             &&
             !$appointment->serviceOrder
         ) {
@@ -186,7 +359,8 @@ class StaffAppointmentController extends Controller
                     ? trim(
                         $validated['staff_note']
                     )
-                    : $appointment->staff_note,
+                    : $appointment
+                        ->staff_note,
         ]);
 
 
@@ -207,10 +381,13 @@ class StaffAppointmentController extends Controller
      */
     private function authorizeStaff(): void
     {
-        $user = Auth::user();
+        $user =
+            Auth::user();
+
 
         if (
-            !$user ||
+            !$user
+            ||
             !$user->role
         ) {
             abort(
@@ -218,6 +395,7 @@ class StaffAppointmentController extends Controller
                 'Bạn không có quyền truy cập.'
             );
         }
+
 
         if (
             !in_array(

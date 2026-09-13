@@ -58,7 +58,11 @@
         margin: 0;
         color: white;
         font-size:
-            clamp(2rem, 4vw, 3.3rem);
+            clamp(
+                2rem,
+                4vw,
+                3.3rem
+            );
         font-weight: 900;
         letter-spacing: -.055em;
     }
@@ -69,6 +73,120 @@
         color: #cbd5e1;
         line-height: 1.75;
     }
+
+
+    /* =====================================================
+       FILTER TOOLBAR
+       ===================================================== */
+
+    .staff-filter-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 22px;
+        padding: 18px 20px;
+        border:
+            1px solid
+            rgba(255, 255, 255, .88);
+        border-radius: 18px;
+        background:
+            rgba(255, 255, 255, .92);
+        box-shadow:
+            var(--ac-shadow);
+        backdrop-filter:
+            blur(16px);
+    }
+
+    .staff-filter-info {
+        min-width: 0;
+    }
+
+    .staff-filter-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #0f172a;
+        font-size: 14px;
+        font-weight: 900;
+    }
+
+    .staff-filter-title i {
+        color: #2563eb;
+    }
+
+    .staff-filter-description {
+        margin-top: 5px;
+        color: #64748b;
+        font-size: 11px;
+    }
+
+    .staff-filter-form {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        flex-wrap: wrap;
+    }
+
+    .staff-filter-select {
+        min-width: 245px;
+        min-height: 44px;
+        padding:
+            8px 38px 8px 13px;
+        border: 1px solid #dbe4ee;
+        border-radius: 11px;
+        color: #0f172a;
+        background-color: white;
+        font-size: 12px;
+        font-weight: 750;
+        box-shadow:
+            0 4px 14px
+            rgba(15, 23, 42, .04);
+    }
+
+    .staff-filter-button {
+        min-height: 44px;
+        padding: 0 15px;
+        border: none;
+        border-radius: 11px;
+        color: white;
+        background:
+            linear-gradient(
+                135deg,
+                #1683ff,
+                #4f46e5
+            );
+        font-size: 12px;
+        font-weight: 850;
+    }
+
+    .staff-filter-reset {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 13px;
+        border:
+            1px solid
+            #dbe4ee;
+        border-radius: 11px;
+        color: #64748b;
+        background: white;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .staff-filter-reset:hover {
+        color: #2563eb;
+        border-color: #93c5fd;
+    }
+
+
+    /* =====================================================
+       APPOINTMENT CARD
+       ===================================================== */
 
     .staff-appointment-card {
         position: relative;
@@ -81,16 +199,20 @@
         border-radius: 20px;
         background:
             rgba(255, 255, 255, .92);
-        box-shadow: var(--ac-shadow);
-        backdrop-filter: blur(16px);
+        box-shadow:
+            var(--ac-shadow);
+        backdrop-filter:
+            blur(16px);
         transition:
             transform .23s ease,
             box-shadow .23s ease;
     }
 
     .staff-appointment-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--ac-shadow-lg);
+        transform:
+            translateY(-5px);
+        box-shadow:
+            var(--ac-shadow-lg);
     }
 
     .staff-appointment-top {
@@ -122,14 +244,19 @@
     .staff-info-grid {
         display: grid;
         grid-template-columns:
-            repeat(5, minmax(0, 1fr));
+            repeat(
+                5,
+                minmax(0, 1fr)
+            );
         gap: 12px;
         margin-top: 20px;
     }
 
     .staff-info-box {
         padding: 14px;
-        border: 1px solid #e7edf4;
+        border:
+            1px solid
+            #e7edf4;
         border-radius: 14px;
         background:
             linear-gradient(
@@ -189,7 +316,8 @@
 
     .staff-action:hover {
         color: white;
-        transform: translateY(-2px);
+        transform:
+            translateY(-2px);
     }
 
     .staff-back {
@@ -203,23 +331,61 @@
         font-weight: 750;
     }
 
+
     @media (max-width: 1100px) {
         .staff-info-grid {
             grid-template-columns:
-                repeat(3, 1fr);
+                repeat(
+                    3,
+                    1fr
+                );
         }
     }
+
 
     @media (max-width: 767px) {
+        .staff-filter-card {
+            align-items: stretch;
+        }
+
+        .staff-filter-form {
+            width: 100%;
+        }
+
+        .staff-filter-select {
+            flex: 1;
+            min-width: 200px;
+        }
+
         .staff-info-grid {
             grid-template-columns:
-                repeat(2, 1fr);
+                repeat(
+                    2,
+                    1fr
+                );
         }
     }
 
+
     @media (max-width: 575px) {
+        .staff-filter-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .staff-filter-select,
+        .staff-filter-button,
+        .staff-filter-reset {
+            width: 100%;
+        }
+
+        .staff-filter-reset {
+            justify-content: center;
+        }
+
         .staff-info-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns:
+                1fr;
         }
     }
 </style>
@@ -231,7 +397,10 @@
 
 <div class="container staff-appointments-page">
 
-    <section class="staff-page-hero" data-reveal="zoom">
+    <section
+        class="staff-page-hero"
+        data-reveal="zoom"
+    >
 
         <div class="staff-page-hero-content">
 
@@ -240,9 +409,14 @@
             </h1>
 
             <p>
+
                 Theo dõi và xử lý các yêu cầu
                 bảo dưỡng do khách hàng gửi
                 tới AutoCare Long Biên.
+
+                Các lịch chưa xử lý được
+                tự động ưu tiên hiển thị trước.
+
             </p>
 
         </div>
@@ -250,28 +424,280 @@
     </section>
 
 
-    @if ($appointments->isEmpty())
+    <section
+        class="staff-filter-card"
+        data-reveal
+    >
 
-        <div class="empty-state" data-reveal="zoom">
+        <div class="staff-filter-info">
 
-            <div class="empty-state-icon">
-                <i class="bi bi-calendar2-x"></i>
+            <div class="staff-filter-title">
+
+                <i class="bi bi-funnel-fill"></i>
+
+                Hiển thị lịch hẹn
+
             </div>
 
-            <h3>
-                Chưa có lịch hẹn
-            </h3>
 
-            <p>
-                Hiện chưa có yêu cầu đặt lịch
-                nào trong hệ thống.
-            </p>
+            <div class="staff-filter-description">
+
+                Đang hiển thị
+                <strong>
+                    {{ $appointments->count() }}
+                </strong>
+                /
+                <strong>
+                    {{ $totalAppointments }}
+                </strong>
+                lịch hẹn.
+
+            </div>
+
+        </div>
+
+
+        <form
+            method="GET"
+            action="{{ route(
+                'staff.appointments.index'
+            ) }}"
+            class="staff-filter-form"
+        >
+
+            <select
+                name="status"
+                class="form-select staff-filter-select"
+                aria-label="Lọc lịch hẹn theo trạng thái"
+                onchange="this.form.submit()"
+            >
+
+                <option
+                    value="ALL"
+                    {{
+                        $statusFilter === 'ALL'
+                            ? 'selected'
+                            : ''
+                    }}
+                >
+                    Tất cả trạng thái
+                    ({{ $totalAppointments }})
+                </option>
+
+
+                <option
+                    value="PENDING"
+                    {{
+                        $statusFilter === 'PENDING'
+                            ? 'selected'
+                            : ''
+                    }}
+                >
+                    Chờ xác nhận
+                    ({{
+                        (int)
+                        (
+                            $statusCounts[
+                                'PENDING'
+                            ]
+                            ?? 0
+                        )
+                    }})
+                </option>
+
+
+                <option
+                    value="CONFIRMED"
+                    {{
+                        $statusFilter === 'CONFIRMED'
+                            ? 'selected'
+                            : ''
+                    }}
+                >
+                    Đã xác nhận
+                    ({{
+                        (int)
+                        (
+                            $statusCounts[
+                                'CONFIRMED'
+                            ]
+                            ?? 0
+                        )
+                    }})
+                </option>
+
+
+                <option
+                    value="IN_PROGRESS"
+                    {{
+                        $statusFilter === 'IN_PROGRESS'
+                            ? 'selected'
+                            : ''
+                    }}
+                >
+                    Đang thực hiện
+                    ({{
+                        (int)
+                        (
+                            $statusCounts[
+                                'IN_PROGRESS'
+                            ]
+                            ?? 0
+                        )
+                    }})
+                </option>
+
+
+                <option
+                    value="COMPLETED"
+                    {{
+                        $statusFilter === 'COMPLETED'
+                            ? 'selected'
+                            : ''
+                    }}
+                >
+                    Hoàn thành
+                    ({{
+                        (int)
+                        (
+                            $statusCounts[
+                                'COMPLETED'
+                            ]
+                            ?? 0
+                        )
+                    }})
+                </option>
+
+
+                <option
+                    value="CANCELLED"
+                    {{
+                        $statusFilter === 'CANCELLED'
+                            ? 'selected'
+                            : ''
+                    }}
+                >
+                    Đã hủy
+                    ({{
+                        (int)
+                        (
+                            $statusCounts[
+                                'CANCELLED'
+                            ]
+                            ?? 0
+                        )
+                    }})
+                </option>
+
+            </select>
+
+
+            <button
+                type="submit"
+                class="staff-filter-button"
+            >
+
+                <i class="bi bi-filter me-1"></i>
+
+                Áp dụng
+
+            </button>
+
+
+            @if (
+                $statusFilter !== 'ALL'
+            )
+
+                <a
+                    href="{{ route(
+                        'staff.appointments.index'
+                    ) }}"
+                    class="staff-filter-reset"
+                >
+
+                    <i class="bi bi-arrow-counterclockwise"></i>
+
+                    Bỏ lọc
+
+                </a>
+
+            @endif
+
+        </form>
+
+    </section>
+
+
+    @if ($appointments->isEmpty())
+
+        <div
+            class="empty-state"
+            data-reveal="zoom"
+        >
+
+            <div class="empty-state-icon">
+
+                <i class="bi bi-calendar2-x"></i>
+
+            </div>
+
+
+            @if (
+                $statusFilter === 'ALL'
+            )
+
+                <h3>
+                    Chưa có lịch hẹn
+                </h3>
+
+                <p>
+
+                    Hiện chưa có yêu cầu đặt lịch
+                    nào trong hệ thống.
+
+                </p>
+
+            @else
+
+                <h3>
+                    Không có lịch hẹn phù hợp
+                </h3>
+
+                <p>
+
+                    Không có lịch hẹn nào
+                    thuộc trạng thái đang chọn.
+
+                </p>
+
+
+                <a
+                    href="{{ route(
+                        'staff.appointments.index'
+                    ) }}"
+                    class="
+                        btn
+                        btn-primary
+                        mt-2
+                    "
+                >
+
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>
+
+                    Xem tất cả lịch hẹn
+
+                </a>
+
+            @endif
 
         </div>
 
     @else
 
-        @foreach ($appointments as $appointment)
+        @foreach (
+            $appointments
+            as $appointment
+        )
 
             @php
                 $statusText = match (
@@ -295,6 +721,7 @@
                     default =>
                         $appointment->status,
                 };
+
 
                 $statusClass = match (
                     $appointment->status
@@ -330,13 +757,20 @@
                     <div>
 
                         <div class="staff-code">
+
                             <i class="bi bi-hash"></i>
+
                             {{ $appointment->appointment_code }}
+
                         </div>
 
+
                         <div class="staff-customer">
+
                             {{ $appointment->contact_name }}
+
                         </div>
+
 
                         <div class="staff-vehicle">
 
@@ -361,7 +795,9 @@
                             {{ $statusClass }}
                         "
                     >
+
                         {{ $statusText }}
+
                     </span>
 
                 </div>
@@ -372,19 +808,25 @@
                     <div class="staff-info-box">
 
                         <div class="staff-info-icon">
+
                             <i class="bi bi-calendar3"></i>
+
                         </div>
+
 
                         <div class="staff-info-label">
                             Ngày hẹn
                         </div>
+
 
                         <div class="staff-info-value">
 
                             {{
                                 $appointment
                                     ->appointment_date
-                                    ->format('d/m/Y')
+                                    ->format(
+                                        'd/m/Y'
+                                    )
                             }}
 
                         </div>
@@ -395,12 +837,16 @@
                     <div class="staff-info-box">
 
                         <div class="staff-info-icon">
+
                             <i class="bi bi-clock"></i>
+
                         </div>
+
 
                         <div class="staff-info-label">
                             Giờ
                         </div>
+
 
                         <div class="staff-info-value">
 
@@ -421,15 +867,21 @@
                     <div class="staff-info-box">
 
                         <div class="staff-info-icon">
+
                             <i class="bi bi-telephone"></i>
+
                         </div>
+
 
                         <div class="staff-info-label">
                             Điện thoại
                         </div>
 
+
                         <div class="staff-info-value">
+
                             {{ $appointment->contact_phone }}
+
                         </div>
 
                     </div>
@@ -438,12 +890,16 @@
                     <div class="staff-info-box">
 
                         <div class="staff-info-icon">
+
                             <i class="bi bi-tools"></i>
+
                         </div>
+
 
                         <div class="staff-info-label">
                             Dịch vụ
                         </div>
+
 
                         <div class="staff-info-value">
 
@@ -461,12 +917,16 @@
                     <div class="staff-info-box">
 
                         <div class="staff-info-icon">
+
                             <i class="bi bi-cash-stack"></i>
+
                         </div>
+
 
                         <div class="staff-info-label">
                             Giá tham khảo
                         </div>
+
 
                         <div class="staff-info-value">
 
@@ -478,7 +938,8 @@
                                     ',',
                                     '.'
                                 )
-                            }} đ
+                            }}
+                            đ
 
                         </div>
 
@@ -496,8 +957,11 @@
                         ) }}"
                         class="staff-action"
                     >
+
                         Xem và xử lý
+
                         <i class="bi bi-arrow-right"></i>
+
                     </a>
 
                 </div>
@@ -510,11 +974,16 @@
 
 
     <a
-        href="{{ route('staff.dashboard') }}"
+        href="{{ route(
+            'staff.dashboard'
+        ) }}"
         class="staff-back"
     >
+
         <i class="bi bi-arrow-left"></i>
+
         Quay lại Dashboard
+
     </a>
 
 </div>

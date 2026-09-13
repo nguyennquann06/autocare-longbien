@@ -14,37 +14,191 @@ class TechnicianServiceOrderController extends Controller
     /**
      * Danh sách phiếu bảo dưỡng
      * được giao cho kỹ thuật viên hiện tại.
+     *
+     * Thứ tự ưu tiên:
+     *
+     * 1. IN_PROGRESS
+     * 2. RECEIVED
+     * 3. COMPLETED
+     * 4. CANCELLED
      */
-    public function index()
-    {
-        $user = $this->authorizeTechnician();
+    public function index(
+        Request $request
+    ) {
+        $user =
+            $this->authorizeTechnician();
 
-        $serviceOrders = ServiceOrder::with([
-            'customer',
-            'vehicle.brand',
-            'vehicle.vehicleModel',
-            'appointment',
-            'items',
-        ])
-            ->where(
-                'technician_id',
-                $user->id
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER STATUS
+        |--------------------------------------------------------------------------
+        */
+
+        $allowedStatuses = [
+            'ALL',
+            'IN_PROGRESS',
+            'RECEIVED',
+            'COMPLETED',
+            'CANCELLED',
+        ];
+
+
+        $statusFilter =
+            strtoupper(
+                trim(
+                    (string)
+                    $request->query(
+                        'status',
+                        'ALL'
+                    )
+                )
+            );
+
+
+        if (
+            !in_array(
+                $statusFilter,
+                $allowedStatuses,
+                true
             )
-            ->orderByRaw("
-                CASE status
-                    WHEN 'IN_PROGRESS' THEN 1
-                    WHEN 'RECEIVED' THEN 2
-                    WHEN 'COMPLETED' THEN 3
-                    WHEN 'CANCELLED' THEN 4
-                    ELSE 5
-                END
-            ")
-            ->orderByDesc('received_at')
-            ->get();
+        ) {
+            $statusFilter =
+                'ALL';
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATUS COUNTS
+        |--------------------------------------------------------------------------
+        |
+        | Luôn đếm toàn bộ công việc
+        | được phân công cho kỹ thuật viên,
+        | không phụ thuộc bộ lọc.
+        |
+        */
+
+        $statusCounts =
+            ServiceOrder::query()
+                ->where(
+                    'technician_id',
+                    $user->id
+                )
+                ->selectRaw(
+                    'status, COUNT(*) as total'
+                )
+                ->groupBy('status')
+                ->pluck(
+                    'total',
+                    'status'
+                );
+
+
+        $totalServiceOrders =
+            (int)
+            $statusCounts->sum();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SERVICE ORDER QUERY
+        |--------------------------------------------------------------------------
+        */
+
+        $query =
+            ServiceOrder::with([
+                'customer',
+                'vehicle.brand',
+                'vehicle.vehicleModel',
+                'appointment',
+                'items',
+            ])
+                ->where(
+                    'technician_id',
+                    $user->id
+                );
+
+
+        if (
+            $statusFilter !== 'ALL'
+        ) {
+            $query->where(
+                'status',
+                $statusFilter
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PRIORITY SORTING
+        |--------------------------------------------------------------------------
+        |
+        | 1. Đang thực hiện
+        | 2. Đã tiếp nhận / chờ bắt đầu
+        | 3. Đã hoàn thành
+        | 4. Đã hủy
+        |
+        | Trong nhóm đang xử lý:
+        | → công việc được bắt đầu / tiếp nhận
+        |   lâu hơn được ưu tiên trước.
+        |
+        | Trong nhóm hoàn thành:
+        | → công việc vừa hoàn thành gần đây
+        |   hiển thị trước.
+        |
+        */
+
+        $serviceOrders =
+            $query
+                ->orderByRaw("
+                    CASE status
+                        WHEN 'IN_PROGRESS' THEN 1
+                        WHEN 'RECEIVED' THEN 2
+                        WHEN 'COMPLETED' THEN 3
+                        WHEN 'CANCELLED' THEN 4
+                        ELSE 5
+                    END
+                ")
+                ->orderByRaw("
+                    CASE
+                        WHEN status = 'IN_PROGRESS'
+                        THEN COALESCE(
+                            started_at,
+                            received_at
+                        )
+                    END ASC
+                ")
+                ->orderByRaw("
+                    CASE
+                        WHEN status = 'RECEIVED'
+                        THEN received_at
+                    END ASC
+                ")
+                ->orderByRaw("
+                    CASE
+                        WHEN status = 'COMPLETED'
+                        THEN completed_at
+                    END DESC
+                ")
+                ->orderByDesc(
+                    'received_at'
+                )
+                ->orderByDesc(
+                    'id'
+                )
+                ->get();
+
 
         return view(
             'technician.service-orders.index',
-            compact('serviceOrders')
+            compact(
+                'serviceOrders',
+                'statusFilter',
+                'statusCounts',
+                'totalServiceOrders'
+            )
         );
     }
 
@@ -55,12 +209,15 @@ class TechnicianServiceOrderController extends Controller
     public function show(
         ServiceOrder $serviceOrder
     ) {
-        $user = $this->authorizeTechnician();
+        $user =
+            $this->authorizeTechnician();
+
 
         $this->authorizeAssignedTechnician(
             $serviceOrder,
             $user->id
         );
+
 
         $serviceOrder->load([
             'appointment',
@@ -71,6 +228,7 @@ class TechnicianServiceOrderController extends Controller
             'technician',
             'items.service',
         ]);
+
 
         return view(
             'technician.service-orders.show',
@@ -85,17 +243,24 @@ class TechnicianServiceOrderController extends Controller
     public function start(
         ServiceOrder $serviceOrder
     ) {
-        $user = $this->authorizeTechnician();
+        $user =
+            $this->authorizeTechnician();
+
 
         $this->authorizeAssignedTechnician(
             $serviceOrder,
             $user->id
         );
 
+
         /**
-         * Chỉ phiếu RECEIVED mới được bắt đầu.
+         * Chỉ phiếu RECEIVED
+         * mới được bắt đầu.
          */
-        if ($serviceOrder->status !== 'RECEIVED') {
+        if (
+            $serviceOrder->status
+            !== 'RECEIVED'
+        ) {
             return redirect()
                 ->route(
                     'technician.service-orders.show',
@@ -107,33 +272,45 @@ class TechnicianServiceOrderController extends Controller
                 );
         }
 
-        DB::transaction(
-            function () use ($serviceOrder) {
 
+        DB::transaction(
+            function () use (
+                $serviceOrder
+            ) {
                 /**
                  * Chuyển Service Order
                  * sang IN_PROGRESS.
                  */
                 $serviceOrder->update([
-                    'status' => 'IN_PROGRESS',
-                    'started_at' => now(),
+                    'status' =>
+                        'IN_PROGRESS',
+
+                    'started_at' =>
+                        now(),
                 ]);
+
 
                 /**
                  * Đồng bộ Appointment.
                  */
                 if (
-                    $serviceOrder->appointment &&
-                    $serviceOrder->appointment->status === 'CONFIRMED'
+                    $serviceOrder->appointment
+                    &&
+                    $serviceOrder
+                        ->appointment
+                        ->status
+                    === 'CONFIRMED'
                 ) {
                     $serviceOrder
                         ->appointment
                         ->update([
-                            'status' => 'IN_PROGRESS',
+                            'status' =>
+                                'IN_PROGRESS',
                         ]);
                 }
             }
         );
+
 
         return redirect()
             ->route(
@@ -155,20 +332,26 @@ class TechnicianServiceOrderController extends Controller
         ServiceOrder $serviceOrder,
         ServiceOrderItem $item
     ) {
-        $user = $this->authorizeTechnician();
+        $user =
+            $this->authorizeTechnician();
+
 
         $this->authorizeAssignedTechnician(
             $serviceOrder,
             $user->id
         );
 
+
         /**
          * Chống thao tác item
          * thuộc Service Order khác.
          */
         if (
-            (int) $item->service_order_id !==
-            (int) $serviceOrder->id
+            (int)
+            $item->service_order_id
+            !==
+            (int)
+            $serviceOrder->id
         ) {
             abort(
                 403,
@@ -176,10 +359,15 @@ class TechnicianServiceOrderController extends Controller
             );
         }
 
+
         /**
-         * Chỉ thao tác khi phiếu đang thực hiện.
+         * Chỉ thao tác khi phiếu
+         * đang thực hiện.
          */
-        if ($serviceOrder->status !== 'IN_PROGRESS') {
+        if (
+            $serviceOrder->status
+            !== 'IN_PROGRESS'
+        ) {
             return redirect()
                 ->route(
                     'technician.service-orders.show',
@@ -191,40 +379,46 @@ class TechnicianServiceOrderController extends Controller
                 );
         }
 
-        $validated = $request->validate(
-            [
-                'status' => [
-                    'required',
 
-                    Rule::in([
-                        'IN_PROGRESS',
-                        'COMPLETED',
-                    ]),
+        $validated =
+            $request->validate(
+                [
+                    'status' => [
+                        'required',
+
+                        Rule::in([
+                            'IN_PROGRESS',
+                            'COMPLETED',
+                        ]),
+                    ],
+
+                    'technician_note' => [
+                        'nullable',
+                        'string',
+                        'max:1000',
+                    ],
                 ],
+                [
+                    'status.required' =>
+                        'Vui lòng chọn trạng thái.',
 
-                'technician_note' => [
-                    'nullable',
-                    'string',
-                    'max:1000',
-                ],
-            ],
-            [
-                'status.required' =>
-                    'Vui lòng chọn trạng thái.',
+                    'status.in' =>
+                        'Trạng thái hạng mục không hợp lệ.',
 
-                'status.in' =>
-                    'Trạng thái hạng mục không hợp lệ.',
+                    'technician_note.max' =>
+                        'Ghi chú kỹ thuật không được vượt quá 1000 ký tự.',
+                ]
+            );
 
-                'technician_note.max' =>
-                    'Ghi chú kỹ thuật không được vượt quá 1000 ký tự.',
-            ]
-        );
 
         /**
          * Không cho hạng mục đã hoàn thành
          * quay ngược trạng thái.
          */
-        if ($item->status === 'COMPLETED') {
+        if (
+            $item->status
+            === 'COMPLETED'
+        ) {
             return redirect()
                 ->route(
                     'technician.service-orders.show',
@@ -236,16 +430,20 @@ class TechnicianServiceOrderController extends Controller
                 );
         }
 
+
         /**
-         * PENDING chỉ được:
+         * PENDING:
          * → IN_PROGRESS
          *
-         * IN_PROGRESS chỉ được:
+         * IN_PROGRESS:
          * → COMPLETED
          */
         if (
-            $item->status === 'PENDING' &&
-            $validated['status'] !== 'IN_PROGRESS'
+            $item->status
+            === 'PENDING'
+            &&
+            $validated['status']
+            !== 'IN_PROGRESS'
         ) {
             return redirect()
                 ->route(
@@ -258,9 +456,13 @@ class TechnicianServiceOrderController extends Controller
                 );
         }
 
+
         if (
-            $item->status === 'IN_PROGRESS' &&
-            $validated['status'] !== 'COMPLETED'
+            $item->status
+            === 'IN_PROGRESS'
+            &&
+            $validated['status']
+            !== 'COMPLETED'
         ) {
             return redirect()
                 ->route(
@@ -272,6 +474,7 @@ class TechnicianServiceOrderController extends Controller
                     'Trạng thái hạng mục không hợp lệ.'
                 );
         }
+
 
         $item->update([
             'status' =>
@@ -285,17 +488,23 @@ class TechnicianServiceOrderController extends Controller
                     ? (
                         !empty(
                             trim(
-                                $validated['technician_note']
+                                $validated[
+                                    'technician_note'
+                                ]
                                 ?? ''
                             )
                         )
                             ? trim(
-                                $validated['technician_note']
+                                $validated[
+                                    'technician_note'
+                                ]
                             )
                             : null
                     )
-                    : $item->technician_note,
+                    : $item
+                        ->technician_note,
         ]);
+
 
         return redirect()
             ->route(
@@ -316,19 +525,26 @@ class TechnicianServiceOrderController extends Controller
         Request $request,
         ServiceOrder $serviceOrder
     ) {
-        $user = $this->authorizeTechnician();
+        $user =
+            $this->authorizeTechnician();
+
 
         $this->authorizeAssignedTechnician(
             $serviceOrder,
             $user->id
         );
 
+
         $serviceOrder->load([
             'items',
             'appointment',
         ]);
 
-        if ($serviceOrder->status !== 'IN_PROGRESS') {
+
+        if (
+            $serviceOrder->status
+            !== 'IN_PROGRESS'
+        ) {
             return redirect()
                 ->route(
                     'technician.service-orders.show',
@@ -340,19 +556,25 @@ class TechnicianServiceOrderController extends Controller
                 );
         }
 
+
         /**
          * Bắt buộc tất cả hạng mục
          * phải COMPLETED.
          */
-        $unfinishedItems = $serviceOrder
-            ->items
-            ->where(
-                'status',
-                '!=',
-                'COMPLETED'
-            );
+        $unfinishedItems =
+            $serviceOrder
+                ->items
+                ->where(
+                    'status',
+                    '!=',
+                    'COMPLETED'
+                );
 
-        if ($unfinishedItems->isNotEmpty()) {
+
+        if (
+            $unfinishedItems
+                ->isNotEmpty()
+        ) {
             return redirect()
                 ->route(
                     'technician.service-orders.show',
@@ -364,19 +586,22 @@ class TechnicianServiceOrderController extends Controller
                 );
         }
 
-        $validated = $request->validate(
-            [
-                'technician_note' => [
-                    'nullable',
-                    'string',
-                    'max:2000',
+
+        $validated =
+            $request->validate(
+                [
+                    'technician_note' => [
+                        'nullable',
+                        'string',
+                        'max:2000',
+                    ],
                 ],
-            ],
-            [
-                'technician_note.max' =>
-                    'Ghi chú kỹ thuật không được vượt quá 2000 ký tự.',
-            ]
-        );
+                [
+                    'technician_note.max' =>
+                        'Ghi chú kỹ thuật không được vượt quá 2000 ký tự.',
+                ]
+            );
+
 
         DB::transaction(
             function () use (
@@ -387,34 +612,46 @@ class TechnicianServiceOrderController extends Controller
                  * Hoàn thành Service Order.
                  */
                 $serviceOrder->update([
-                    'status' => 'COMPLETED',
+                    'status' =>
+                        'COMPLETED',
 
-                    'completed_at' => now(),
+                    'completed_at' =>
+                        now(),
 
                     'technician_note' =>
                         !empty(
-                            $validated['technician_note']
+                            $validated[
+                                'technician_note'
+                            ]
                             ?? null
                         )
                             ? trim(
-                                $validated['technician_note']
+                                $validated[
+                                    'technician_note'
+                                ]
                             )
                             : $serviceOrder
                                 ->technician_note,
                 ]);
 
+
                 /**
                  * Đồng bộ Appointment.
                  */
-                if ($serviceOrder->appointment) {
+                if (
+                    $serviceOrder
+                        ->appointment
+                ) {
                     $serviceOrder
                         ->appointment
                         ->update([
-                            'status' => 'COMPLETED',
+                            'status' =>
+                                'COMPLETED',
                         ]);
                 }
             }
         );
+
 
         return redirect()
             ->route(
@@ -433,10 +670,13 @@ class TechnicianServiceOrderController extends Controller
      */
     private function authorizeTechnician()
     {
-        $user = Auth::user();
+        $user =
+            Auth::user();
+
 
         if (
-            !$user ||
+            !$user
+            ||
             !$user->role
         ) {
             abort(
@@ -445,15 +685,17 @@ class TechnicianServiceOrderController extends Controller
             );
         }
 
+
         if (
-            $user->role->code !==
-            'TECHNICIAN'
+            $user->role->code
+            !== 'TECHNICIAN'
         ) {
             abort(
                 403,
                 'Bạn không có quyền truy cập khu vực kỹ thuật viên.'
             );
         }
+
 
         return $user;
     }
@@ -468,7 +710,9 @@ class TechnicianServiceOrderController extends Controller
         int $userId
     ): void {
         if (
-            (int) $serviceOrder->technician_id !==
+            (int)
+            $serviceOrder->technician_id
+            !==
             $userId
         ) {
             abort(
