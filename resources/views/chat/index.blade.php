@@ -457,6 +457,55 @@
             rgba(37, 99, 235, 0.18);
     }
 
+    .chat-message-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .chat-message-action {
+        min-height: 39px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 8px 13px;
+        border:
+            1px solid
+            rgba(37, 99, 235, 0.18);
+        border-radius: 11px;
+        color: white;
+        text-decoration: none;
+        background:
+            linear-gradient(
+                135deg,
+                #1683ff,
+                #4f46e5
+            );
+        box-shadow:
+            0 7px 18px
+            rgba(37, 99, 235, 0.16);
+        font-size: 10px;
+        font-weight: 850;
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .chat-message-action:hover {
+        color: white;
+        transform:
+            translateY(-2px);
+        box-shadow:
+            0 11px 24px
+            rgba(37, 99, 235, 0.24);
+    }
+
+    .chat-message-action i {
+        font-size: 12px;
+    }
+
     .chat-message-time {
         margin-top: 5px;
         color: #94a3b8;
@@ -635,6 +684,10 @@
         .chat-composer {
             padding: 13px;
         }
+
+        .chat-message-action {
+            width: 100%;
+        }
     }
 </style>
 
@@ -650,9 +703,6 @@
         data-reveal="zoom"
     >
 
-        {{-- =========================================
-            SIDEBAR
-        ========================================== --}}
         <aside class="chat-sidebar">
 
             <div class="chat-sidebar-inner">
@@ -783,9 +833,6 @@
         </aside>
 
 
-        {{-- =========================================
-            CHAT
-        ========================================== --}}
         <section class="chat-main">
 
             <header class="chat-header">
@@ -919,6 +966,23 @@
                             $isUser =
                                 $message->role
                                 === 'USER';
+
+                            $messageMetadata =
+                                is_array(
+                                    $message->metadata
+                                )
+                                    ? $message->metadata
+                                    : [];
+
+                            $messageActions =
+                                !$isUser
+                                    ? (
+                                        $messageMetadata[
+                                            'actions'
+                                        ]
+                                        ?? []
+                                    )
+                                    : [];
                         @endphp
 
 
@@ -963,6 +1027,60 @@
 
 
                                 <div class="chat-bubble">{{ $message->content }}</div>
+
+
+                                @if (
+                                    !empty(
+                                        $messageActions
+                                    )
+                                )
+
+                                    <div class="chat-message-actions">
+
+                                        @foreach (
+                                            $messageActions
+                                            as $action
+                                        )
+
+                                            @if (
+                                                ($action['type'] ?? null)
+                                                === 'link'
+                                                &&
+                                                !empty(
+                                                    $action['url']
+                                                )
+                                                &&
+                                                !empty(
+                                                    $action['label']
+                                                )
+                                            )
+
+                                                <a
+                                                    href="{{ $action['url'] }}"
+                                                    class="chat-message-action"
+                                                >
+
+                                                    <i
+                                                        class="
+                                                            bi
+                                                            {{
+                                                                $action['icon']
+                                                                ?? 'bi-arrow-right-circle'
+                                                            }}
+                                                        "
+                                                    ></i>
+
+                                                    {{ $action['label'] }}
+
+                                                </a>
+
+                                            @endif
+
+                                        @endforeach
+
+                                    </div>
+
+                                @endif
 
 
                                 <div class="chat-message-time">
@@ -1019,8 +1137,8 @@
 
                 <div class="chat-disclaimer">
 
-                    AutoCare AI hiện đang sử dụng
-                    Knowledge Base nội bộ.
+                    AutoCare AI sử dụng dữ liệu nội bộ
+                    và AI để hỗ trợ người dùng.
                     Các tư vấn kỹ thuật chỉ mang tính hỗ trợ.
 
                 </div>
@@ -1090,10 +1208,111 @@
             }
 
 
+            function appendActions(
+                contentWrapper,
+                actions
+            ) {
+                if (
+                    !Array.isArray(actions)
+                    ||
+                    actions.length === 0
+                ) {
+                    return;
+                }
+
+
+                const actionsWrapper =
+                    document.createElement(
+                        'div'
+                    );
+
+                actionsWrapper.className =
+                    'chat-message-actions';
+
+
+                actions.forEach(
+                    function (action) {
+                        if (
+                            !action
+                            ||
+                            action.type !== 'link'
+                            ||
+                            !action.url
+                            ||
+                            !action.label
+                        ) {
+                            return;
+                        }
+
+
+                        const link =
+                            document.createElement(
+                                'a'
+                            );
+
+                        link.className =
+                            'chat-message-action';
+
+                        link.href =
+                            action.url;
+
+
+                        const icon =
+                            document.createElement(
+                                'i'
+                            );
+
+                        icon.className =
+                            `bi ${
+                                action.icon
+                                || 'bi-arrow-right-circle'
+                            }`;
+
+
+                        const label =
+                            document.createElement(
+                                'span'
+                            );
+
+                        label.textContent =
+                            action.label;
+
+
+                        link.appendChild(
+                            icon
+                        );
+
+                        link.appendChild(
+                            label
+                        );
+
+                        actionsWrapper
+                            .appendChild(
+                                link
+                            );
+                    }
+                );
+
+
+                if (
+                    actionsWrapper
+                        .children
+                        .length
+                    > 0
+                ) {
+                    contentWrapper
+                        .appendChild(
+                            actionsWrapper
+                        );
+                }
+            }
+
+
             function createMessage(
                 role,
                 content,
-                time = ''
+                time = '',
+                actions = []
             ) {
                 const wrapper =
                     document.createElement(
@@ -1183,6 +1402,17 @@
                 contentWrapper.appendChild(
                     bubble
                 );
+
+
+                if (
+                    role === 'assistant'
+                ) {
+                    appendActions(
+                        contentWrapper,
+                        actions
+                    );
+                }
+
 
                 contentWrapper.appendChild(
                     timeElement
@@ -1413,7 +1643,11 @@
                             .content,
                         data
                             .assistant_message
-                            .created_at
+                            .created_at,
+                        data
+                            .assistant_message
+                            .actions
+                        || []
                     );
                 }
                 catch (error) {

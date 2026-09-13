@@ -471,6 +471,132 @@
 
 
     /* =====================================================
+       GUEST AUTH ACTIONS
+       ===================================================== */
+
+    .guest-auth-links {
+        display: flex;
+
+        align-items: center;
+
+        gap: 9px;
+
+        padding: 4px;
+    }
+
+
+    .guest-login-link,
+    .guest-register-link {
+        min-height: 42px;
+
+        padding:
+            9px 17px;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 8px;
+
+        border-radius: 11px;
+
+        text-decoration: none;
+
+        white-space: nowrap;
+
+        font-size: 12px;
+
+        font-weight: 800;
+
+        transition:
+            transform 0.22s ease,
+            background 0.22s ease,
+            border-color 0.22s ease,
+            box-shadow 0.22s ease;
+    }
+
+
+    .guest-login-link {
+        color: #e0f2fe;
+
+        border:
+            1px solid
+            rgba(186, 230, 253, 0.25);
+
+        background:
+            rgba(255, 255, 255, 0.065);
+
+        backdrop-filter:
+            blur(12px);
+    }
+
+
+    .guest-login-link:hover {
+        color: white;
+
+        border-color:
+            rgba(125, 211, 252, 0.50);
+
+        background:
+            rgba(255, 255, 255, 0.12);
+
+        transform:
+            translateY(-2px);
+
+        box-shadow:
+            0 8px 20px
+            rgba(2, 132, 199, 0.15);
+    }
+
+
+    .guest-register-link {
+        color: #07111f;
+
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.38);
+
+        background:
+            linear-gradient(
+                135deg,
+                #67e8f9,
+                #bfdbfe 55%,
+                #ffffff
+            );
+
+        box-shadow:
+            0 8px 24px
+            rgba(56, 189, 248, 0.24),
+
+            inset 0 1px 0
+            rgba(255, 255, 255, 0.70);
+    }
+
+
+    .guest-register-link:hover {
+        color: #07111f;
+
+        transform:
+            translateY(-2px);
+
+        box-shadow:
+            0 12px 30px
+            rgba(56, 189, 248, 0.34),
+
+            inset 0 1px 0
+            rgba(255, 255, 255, 0.75);
+    }
+
+
+    .guest-login-link i,
+    .guest-register-link i {
+        font-size: 14px;
+    }
+
+
+    /* =====================================================
        AUTOCARE AI NAV ITEM
        ===================================================== */
 
@@ -1377,6 +1503,25 @@
         }
 
 
+        .guest-auth-links {
+            width: 100%;
+
+            flex-direction: column;
+
+            align-items: stretch;
+
+            padding: 0;
+        }
+
+
+        .guest-login-link,
+        .guest-register-link {
+            width: 100%;
+
+            min-height: 46px;
+        }
+
+
         .app-navbar-account {
             width: 100%;
 
@@ -1512,308 +1657,311 @@
 
         <nav class="app-navbar-menu">
 
-            <div class="app-nav-links">
-
-                {{-- CUSTOMER --}}
-                @if ($roleCode === 'CUSTOMER')
-
-                    <a
-                        href="{{ route(
-                            'customer.dashboard'
-                        ) }}"
-                        class="
-                            app-nav-link
-                            {{
-                                request()->routeIs(
-                                    'customer.dashboard'
-                                )
-                                    ? 'active'
-                                    : ''
-                            }}
-                        "
-                    >
-                        <span class="nav-dot"></span>
-                        Tổng quan
-                    </a>
-
-
-                    <a
-                        href="{{ route(
-                            'vehicles.index'
-                        ) }}"
-                        class="
-                            app-nav-link
-                            {{
-                                request()->routeIs(
-                                    'vehicles.*'
-                                )
-                                    ? 'active'
-                                    : ''
-                            }}
-                        "
-                    >
-                        <span class="nav-dot"></span>
-                        Xe của tôi
-                    </a>
-
-
-                    <a
-                        href="{{ route(
-                            'appointments.create'
-                        ) }}"
-                        class="
-                            app-nav-link
-                            {{
-                                request()->routeIs(
-                                    'appointments.create'
-                                )
-                                    ? 'active'
-                                    : ''
-                            }}
-                        "
-                    >
-                        <span class="nav-dot"></span>
-                        Đặt lịch
-                    </a>
-
-
-                    <a
-                        href="{{ route(
-                            'appointments.index'
-                        ) }}"
-                        class="
-                            app-nav-link
-                            {{
-                                request()->routeIs(
-                                    'appointments.index',
-                                    'appointments.show'
-                                )
-                                    ? 'active'
-                                    : ''
-                            }}
-                        "
-                    >
-                        <span class="nav-dot"></span>
-                        Lịch hẹn
-                    </a>
-
-
-                    <a
-                        href="{{ route(
-                            'maintenance-history.index'
-                        ) }}"
-                        class="
-                            app-nav-link
-                            {{
-                                request()->routeIs(
-                                    'maintenance-history.*'
-                                )
-                                    ? 'active'
-                                    : ''
-                            }}
-                        "
-                    >
-                        <span class="nav-dot"></span>
-                        Lịch sử bảo dưỡng
-                    </a>
-
-
-                    <a
-                        href="{{ route(
-                            'customer.invoices.index'
-                        ) }}"
-                        class="
-                            app-nav-link
-                            {{
-                                request()->routeIs(
-                                    'customer.invoices.*'
-                                )
-                                    ? 'active'
-                                    : ''
-                            }}
-                        "
-                    >
-                        <span class="nav-dot"></span>
-                        Hóa đơn
-                    </a>
-
-
-                    <a
-                        href="{{ route(
-                            'chat.index'
-                        ) }}"
-                        class="
-                            app-nav-link
-                            ai-nav-link
-                            {{
-                                request()->routeIs(
-                                    'chat.*'
-                                )
-                                    ? 'active'
-                                    : ''
-                            }}
-                        "
-                    >
-
-                        <i
-                            class="
-                                bi
-                                bi-stars
-                                ai-nav-icon
-                            "
-                        ></i>
-
-                        AutoCare AI
-
-                        <span class="ai-nav-badge">
-                            AI
-                        </span>
-
-                    </a>
-
-
-                {{-- STAFF / ADMIN --}}
-                @elseif (
-                    in_array(
-                        $roleCode,
-                        [
-                            'STAFF',
-                            'ADMIN',
-                        ],
-                        true
-                    )
-                )
-
-                    <a
-                        href="{{ route(
-                            'staff.dashboard'
-                        ) }}"
-                        class="
-                            app-nav-link
-                            {{
-                                request()->routeIs(
-                                    'staff.dashboard'
-                                )
-                                    ? 'active'
-                                    : ''
-                            }}
-                        "
-                    >
-                        <span class="nav-dot"></span>
-                        Dashboard
-                    </a>
-
-
-                    <a
-                        href="{{ route(
-                            'staff.appointments.index'
-                        ) }}"
-                        class="
-                            app-nav-link
-                            {{
-                                request()->routeIs(
-                                    'staff.appointments.*',
-                                    'staff.service-orders.*',
-                                    'staff.invoices.*'
-                                )
-                                    ? 'active'
-                                    : ''
-                            }}
-                        "
-                    >
-                        <span class="nav-dot"></span>
-                        Lịch hẹn
-                    </a>
-
-
-                    <a
-                        href="{{ route(
-                            'staff.parts.index'
-                        ) }}"
-                        class="
-                            app-nav-link
-                            {{
-                                request()->routeIs(
-                                    'staff.parts.*'
-                                )
-                                    ? 'active'
-                                    : ''
-                            }}
-                        "
-                    >
-                        <span class="nav-dot"></span>
-                        Kho phụ tùng
-                    </a>
-
-
-                    <a
-                        href="{{ route(
-                            'services.index'
-                        ) }}"
-                        class="
-                            app-nav-link
-                            {{
-                                request()->routeIs(
-                                    'services.*'
-                                )
-                                    ? 'active'
-                                    : ''
-                            }}
-                        "
-                    >
-                        <span class="nav-dot"></span>
-                        Dịch vụ
-                    </a>
-
-
-                {{-- TECHNICIAN --}}
-                @elseif (
-                    $roleCode === 'TECHNICIAN'
-                )
-
-                    <a
-                        href="{{ route(
-                            'technician.service-orders.index'
-                        ) }}"
-                        class="
-                            app-nav-link
-                            {{
-                                request()->routeIs(
-                                    'technician.service-orders.*'
-                                )
-                                    ? 'active'
-                                    : ''
-                            }}
-                        "
-                    >
-                        <span class="nav-dot"></span>
-                        Công việc của tôi
-                    </a>
-
-
-                    <a
-                        href="{{ route('home') }}"
-                        class="
-                            app-nav-link
-                            {{
-                                request()->routeIs(
-                                    'home'
-                                )
-                                    ? 'active'
-                                    : ''
-                            }}
-                        "
-                    >
-                        <span class="nav-dot"></span>
-                        Trang chủ
-                    </a>
-
-                @endif
-
-            </div>
-
-
+            {{-- =====================================================
+                AUTHENTICATED NAVIGATION
+            ====================================================== --}}
             @auth
+
+                <div class="app-nav-links">
+
+                    {{-- CUSTOMER --}}
+                    @if ($roleCode === 'CUSTOMER')
+
+                        <a
+                            href="{{ route(
+                                'customer.dashboard'
+                            ) }}"
+                            class="
+                                app-nav-link
+                                {{
+                                    request()->routeIs(
+                                        'customer.dashboard'
+                                    )
+                                        ? 'active'
+                                        : ''
+                                }}
+                            "
+                        >
+                            <span class="nav-dot"></span>
+                            Tổng quan
+                        </a>
+
+
+                        <a
+                            href="{{ route(
+                                'vehicles.index'
+                            ) }}"
+                            class="
+                                app-nav-link
+                                {{
+                                    request()->routeIs(
+                                        'vehicles.*'
+                                    )
+                                        ? 'active'
+                                        : ''
+                                }}
+                            "
+                        >
+                            <span class="nav-dot"></span>
+                            Xe của tôi
+                        </a>
+
+
+                        <a
+                            href="{{ route(
+                                'appointments.create'
+                            ) }}"
+                            class="
+                                app-nav-link
+                                {{
+                                    request()->routeIs(
+                                        'appointments.create'
+                                    )
+                                        ? 'active'
+                                        : ''
+                                }}
+                            "
+                        >
+                            <span class="nav-dot"></span>
+                            Đặt lịch
+                        </a>
+
+
+                        <a
+                            href="{{ route(
+                                'appointments.index'
+                            ) }}"
+                            class="
+                                app-nav-link
+                                {{
+                                    request()->routeIs(
+                                        'appointments.index',
+                                        'appointments.show'
+                                    )
+                                        ? 'active'
+                                        : ''
+                                }}
+                            "
+                        >
+                            <span class="nav-dot"></span>
+                            Lịch hẹn
+                        </a>
+
+
+                        <a
+                            href="{{ route(
+                                'maintenance-history.index'
+                            ) }}"
+                            class="
+                                app-nav-link
+                                {{
+                                    request()->routeIs(
+                                        'maintenance-history.*'
+                                    )
+                                        ? 'active'
+                                        : ''
+                                }}
+                            "
+                        >
+                            <span class="nav-dot"></span>
+                            Lịch sử bảo dưỡng
+                        </a>
+
+
+                        <a
+                            href="{{ route(
+                                'customer.invoices.index'
+                            ) }}"
+                            class="
+                                app-nav-link
+                                {{
+                                    request()->routeIs(
+                                        'customer.invoices.*'
+                                    )
+                                        ? 'active'
+                                        : ''
+                                }}
+                            "
+                        >
+                            <span class="nav-dot"></span>
+                            Hóa đơn
+                        </a>
+
+
+                        <a
+                            href="{{ route(
+                                'chat.index'
+                            ) }}"
+                            class="
+                                app-nav-link
+                                ai-nav-link
+                                {{
+                                    request()->routeIs(
+                                        'chat.*'
+                                    )
+                                        ? 'active'
+                                        : ''
+                                }}
+                            "
+                        >
+
+                            <i
+                                class="
+                                    bi
+                                    bi-stars
+                                    ai-nav-icon
+                                "
+                            ></i>
+
+                            AutoCare AI
+
+                            <span class="ai-nav-badge">
+                                AI
+                            </span>
+
+                        </a>
+
+
+                    {{-- STAFF / ADMIN --}}
+                    @elseif (
+                        in_array(
+                            $roleCode,
+                            [
+                                'STAFF',
+                                'ADMIN',
+                            ],
+                            true
+                        )
+                    )
+
+                        <a
+                            href="{{ route(
+                                'staff.dashboard'
+                            ) }}"
+                            class="
+                                app-nav-link
+                                {{
+                                    request()->routeIs(
+                                        'staff.dashboard'
+                                    )
+                                        ? 'active'
+                                        : ''
+                                }}
+                            "
+                        >
+                            <span class="nav-dot"></span>
+                            Dashboard
+                        </a>
+
+
+                        <a
+                            href="{{ route(
+                                'staff.appointments.index'
+                            ) }}"
+                            class="
+                                app-nav-link
+                                {{
+                                    request()->routeIs(
+                                        'staff.appointments.*',
+                                        'staff.service-orders.*',
+                                        'staff.invoices.*'
+                                    )
+                                        ? 'active'
+                                        : ''
+                                }}
+                            "
+                        >
+                            <span class="nav-dot"></span>
+                            Lịch hẹn
+                        </a>
+
+
+                        <a
+                            href="{{ route(
+                                'staff.parts.index'
+                            ) }}"
+                            class="
+                                app-nav-link
+                                {{
+                                    request()->routeIs(
+                                        'staff.parts.*'
+                                    )
+                                        ? 'active'
+                                        : ''
+                                }}
+                            "
+                        >
+                            <span class="nav-dot"></span>
+                            Kho phụ tùng
+                        </a>
+
+
+                        <a
+                            href="{{ route(
+                                'services.index'
+                            ) }}"
+                            class="
+                                app-nav-link
+                                {{
+                                    request()->routeIs(
+                                        'services.*'
+                                    )
+                                        ? 'active'
+                                        : ''
+                                }}
+                            "
+                        >
+                            <span class="nav-dot"></span>
+                            Dịch vụ
+                        </a>
+
+
+                    {{-- TECHNICIAN --}}
+                    @elseif (
+                        $roleCode === 'TECHNICIAN'
+                    )
+
+                        <a
+                            href="{{ route(
+                                'technician.service-orders.index'
+                            ) }}"
+                            class="
+                                app-nav-link
+                                {{
+                                    request()->routeIs(
+                                        'technician.service-orders.*'
+                                    )
+                                        ? 'active'
+                                        : ''
+                                }}
+                            "
+                        >
+                            <span class="nav-dot"></span>
+                            Công việc của tôi
+                        </a>
+
+
+                        <a
+                            href="{{ route('home') }}"
+                            class="
+                                app-nav-link
+                                {{
+                                    request()->routeIs(
+                                        'home'
+                                    )
+                                        ? 'active'
+                                        : ''
+                                }}
+                            "
+                        >
+                            <span class="nav-dot"></span>
+                            Trang chủ
+                        </a>
+
+                    @endif
+
+                </div>
+
 
                 <div class="app-navbar-account">
 
@@ -1860,6 +2008,60 @@
                 </div>
 
             @endauth
+
+
+            {{-- =====================================================
+                GUEST ACTIONS
+                Chỉ hiển thị tại URL /
+            ====================================================== --}}
+            @guest
+
+                @if (
+                    request()->routeIs(
+                        'home'
+                    )
+                )
+
+                    <div class="guest-auth-links">
+
+                        <a
+                            href="{{ route('login') }}"
+                            class="guest-login-link"
+                        >
+
+                            <i
+                                class="
+                                    bi
+                                    bi-box-arrow-in-right
+                                "
+                            ></i>
+
+                            Đăng nhập
+
+                        </a>
+
+
+                        <a
+                            href="{{ route('register') }}"
+                            class="guest-register-link"
+                        >
+
+                            <i
+                                class="
+                                    bi
+                                    bi-person-plus-fill
+                                "
+                            ></i>
+
+                            Đăng ký
+
+                        </a>
+
+                    </div>
+
+                @endif
+
+            @endguest
 
         </nav>
 

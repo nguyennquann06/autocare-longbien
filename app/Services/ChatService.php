@@ -86,6 +86,31 @@ class ChatService
 
         /*
         |--------------------------------------------------------------------------
+        | APPOINTMENT GUIDANCE
+        |--------------------------------------------------------------------------
+        |
+        | Đây là action thuộc chính hệ thống AutoCare.
+        |
+        | Không cần gọi Gemini:
+        |
+        | - tiết kiệm quota
+        | - URL do backend kiểm soát
+        | - không cho LLM tự sinh link
+        |
+        */
+
+        if (
+            $this->isAppointmentGuidanceIntent(
+                $message
+            )
+        ) {
+            return $this
+                ->appointmentGuidanceResponse();
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
         | CUSTOMER DATA
         |--------------------------------------------------------------------------
         */
@@ -98,10 +123,6 @@ class ChatService
                 null;
 
 
-            /*
-             * Resolve customer follow-up
-             * bằng entity metadata.
-             */
             if ($history->isNotEmpty()) {
                 $resolution =
                     $this
@@ -148,10 +169,6 @@ class ChatService
             }
 
 
-            /*
-             * Không phải customer follow-up:
-             * xử lý current message độc lập.
-             */
             if (!$customerAnswer) {
                 $customerAnswer =
                     $this
@@ -212,10 +229,6 @@ class ChatService
                 );
 
 
-        /*
-         * Contextual retrieval không có kết quả
-         * thì thử current question nguyên bản.
-         */
         if (
             $documents->isEmpty()
             &&
@@ -310,11 +323,6 @@ class ChatService
                 0;
 
 
-            /*
-             * Chỉ truyền history nếu
-             * resolver xác định đây là
-             * knowledge follow-up.
-             */
             if (
                 $retrieval[
                     'uses_history'
@@ -367,6 +375,9 @@ class ChatService
                 'sources' =>
                     $sources,
 
+                'actions' =>
+                    [],
+
                 'mode' =>
                     'llm_rag',
 
@@ -400,13 +411,6 @@ class ChatService
             report($exception);
 
 
-            /*
-             * Gemini lỗi / hết quota /
-             * high demand:
-             *
-             * dùng SMART FALLBACK,
-             * không dump toàn bộ Top-K.
-             */
             return $this
                 ->knowledgeFallback(
                     $message,
@@ -430,18 +434,20 @@ class ChatService
         array $historyMessages,
         int $historyCount
     ): array {
-        /*
-         * Structured customer answer vốn
-         * đã là câu trả lời an toàn.
-         *
-         * Nếu Gemini không cấu hình:
-         * dùng trực tiếp.
-         */
         if (
             !$this
                 ->aiProviderManager
                 ->isConfigured()
         ) {
+            $customerAnswer[
+                'actions'
+            ] =
+                $customerAnswer[
+                    'actions'
+                ]
+                ?? [];
+
+
             return $customerAnswer;
         }
 
@@ -512,6 +518,12 @@ class ChatService
                     ]
                     ?? [],
 
+                'actions' =>
+                    $customerAnswer[
+                        'actions'
+                    ]
+                    ?? [],
+
                 'mode' =>
                     'llm_customer_context',
 
@@ -545,10 +557,6 @@ class ChatService
             report($exception);
 
 
-            /*
-             * Customer structured answer
-             * đã đủ an toàn để fallback.
-             */
             $customerAnswer[
                 'mode'
             ] =
@@ -561,8 +569,87 @@ class ChatService
                 . '_fallback';
 
 
+            $customerAnswer[
+                'actions'
+            ] =
+                $customerAnswer[
+                    'actions'
+                ]
+                ?? [];
+
+
             return $customerAnswer;
         }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | APPOINTMENT GUIDANCE RESPONSE
+    |--------------------------------------------------------------------------
+    */
+
+    private function appointmentGuidanceResponse(): array
+    {
+        return [
+            'content' =>
+                implode(
+                    "\n",
+                    [
+                        'Bạn có thể đặt lịch bảo dưỡng trực tuyến ngay trên AutoCare.',
+                        '',
+                        'Các bước thực hiện:',
+                        '1. Mở trang Đặt lịch bảo dưỡng.',
+                        '2. Chọn xe cần bảo dưỡng.',
+                        '3. Chọn dịch vụ phù hợp.',
+                        '4. Chọn ngày và giờ mong muốn.',
+                        '5. Kiểm tra thông tin rồi xác nhận đặt lịch.',
+                        '',
+                        'Bạn có thể nhấn nút bên dưới để chuyển thẳng tới trang đặt lịch.',
+                    ]
+                ),
+
+            'sources' =>
+                [],
+
+            'actions' => [
+                [
+                    'type' =>
+                        'link',
+
+                    'label' =>
+                        'Đặt lịch bảo dưỡng ngay',
+
+                    'url' =>
+                        route(
+                            'appointments.create'
+                        ),
+
+                    'icon' =>
+                        'bi-calendar2-check',
+                ],
+            ],
+
+            'mode' =>
+                'local_appointment_guidance',
+
+            'provider' =>
+                null,
+
+            'model' =>
+                null,
+
+            'token_count' =>
+                null,
+
+            'llm_metadata' => [
+                'local_intent' =>
+                    'appointment_guidance',
+
+                'llm_used' =>
+                    false,
+            ],
+        ];
     }
 
 
@@ -635,6 +722,9 @@ class ChatService
             'sources' =>
                 $sources,
 
+            'actions' =>
+                [],
+
             'mode' =>
                 'clarification_vehicle',
 
@@ -657,15 +747,6 @@ class ChatService
     |--------------------------------------------------------------------------
     | SMART KNOWLEDGE FALLBACK
     |--------------------------------------------------------------------------
-    |
-    | Gemini có thể hết quota / high demand.
-    |
-    | Khi đó:
-    |
-    | - không dump 5 documents
-    | - chọn document tốt nhất
-    | - trả lời theo ý định current question
-    |
     */
 
     private function knowledgeFallback(
@@ -692,11 +773,6 @@ class ChatService
                 );
 
 
-        /*
-         * Vì câu fallback chỉ sử dụng
-         * primary document nên metadata
-         * cũng chỉ nên ghi nguồn đó.
-         */
         $primarySources =
             collect(
                 $sources
@@ -735,6 +811,9 @@ class ChatService
             'sources' =>
                 $primarySources,
 
+            'actions' =>
+                [],
+
             'mode' =>
                 $llmFailed
                     ? 'knowledge_fallback_after_llm_error'
@@ -763,10 +842,6 @@ class ChatService
     }
 
 
-    /**
-     * Tạo câu trả lời local thông minh
-     * từ document tốt nhất.
-     */
     private function buildSmartFallbackAnswer(
         string $question,
         KnowledgeDocument $document
@@ -786,11 +861,6 @@ class ChatService
         }
 
 
-        /*
-         * FAQ / BUSINESS_INFO / nguồn khác:
-         * chỉ dùng document tốt nhất,
-         * không dump toàn Top-K.
-         */
         $title =
             trim(
                 (string)
@@ -825,9 +895,6 @@ class ChatService
     }
 
 
-    /**
-     * Smart fallback dành cho SERVICE.
-     */
     private function buildServiceFallbackAnswer(
         string $question,
         KnowledgeDocument $document
@@ -933,12 +1000,6 @@ class ChatService
             );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | PRICE
-        |--------------------------------------------------------------------------
-        */
-
         if ($asksPrice) {
             $lines = [];
 
@@ -973,12 +1034,6 @@ class ChatService
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | DURATION
-        |--------------------------------------------------------------------------
-        */
-
         if ($asksDuration) {
             if ($data['duration']) {
                 return
@@ -996,12 +1051,6 @@ class ChatService
                 . ', nhưng dữ liệu hiện tại chưa ghi thời gian thực hiện dự kiến.';
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | MAINTENANCE INTERVAL
-        |--------------------------------------------------------------------------
-        */
 
         if ($asksCycle) {
             $intervals = [];
@@ -1042,12 +1091,6 @@ class ChatService
                 . ', nhưng dữ liệu hiện tại chưa ghi chu kỳ bảo dưỡng tham khảo.';
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | SERVICE AVAILABILITY
-        |--------------------------------------------------------------------------
-        */
 
         if ($asksAvailability) {
             $lines = [
@@ -1109,12 +1152,6 @@ class ChatService
             );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | GENERAL SERVICE QUESTION
-        |--------------------------------------------------------------------------
-        */
 
         $lines = [
             $serviceName,
@@ -1182,17 +1219,6 @@ class ChatService
     }
 
 
-    /**
-     * Parse KnowledgeDocument SERVICE.
-     *
-     * Seeder hiện lưu content dạng:
-     *
-     * Tên dịch vụ: ...
-     * Danh mục: ...
-     * Mô tả: ...
-     * Giá tham khảo: ...
-     * ...
-     */
     private function extractServiceData(
         string $content
     ): array {
@@ -1467,7 +1493,11 @@ class ChatService
             'content' =>
                 $content,
 
-            'sources' => [],
+            'sources' =>
+                [],
+
+            'actions' =>
+                [],
 
             'mode' =>
                 'local_greeting',
@@ -1493,7 +1523,11 @@ class ChatService
             'content' =>
                 'Mình chưa tìm thấy dữ liệu AutoCare đủ phù hợp để trả lời chính xác câu hỏi này. Bạn hãy thử mô tả cụ thể hơn.',
 
-            'sources' => [],
+            'sources' =>
+                [],
+
+            'actions' =>
+                [],
 
             'mode' =>
                 'no_knowledge',
@@ -1575,6 +1609,133 @@ class ChatService
 
 
         return false;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | APPOINTMENT INTENT
+    |--------------------------------------------------------------------------
+    |
+    | Nhận biết cả câu hỏi hướng dẫn
+    | và mong muốn thực hiện bảo dưỡng.
+    |
+    | Ví dụ:
+    |
+    | - Tôi muốn đặt lịch
+    | - Tôi muốn đăng ký bảo dưỡng xe
+    | - Tôi muốn bảo dưỡng xe
+    | - Đăng ký dịch vụ bảo dưỡng
+    | - Book lịch sửa xe
+    |
+    */
+
+    private function isAppointmentGuidanceIntent(
+        string $message
+    ): bool {
+        $normalized =
+            $this
+                ->normalizeForIntent(
+                    $message
+                );
+
+
+        /*
+         * Các câu thể hiện rất rõ
+         * ý định đặt lịch / đăng ký
+         * bảo dưỡng.
+         */
+        $directIntent =
+            $this
+                ->containsAnyNormalized(
+                    $normalized,
+                    [
+                        'cach dat lich',
+                        'lam sao dat lich',
+                        'lam the nao de dat lich',
+                        'quy trinh dat lich',
+                        'huong dan dat lich',
+                        'dat lich o dau',
+
+                        'toi muon dat lich',
+                        'minh muon dat lich',
+                        'muon dat lich',
+
+                        'dat lich bao duong',
+                        'dat lich sua xe',
+                        'dat lich sua chua',
+
+                        'dat hen bao duong',
+                        'dat hen sua xe',
+                        'dat hen sua chua',
+
+                        'book lich',
+                        'book lich bao duong',
+                        'book lich sua xe',
+                        'book hen',
+
+                        'dang ky lich bao duong',
+                        'dang ky bao duong',
+                        'dang ky bao duong xe',
+                        'dang ky dich vu bao duong',
+
+                        'toi muon dang ky bao duong',
+                        'toi muon dang ky bao duong xe',
+                        'minh muon dang ky bao duong',
+                        'minh muon dang ky bao duong xe',
+
+                        'toi muon bao duong xe',
+                        'minh muon bao duong xe',
+                        'muon bao duong xe',
+                    ]
+                );
+
+
+        if ($directIntent) {
+            return true;
+        }
+
+
+        /*
+         * Nhận biết câu tự nhiên không nằm
+         * đúng 100% trong danh sách phrase.
+         *
+         * Ví dụ:
+         *
+         * "cho tôi đăng ký bảo dưỡng chiếc xe"
+         * "mình muốn đăng ký dịch vụ sửa xe"
+         */
+        $hasBookingAction =
+            $this
+                ->containsAnyNormalized(
+                    $normalized,
+                    [
+                        'dat lich',
+                        'dat hen',
+                        'book lich',
+                        'book hen',
+                        'dang ky',
+                    ]
+                );
+
+
+        $hasServiceContext =
+            $this
+                ->containsAnyNormalized(
+                    $normalized,
+                    [
+                        'bao duong',
+                        'sua xe',
+                        'sua chua',
+                        'dich vu',
+                    ]
+                );
+
+
+        return
+            $hasBookingAction
+            &&
+            $hasServiceContext;
     }
 
 
