@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class TechnicianServiceOrderController extends Controller
 {
@@ -28,12 +29,6 @@ class TechnicianServiceOrderController extends Controller
         $user =
             $this->authorizeTechnician();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | FILTER STATUS
-        |--------------------------------------------------------------------------
-        */
 
         $allowedStatuses = [
             'ALL',
@@ -68,17 +63,6 @@ class TechnicianServiceOrderController extends Controller
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | STATUS COUNTS
-        |--------------------------------------------------------------------------
-        |
-        | Luôn đếm toàn bộ công việc
-        | được phân công cho kỹ thuật viên,
-        | không phụ thuộc bộ lọc.
-        |
-        */
-
         $statusCounts =
             ServiceOrder::query()
                 ->where(
@@ -99,12 +83,6 @@ class TechnicianServiceOrderController extends Controller
             (int)
             $statusCounts->sum();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | SERVICE ORDER QUERY
-        |--------------------------------------------------------------------------
-        */
 
         $query =
             ServiceOrder::with([
@@ -129,26 +107,6 @@ class TechnicianServiceOrderController extends Controller
             );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | PRIORITY SORTING
-        |--------------------------------------------------------------------------
-        |
-        | 1. Đang thực hiện
-        | 2. Đã tiếp nhận / chờ bắt đầu
-        | 3. Đã hoàn thành
-        | 4. Đã hủy
-        |
-        | Trong nhóm đang xử lý:
-        | → công việc được bắt đầu / tiếp nhận
-        |   lâu hơn được ưu tiên trước.
-        |
-        | Trong nhóm hoàn thành:
-        | → công việc vừa hoàn thành gần đây
-        |   hiển thị trước.
-        |
-        */
 
         $serviceOrders =
             $query
@@ -253,35 +211,41 @@ class TechnicianServiceOrderController extends Controller
         );
 
 
-        /**
-         * Chỉ phiếu RECEIVED
-         * mới được bắt đầu.
-         */
-        if (
-            $serviceOrder->status
-            !== 'RECEIVED'
-        ) {
-            return redirect()
-                ->route(
-                    'technician.service-orders.show',
-                    $serviceOrder->id
-                )
-                ->with(
-                    'error',
-                    'Chỉ phiếu đã tiếp nhận mới có thể bắt đầu thực hiện.'
-                );
-        }
-
-
         DB::transaction(
             function () use (
-                $serviceOrder
+                $serviceOrder,
+                $user
             ) {
-                /**
-                 * Chuyển Service Order
-                 * sang IN_PROGRESS.
-                 */
-                $serviceOrder->update([
+                $lockedOrder =
+                    ServiceOrder::query()
+                        ->whereKey(
+                            $serviceOrder->id
+                        )
+                        ->lockForUpdate()
+                        ->firstOrFail();
+
+
+                $this->authorizeAssignedTechnician(
+                    $lockedOrder,
+                    $user->id
+                );
+
+
+                if (
+                    $lockedOrder->status
+                    !== 'RECEIVED'
+                ) {
+                    throw ValidationException::withMessages([
+                        'service_order' =>
+                            $lockedOrder->status
+                            === 'IN_PROGRESS'
+                                ? 'Phiếu bảo dưỡng này đã được bắt đầu trước đó.'
+                                : 'Chỉ phiếu đã tiếp nhận mới có thể bắt đầu thực hiện.',
+                    ]);
+                }
+
+
+                $lockedOrder->update([
                     'status' =>
                         'IN_PROGRESS',
 
@@ -290,23 +254,23 @@ class TechnicianServiceOrderController extends Controller
                 ]);
 
 
-                /**
-                 * Đồng bộ Appointment.
-                 */
+                $appointment =
+                    $lockedOrder
+                        ->appointment()
+                        ->lockForUpdate()
+                        ->first();
+
+
                 if (
-                    $serviceOrder->appointment
+                    $appointment
                     &&
-                    $serviceOrder
-                        ->appointment
-                        ->status
+                    $appointment->status
                     === 'CONFIRMED'
                 ) {
-                    $serviceOrder
-                        ->appointment
-                        ->update([
-                            'status' =>
-                                'IN_PROGRESS',
-                        ]);
+                    $appointment->update([
+                        'status' =>
+                            'IN_PROGRESS',
+                    ]);
                 }
             }
         );
@@ -342,10 +306,6 @@ class TechnicianServiceOrderController extends Controller
         );
 
 
-        /**
-         * Chống thao tác item
-         * thuộc Service Order khác.
-         */
         if (
             (int)
             $item->service_order_id
@@ -360,31 +320,23 @@ class TechnicianServiceOrderController extends Controller
         }
 
 
-        /**
-         * Chỉ thao tác khi phiếu
-         * đang thực hiện.
-         */
-        if (
-            $serviceOrder->status
-            !== 'IN_PROGRESS'
-        ) {
-            return redirect()
-                ->route(
-                    'technician.service-orders.show',
-                    $serviceOrder->id
-                )
-                ->with(
-                    'error',
-                    'Phiếu bảo dưỡng chưa ở trạng thái đang thực hiện.'
-                );
-        }
+        $request->merge([
+            'technician_note' =>
+                $this->normalizeNullableText(
+                    $request->input(
+                        'technician_note'
+                    )
+                ),
+        ]);
 
 
         $validated =
             $request->validate(
                 [
                     'status' => [
+                        'bail',
                         'required',
+                        'string',
 
                         Rule::in([
                             'IN_PROGRESS',
@@ -393,6 +345,7 @@ class TechnicianServiceOrderController extends Controller
                     ],
 
                     'technician_note' => [
+                        'bail',
                         'nullable',
                         'string',
                         'max:1000',
@@ -400,10 +353,16 @@ class TechnicianServiceOrderController extends Controller
                 ],
                 [
                     'status.required' =>
-                        'Vui lòng chọn trạng thái.',
+                        'Không xác định được trạng thái tiếp theo của hạng mục.',
+
+                    'status.string' =>
+                        'Trạng thái hạng mục không hợp lệ.',
 
                     'status.in' =>
                         'Trạng thái hạng mục không hợp lệ.',
+
+                    'technician_note.string' =>
+                        'Ghi chú kỹ thuật không hợp lệ.',
 
                     'technician_note.max' =>
                         'Ghi chú kỹ thuật không được vượt quá 1000 ký tự.',
@@ -411,99 +370,151 @@ class TechnicianServiceOrderController extends Controller
             );
 
 
-        /**
-         * Không cho hạng mục đã hoàn thành
-         * quay ngược trạng thái.
-         */
-        if (
-            $item->status
-            === 'COMPLETED'
-        ) {
-            return redirect()
-                ->route(
-                    'technician.service-orders.show',
-                    $serviceOrder->id
-                )
-                ->with(
-                    'error',
-                    'Hạng mục này đã hoàn thành.'
-                );
-        }
-
-
-        /**
-         * PENDING:
-         * → IN_PROGRESS
-         *
-         * IN_PROGRESS:
-         * → COMPLETED
-         */
-        if (
-            $item->status
-            === 'PENDING'
-            &&
-            $validated['status']
-            !== 'IN_PROGRESS'
-        ) {
-            return redirect()
-                ->route(
-                    'technician.service-orders.show',
-                    $serviceOrder->id
-                )
-                ->with(
-                    'error',
-                    'Hạng mục phải được bắt đầu trước khi hoàn thành.'
-                );
-        }
-
-
-        if (
-            $item->status
-            === 'IN_PROGRESS'
-            &&
-            $validated['status']
-            !== 'COMPLETED'
-        ) {
-            return redirect()
-                ->route(
-                    'technician.service-orders.show',
-                    $serviceOrder->id
-                )
-                ->with(
-                    'error',
-                    'Trạng thái hạng mục không hợp lệ.'
-                );
-        }
-
-
-        $item->update([
-            'status' =>
-                $validated['status'],
-
-            'technician_note' =>
-                array_key_exists(
-                    'technician_note',
-                    $validated
-                )
-                    ? (
-                        !empty(
-                            trim(
-                                $validated[
-                                    'technician_note'
-                                ]
-                                ?? ''
-                            )
+        DB::transaction(
+            function () use (
+                $serviceOrder,
+                $item,
+                $validated,
+                $user
+            ) {
+                $lockedOrder =
+                    ServiceOrder::query()
+                        ->whereKey(
+                            $serviceOrder->id
                         )
-                            ? trim(
-                                $validated[
-                                    'technician_note'
-                                ]
-                            )
-                            : null
+                        ->lockForUpdate()
+                        ->firstOrFail();
+
+
+                $this->authorizeAssignedTechnician(
+                    $lockedOrder,
+                    $user->id
+                );
+
+
+                if (
+                    $lockedOrder->status
+                    !== 'IN_PROGRESS'
+                ) {
+                    throw ValidationException::withMessages([
+                        'status' =>
+                            'Chỉ có thể cập nhật hạng mục khi phiếu bảo dưỡng đang được thực hiện.',
+                    ]);
+                }
+
+
+                $lockedItem =
+                    ServiceOrderItem::query()
+                        ->whereKey(
+                            $item->id
+                        )
+                        ->where(
+                            'service_order_id',
+                            $lockedOrder->id
+                        )
+                        ->lockForUpdate()
+                        ->first();
+
+
+                if (
+                    !$lockedItem
+                ) {
+                    throw ValidationException::withMessages([
+                        'status' =>
+                            'Hạng mục không còn tồn tại hoặc không thuộc phiếu bảo dưỡng này.',
+                    ]);
+                }
+
+
+                $currentStatus =
+                    $lockedItem->status;
+
+
+                $nextStatus =
+                    $validated[
+                        'status'
+                    ];
+
+
+                if (
+                    $currentStatus
+                    === 'COMPLETED'
+                ) {
+                    throw ValidationException::withMessages([
+                        'status' =>
+                            'Hạng mục này đã hoàn thành và không thể cập nhật lại.',
+                    ]);
+                }
+
+
+                if (
+                    $currentStatus
+                    === 'CANCELLED'
+                ) {
+                    throw ValidationException::withMessages([
+                        'status' =>
+                            'Hạng mục đã bị hủy nên không thể tiếp tục thực hiện.',
+                    ]);
+                }
+
+
+                if (
+                    $currentStatus
+                    === 'PENDING'
+                    &&
+                    $nextStatus
+                    !== 'IN_PROGRESS'
+                ) {
+                    throw ValidationException::withMessages([
+                        'status' =>
+                            'Hạng mục phải được bắt đầu trước khi có thể hoàn thành.',
+                    ]);
+                }
+
+
+                if (
+                    $currentStatus
+                    === 'IN_PROGRESS'
+                    &&
+                    $nextStatus
+                    !== 'COMPLETED'
+                ) {
+                    throw ValidationException::withMessages([
+                        'status' =>
+                            'Hạng mục đang được thực hiện. Bước tiếp theo hợp lệ là hoàn thành hạng mục.',
+                    ]);
+                }
+
+
+                if (
+                    !in_array(
+                        $currentStatus,
+                        [
+                            'PENDING',
+                            'IN_PROGRESS',
+                        ],
+                        true
                     )
-                    : $item
-                        ->technician_note,
-        ]);
+                ) {
+                    throw ValidationException::withMessages([
+                        'status' =>
+                            'Trạng thái hiện tại của hạng mục không cho phép cập nhật.',
+                    ]);
+                }
+
+
+                $lockedItem->update([
+                    'status' =>
+                        $nextStatus,
+
+                    'technician_note' =>
+                        $validated[
+                            'technician_note'
+                        ]
+                        ?? null,
+                ]);
+            }
+        );
 
 
         return redirect()
@@ -513,7 +524,10 @@ class TechnicianServiceOrderController extends Controller
             )
             ->with(
                 'success',
-                'Cập nhật hạng mục thành công.'
+                $validated['status']
+                === 'IN_PROGRESS'
+                    ? 'Đã bắt đầu thực hiện hạng mục.'
+                    : 'Đã hoàn thành hạng mục.'
             );
     }
 
@@ -529,89 +543,231 @@ class TechnicianServiceOrderController extends Controller
             $this->authorizeTechnician();
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | INITIAL AUTHORIZATION
+        |--------------------------------------------------------------------------
+        */
+
         $this->authorizeAssignedTechnician(
             $serviceOrder,
             $user->id
         );
 
 
-        $serviceOrder->load([
-            'items',
-            'appointment',
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE FINAL NOTE
+        |--------------------------------------------------------------------------
+        */
+
+        $request->merge([
+            'technician_note' =>
+                $this->normalizeNullableText(
+                    $request->input(
+                        'technician_note'
+                    )
+                ),
         ]);
 
 
-        if (
-            $serviceOrder->status
-            !== 'IN_PROGRESS'
-        ) {
-            return redirect()
-                ->route(
-                    'technician.service-orders.show',
-                    $serviceOrder->id
-                )
-                ->with(
-                    'error',
-                    'Chỉ phiếu đang thực hiện mới có thể hoàn thành.'
-                );
-        }
-
-
-        /**
-         * Bắt buộc tất cả hạng mục
-         * phải COMPLETED.
-         */
-        $unfinishedItems =
-            $serviceOrder
-                ->items
-                ->where(
-                    'status',
-                    '!=',
-                    'COMPLETED'
-                );
-
-
-        if (
-            $unfinishedItems
-                ->isNotEmpty()
-        ) {
-            return redirect()
-                ->route(
-                    'technician.service-orders.show',
-                    $serviceOrder->id
-                )
-                ->with(
-                    'error',
-                    'Vẫn còn hạng mục chưa hoàn thành.'
-                );
-        }
-
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
 
         $validated =
             $request->validate(
                 [
                     'technician_note' => [
+                        'bail',
                         'nullable',
                         'string',
                         'max:2000',
                     ],
                 ],
                 [
+                    'technician_note.string' =>
+                        'Ghi chú tổng kết kỹ thuật không hợp lệ.',
+
                     'technician_note.max' =>
-                        'Ghi chú kỹ thuật không được vượt quá 2000 ký tự.',
+                        'Ghi chú tổng kết kỹ thuật không được vượt quá 2000 ký tự.',
                 ]
             );
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | COMPLETE TRANSACTION
+        |--------------------------------------------------------------------------
+        |
+        | Khóa Service Order + toàn bộ Item trước khi hoàn thành.
+        |
+        | Điều này tránh trường hợp:
+        |
+        | - hai request cùng đóng phiếu;
+        | - item thay đổi trong lúc đang kiểm tra;
+        | - phiếu bị phân công lại;
+        | - trạng thái phiếu thay đổi đồng thời.
+        |
+        */
+
         DB::transaction(
             function () use (
                 $serviceOrder,
-                $validated
+                $validated,
+                $user
             ) {
-                /**
-                 * Hoàn thành Service Order.
-                 */
-                $serviceOrder->update([
+                /*
+                |--------------------------------------------------------------------------
+                | LOCK SERVICE ORDER
+                |--------------------------------------------------------------------------
+                */
+
+                $lockedOrder =
+                    ServiceOrder::query()
+                        ->whereKey(
+                            $serviceOrder->id
+                        )
+                        ->lockForUpdate()
+                        ->firstOrFail();
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | RECHECK ASSIGNMENT
+                |--------------------------------------------------------------------------
+                */
+
+                $this->authorizeAssignedTechnician(
+                    $lockedOrder,
+                    $user->id
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | RECHECK ORDER STATUS
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    $lockedOrder->status
+                    !== 'IN_PROGRESS'
+                ) {
+                    $message =
+                        $lockedOrder->status
+                        === 'COMPLETED'
+                            ? 'Phiếu bảo dưỡng này đã được hoàn thành trước đó.'
+                            : 'Chỉ phiếu đang thực hiện mới có thể hoàn thành.';
+
+
+                    throw ValidationException::withMessages([
+                        'service_order' =>
+                            $message,
+                    ]);
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | LOCK ALL ITEMS
+                |--------------------------------------------------------------------------
+                */
+
+                $lockedItems =
+                    ServiceOrderItem::query()
+                        ->where(
+                            'service_order_id',
+                            $lockedOrder->id
+                        )
+                        ->orderBy('id')
+                        ->lockForUpdate()
+                        ->get();
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | REQUIRE AT LEAST ONE ITEM
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    $lockedItems->isEmpty()
+                ) {
+                    throw ValidationException::withMessages([
+                        'service_order' =>
+                            'Phiếu bảo dưỡng chưa có hạng mục công việc nên không thể hoàn thành.',
+                    ]);
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | REQUIRE ALL ITEMS COMPLETED
+                |--------------------------------------------------------------------------
+                */
+
+                $unfinishedItems =
+                    $lockedItems->filter(
+                        fn ($item) =>
+                            $item->status
+                            !== 'COMPLETED'
+                    );
+
+
+                if (
+                    $unfinishedItems->isNotEmpty()
+                ) {
+                    throw ValidationException::withMessages([
+                        'service_order' =>
+                            'Vẫn còn '
+                            . $unfinishedItems->count()
+                            . ' hạng mục chưa hoàn thành. Vui lòng hoàn thành toàn bộ hạng mục trước khi đóng phiếu.',
+                    ]);
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | LOCK APPOINTMENT
+                |--------------------------------------------------------------------------
+                */
+
+                $appointment =
+                    $lockedOrder
+                        ->appointment()
+                        ->lockForUpdate()
+                        ->first();
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | PROTECT CANCELLED APPOINTMENT
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    $appointment
+                    &&
+                    $appointment->status
+                    === 'CANCELLED'
+                ) {
+                    throw ValidationException::withMessages([
+                        'service_order' =>
+                            'Lịch hẹn liên quan đã bị hủy nên không thể hoàn thành phiếu bảo dưỡng.',
+                    ]);
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | COMPLETE SERVICE ORDER
+                |--------------------------------------------------------------------------
+                */
+
+                $lockedOrder->update([
                     'status' =>
                         'COMPLETED',
 
@@ -619,35 +775,29 @@ class TechnicianServiceOrderController extends Controller
                         now(),
 
                     'technician_note' =>
-                        !empty(
-                            $validated[
-                                'technician_note'
-                            ]
-                            ?? null
-                        )
-                            ? trim(
-                                $validated[
-                                    'technician_note'
-                                ]
-                            )
-                            : $serviceOrder
-                                ->technician_note,
+                        $validated[
+                            'technician_note'
+                        ]
+                        ?? null,
                 ]);
 
 
-                /**
-                 * Đồng bộ Appointment.
-                 */
+                /*
+                |--------------------------------------------------------------------------
+                | SYNCHRONIZE APPOINTMENT
+                |--------------------------------------------------------------------------
+                */
+
                 if (
-                    $serviceOrder
-                        ->appointment
+                    $appointment
+                    &&
+                    $appointment->status
+                    !== 'COMPLETED'
                 ) {
-                    $serviceOrder
-                        ->appointment
-                        ->update([
-                            'status' =>
-                                'COMPLETED',
-                        ]);
+                    $appointment->update([
+                        'status' =>
+                            'COMPLETED',
+                    ]);
                 }
             }
         );
@@ -720,5 +870,34 @@ class TechnicianServiceOrderController extends Controller
                 'Phiếu bảo dưỡng này không được phân công cho bạn.'
             );
         }
+    }
+
+
+    /**
+     * Chuẩn hóa ghi chú nullable.
+     *
+     * Chỉ trim đầu/cuối, vẫn giữ
+     * xuống dòng trong nội dung kỹ thuật.
+     */
+    private function normalizeNullableText(
+        mixed $value
+    ): ?string {
+        if (
+            $value === null
+        ) {
+            return null;
+        }
+
+
+        $value =
+            trim(
+                (string)
+                $value
+            );
+
+
+        return $value !== ''
+            ? $value
+            : null;
     }
 }

@@ -14,24 +14,13 @@
         max-width: 1120px;
     }
 
-
-    /* =====================================================
-       HERO
-       ===================================================== */
-
     .technician-order-hero {
         position: relative;
-
         overflow: hidden;
-
         padding: 34px;
-
         margin-bottom: 23px;
-
         border-radius: 28px;
-
         color: white;
-
         background:
             linear-gradient(
                 120deg,
@@ -39,215 +28,144 @@
                 #0b2f6b 52%,
                 #1467df 100%
             );
-
         box-shadow:
             0 28px 75px
-            rgba(20, 103, 223, 0.23);
+            rgba(20, 103, 223, .23);
     }
-
 
     .technician-order-hero::before {
         content: "";
-
         position: absolute;
-
         width: 370px;
         height: 370px;
-
         top: -220px;
         right: -100px;
-
         border-radius: 50%;
-
         background:
             radial-gradient(
                 circle,
-                rgba(103, 232, 249, 0.42),
+                rgba(103, 232, 249, .42),
                 transparent 70%
             );
     }
-
 
     .technician-order-hero::after {
         content: "";
-
         position: absolute;
-
         width: 270px;
         height: 270px;
-
         left: 38%;
         bottom: -225px;
-
         border-radius: 50%;
-
         background:
             radial-gradient(
                 circle,
-                rgba(124, 58, 237, 0.34),
+                rgba(124, 58, 237, .34),
                 transparent 70%
             );
     }
 
-
     .technician-order-hero-inner {
         position: relative;
-
         z-index: 2;
-
         display: flex;
-
         justify-content: space-between;
-
         align-items: flex-start;
-
         gap: 20px;
-
         flex-wrap: wrap;
     }
 
-
     .technician-order-code {
         display: inline-flex;
-
         align-items: center;
-
         gap: 6px;
-
         margin-bottom: 8px;
-
         color: #bfdbfe;
-
         font-size: 11px;
-
         font-weight: 800;
     }
 
-
     .technician-order-hero h1 {
         margin: 0;
-
         color: white;
-
         font-size:
             clamp(
                 2rem,
                 4vw,
                 3.4rem
             );
-
         font-weight: 900;
-
-        letter-spacing: -0.055em;
+        letter-spacing: -.055em;
     }
-
 
     .technician-order-hero p {
         max-width: 650px;
-
         margin: 11px 0 0;
-
         color: #cbd5e1;
-
         line-height: 1.75;
     }
 
-
-    /* =====================================================
-       MAIN LAYOUT
-       ===================================================== */
-
     .technician-order-layout {
         display: grid;
-
         grid-template-columns:
             minmax(0, 1.4fr)
-            minmax(290px, 0.6fr);
-
+            minmax(290px, .6fr);
         gap: 22px;
-
         align-items: start;
     }
 
-
     .technician-main-card {
         overflow: hidden;
-
         border:
             1px solid
-            rgba(255, 255, 255, 0.88);
-
+            rgba(255, 255, 255, .88);
         border-radius: 21px;
-
         background:
-            rgba(255, 255, 255, 0.92);
-
+            rgba(255, 255, 255, .92);
         box-shadow:
             var(--ac-shadow);
-
         backdrop-filter:
             blur(16px);
     }
-
 
     .technician-main-card-body {
         padding: 27px;
     }
 
-
     .technician-section {
         padding: 25px 0;
-
         border-bottom:
             1px solid #edf1f6;
     }
-
 
     .technician-section:first-child {
         padding-top: 0;
     }
 
-
     .technician-section:last-child {
         padding-bottom: 0;
-
         border-bottom: none;
     }
 
-
     .technician-section-title {
         display: flex;
-
         align-items: center;
-
         gap: 10px;
-
         margin-bottom: 18px;
-
         color: #0f172a;
-
         font-size: 17px;
-
         font-weight: 900;
     }
-
 
     .technician-section-icon {
         width: 38px;
         height: 38px;
-
         flex: 0 0 auto;
-
         display: flex;
-
         align-items: center;
-
         justify-content: center;
-
         border-radius: 12px;
-
         color: #2563eb;
-
         background:
             linear-gradient(
                 135deg,
@@ -256,32 +174,21 @@
             );
     }
 
-
-    /* =====================================================
-       INFO
-       ===================================================== */
-
     .technician-info-grid {
         display: grid;
-
         grid-template-columns:
             repeat(
                 2,
                 minmax(0, 1fr)
             );
-
         gap: 12px;
     }
 
-
     .technician-info-box {
         padding: 15px;
-
         border:
             1px solid #e7edf4;
-
         border-radius: 14px;
-
         background:
             linear-gradient(
                 180deg,
@@ -290,247 +197,199 @@
             );
     }
 
-
     .technician-info-icon {
         margin-bottom: 7px;
-
         color: #2563eb;
-
         font-size: 17px;
     }
 
-
     .technician-info-label {
         color: #64748b;
-
         font-size: 9px;
-
         font-weight: 800;
-
         text-transform: uppercase;
-
-        letter-spacing: 0.05em;
+        letter-spacing: .05em;
     }
-
 
     .technician-info-value {
         margin-top: 5px;
-
         color: #0f172a;
-
         font-size: 12px;
-
         font-weight: 850;
     }
 
-
-    /* =====================================================
-       NOTE
-       ===================================================== */
-
     .technician-note {
         padding: 16px;
-
         border:
             1px solid #e4ebf3;
-
         border-radius: 14px;
-
         color: #475569;
-
         background:
             linear-gradient(
                 135deg,
                 #f8fbff,
                 #f7faff
             );
-
         font-size: 12px;
-
         line-height: 1.75;
     }
 
-
-    /* =====================================================
-       WORK ITEM
-       ===================================================== */
-
     .technician-work-item {
         position: relative;
-
         overflow: hidden;
-
         padding: 19px;
-
         margin-bottom: 14px;
-
         border:
             1px solid #e5ecf4;
-
         border-radius: 16px;
-
         background:
             linear-gradient(
                 145deg,
                 #ffffff,
                 #f8fbff
             );
-
         transition:
-            transform 0.22s ease,
-            border-color 0.22s ease,
-            box-shadow 0.22s ease;
+            transform .22s ease,
+            border-color .22s ease,
+            box-shadow .22s ease;
     }
-
 
     .technician-work-item:hover {
         transform:
             translateY(-3px);
-
         border-color: #bfdbfe;
-
         box-shadow:
             0 12px 30px
-            rgba(37, 99, 235, 0.08);
+            rgba(37, 99, 235, .08);
     }
-
 
     .technician-work-item:last-child {
         margin-bottom: 0;
     }
 
-
     .technician-work-item-top {
         display: flex;
-
         justify-content: space-between;
-
         align-items: flex-start;
-
         gap: 15px;
-
         flex-wrap: wrap;
     }
 
-
     .technician-item-name {
         color: #0f172a;
-
         font-size: 15px;
-
         font-weight: 900;
     }
 
-
     .technician-item-price {
         margin-top: 5px;
-
         color: #1d4ed8;
-
         font-size: 12px;
-
         font-weight: 850;
     }
-
 
     .technician-item-status {
         display: inline-flex;
-
         align-items: center;
-
         gap: 6px;
-
         padding: 6px 9px;
-
         border-radius: 999px;
-
         font-size: 10px;
-
         font-weight: 850;
     }
 
-
     .technician-item-status.pending {
         color: #92400e;
-
         background: #fff7ed;
     }
 
-
     .technician-item-status.progress {
         color: #6d28d9;
-
         background: #f5f3ff;
     }
 
-
     .technician-item-status.completed {
         color: #047857;
-
         background: #ecfdf5;
     }
 
-
     .technician-item-status.cancelled {
         color: #b91c1c;
-
         background: #fef2f2;
     }
 
-
     .technician-item-form {
         margin-top: 16px;
-
         padding-top: 16px;
-
         border-top:
             1px solid #edf1f6;
     }
 
+    .technician-item-label,
+    .technician-final-label {
+        margin-bottom: 8px;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 850;
+    }
+
+    .technician-item-input.is-invalid,
+    .technician-final-input.is-invalid {
+        border-color: #f87171;
+        background-color: #fffafa;
+        box-shadow:
+            0 0 0 3px
+            rgba(239, 68, 68, .07);
+    }
+
+    .technician-item-hint,
+    .technician-final-hint {
+        margin-top: 6px;
+        color: #64748b;
+        font-size: 10px;
+        line-height: 1.55;
+    }
+
+    .technician-item-submit {
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 13px;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .technician-item-submit:disabled {
+        cursor: not-allowed;
+        opacity: .65;
+    }
 
     .technician-item-note {
         margin-top: 13px;
-
         padding: 13px;
-
         border-left:
             3px solid #60a5fa;
-
         border-radius:
             0 11px 11px 0;
-
         color: #475569;
-
         background: #f8fbff;
-
         font-size: 12px;
-
         line-height: 1.7;
     }
 
-
-    /* =====================================================
-       SIDEBAR
-       ===================================================== */
-
     .technician-sidebar {
         position: sticky;
-
         top: 100px;
     }
 
-
     .technician-status-card {
         position: relative;
-
         overflow: hidden;
-
         padding: 23px;
-
         border-radius: 21px;
-
         color: white;
-
         background:
             linear-gradient(
                 145deg,
@@ -538,157 +397,106 @@
                 #0d2f69 56%,
                 #155bd1
             );
-
         box-shadow:
             0 25px 60px
-            rgba(13, 47, 105, 0.26);
+            rgba(13, 47, 105, .26);
     }
-
 
     .technician-status-card::before {
         content: "";
-
         position: absolute;
-
         width: 230px;
         height: 230px;
-
         right: -110px;
         top: -140px;
-
         border-radius: 50%;
-
         background:
             radial-gradient(
                 circle,
-                rgba(34, 211, 238, 0.32),
+                rgba(34, 211, 238, .32),
                 transparent 70%
             );
     }
 
-
     .technician-status-content {
         position: relative;
-
         z-index: 2;
     }
-
 
     .technician-status-icon {
         width: 49px;
         height: 49px;
-
         display: flex;
-
         align-items: center;
-
         justify-content: center;
-
         margin-bottom: 18px;
-
         border-radius: 15px;
-
         color: #67e8f9;
-
         background:
-            rgba(255, 255, 255, 0.09);
-
+            rgba(255, 255, 255, .09);
         font-size: 21px;
     }
 
-
     .technician-status-title {
         margin-bottom: 18px;
-
         color: white;
-
         font-size: 18px;
-
         font-weight: 900;
     }
 
-
     .technician-status-row {
         display: flex;
-
         justify-content: space-between;
-
         gap: 15px;
-
         padding: 12px 0;
-
         border-bottom:
             1px solid
-            rgba(255, 255, 255, 0.10);
+            rgba(255, 255, 255, .10);
     }
-
 
     .technician-status-label {
         color: #bfdbfe;
-
         font-size: 11px;
     }
 
-
     .technician-status-value {
         color: white;
-
         text-align: right;
-
         font-size: 12px;
-
         font-weight: 850;
     }
 
-
     .technician-progress-box {
         margin-top: 18px;
-
         padding: 14px;
-
         border:
             1px solid
-            rgba(255, 255, 255, 0.10);
-
+            rgba(255, 255, 255, .10);
         border-radius: 13px;
-
         background:
-            rgba(255, 255, 255, 0.06);
+            rgba(255, 255, 255, .06);
     }
-
 
     .technician-progress-head {
         display: flex;
-
         justify-content: space-between;
-
         margin-bottom: 8px;
-
         color: #dbeafe;
-
         font-size: 10px;
-
         font-weight: 750;
     }
 
-
     .technician-progress-track {
         height: 7px;
-
         overflow: hidden;
-
         border-radius: 999px;
-
         background:
-            rgba(255, 255, 255, 0.15);
+            rgba(255, 255, 255, .15);
     }
-
 
     .technician-progress-bar {
         height: 100%;
-
         border-radius: 999px;
-
         background:
             linear-gradient(
                 90deg,
@@ -698,58 +506,46 @@
             );
     }
 
-
     .technician-primary-action {
         width: 100%;
-
         min-height: 47px;
-
         display: flex;
-
         align-items: center;
-
         justify-content: center;
-
         gap: 8px;
-
         margin-top: 18px;
-
         border: none;
-
         border-radius: 13px;
-
         color: #07111f;
-
         background:
             linear-gradient(
                 135deg,
                 #67e8f9,
                 #bfdbfe
             );
-
         font-size: 12px;
-
         font-weight: 900;
-
         transition:
-            transform 0.2s ease,
-            box-shadow 0.2s ease;
+            transform .2s ease,
+            box-shadow .2s ease,
+            opacity .2s ease;
     }
 
-
-    .technician-primary-action:hover {
+    .technician-primary-action:hover:not(:disabled) {
         transform:
             translateY(-2px);
-
         box-shadow:
             0 12px 28px
-            rgba(103, 232, 249, 0.20);
+            rgba(103, 232, 249, .20);
     }
 
+    .technician-primary-action:disabled {
+        cursor: not-allowed;
+        opacity: .65;
+    }
 
     .technician-complete-action {
         color: white;
-
         background:
             linear-gradient(
                 135deg,
@@ -758,65 +554,42 @@
             );
     }
 
-
     .technician-completed-box {
         display: flex;
-
         align-items: flex-start;
-
         gap: 10px;
-
         margin-top: 18px;
-
         padding: 14px;
-
         border:
             1px solid
-            rgba(16, 185, 129, 0.30);
-
+            rgba(16, 185, 129, .30);
         border-radius: 13px;
-
         color: #d1fae5;
-
         background:
-            rgba(16, 185, 129, 0.12);
-
+            rgba(16, 185, 129, .12);
         font-size: 11px;
-
         line-height: 1.6;
     }
 
-
     .technician-completed-box i {
         color: #6ee7b7;
-
         font-size: 18px;
     }
 
-
     .technician-back {
         display: inline-flex;
-
         align-items: center;
-
         gap: 7px;
-
         margin-top: 21px;
-
         color: #64748b;
-
         text-decoration: none;
-
         font-size: 12px;
-
         font-weight: 750;
     }
-
 
     .technician-back:hover {
         color: #2563eb;
     }
-
 
     @media (max-width: 991px) {
         .technician-order-layout {
@@ -827,7 +600,6 @@
             position: static;
         }
     }
-
 
     @media (max-width: 575px) {
         .technician-info-grid {
@@ -840,6 +612,10 @@
 
         .technician-main-card-body {
             padding: 20px;
+        }
+
+        .technician-item-submit {
+            width: 100%;
         }
     }
 </style>
@@ -922,6 +698,8 @@
 
 
         $allItemsCompleted =
+            $totalItems > 0
+            &&
             $serviceOrder
                 ->items
                 ->every(
@@ -929,39 +707,19 @@
                         $item->status
                         === 'COMPLETED'
                 );
+
+
+        $isCompleteFormError =
+            (string)
+            old(
+                '_complete_order'
+            )
+            === '1'
+            &&
+            $errors->has(
+                'technician_note'
+            );
     @endphp
-
-
-    @if (session('success'))
-
-        <div
-            class="alert alert-success"
-            data-reveal
-        >
-
-            <i class="bi bi-check-circle-fill me-2"></i>
-
-            {{ session('success') }}
-
-        </div>
-
-    @endif
-
-
-    @if (session('error'))
-
-        <div
-            class="alert alert-danger"
-            data-reveal
-        >
-
-            <i class="bi bi-exclamation-circle-fill me-2"></i>
-
-            {{ session('error') }}
-
-        </div>
-
-    @endif
 
 
     <section
@@ -988,11 +746,9 @@
 
 
                 <p>
-
                     Theo dõi và cập nhật tiến độ
                     các hạng mục kỹ thuật
                     của phiếu bảo dưỡng này.
-
                 </p>
 
             </div>
@@ -1004,9 +760,7 @@
                     {{ $statusClass }}
                 "
             >
-
                 {{ $statusText }}
-
             </span>
 
         </div>
@@ -1023,17 +777,12 @@
 
             <div class="technician-main-card-body">
 
-                {{-- =====================================
-                    INFORMATION
-                ====================================== --}}
                 <section class="technician-section">
 
                     <div class="technician-section-title">
 
                         <span class="technician-section-icon">
-
                             <i class="bi bi-car-front-fill"></i>
-
                         </span>
 
                         Thông tin phiếu
@@ -1046,9 +795,7 @@
                         <div class="technician-info-box">
 
                             <div class="technician-info-icon">
-
                                 <i class="bi bi-person"></i>
-
                             </div>
 
                             <div class="technician-info-label">
@@ -1065,9 +812,7 @@
                         <div class="technician-info-box">
 
                             <div class="technician-info-icon">
-
                                 <i class="bi bi-car-front-fill"></i>
-
                             </div>
 
                             <div class="technician-info-label">
@@ -1088,9 +833,7 @@
                         <div class="technician-info-box">
 
                             <div class="technician-info-icon">
-
                                 <i class="bi bi-credit-card-2-front"></i>
-
                             </div>
 
                             <div class="technician-info-label">
@@ -1107,9 +850,7 @@
                         <div class="technician-info-box">
 
                             <div class="technician-info-icon">
-
                                 <i class="bi bi-speedometer2"></i>
-
                             </div>
 
                             <div class="technician-info-label">
@@ -1120,9 +861,13 @@
 
                                 {{
                                     number_format(
-                                        $serviceOrder->received_mileage
+                                        $serviceOrder->received_mileage,
+                                        0,
+                                        ',',
+                                        '.'
                                     )
-                                }} km
+                                }}
+                                km
 
                             </div>
 
@@ -1133,9 +878,6 @@
                 </section>
 
 
-                {{-- =====================================
-                    VEHICLE CONDITION
-                ====================================== --}}
                 @if ($serviceOrder->vehicle_condition)
 
                     <section class="technician-section">
@@ -1143,9 +885,7 @@
                         <div class="technician-section-title">
 
                             <span class="technician-section-icon">
-
                                 <i class="bi bi-clipboard2-pulse"></i>
-
                             </span>
 
                             Tình trạng xe
@@ -1161,9 +901,6 @@
                 @endif
 
 
-                {{-- =====================================
-                    DIAGNOSIS
-                ====================================== --}}
                 @if ($serviceOrder->diagnosis)
 
                     <section class="technician-section">
@@ -1171,9 +908,7 @@
                         <div class="technician-section-title">
 
                             <span class="technician-section-icon">
-
                                 <i class="bi bi-search"></i>
-
                             </span>
 
                             Chẩn đoán ban đầu
@@ -1189,17 +924,12 @@
                 @endif
 
 
-                {{-- =====================================
-                    SERVICE ITEMS
-                ====================================== --}}
                 <section class="technician-section">
 
                     <div class="technician-section-title">
 
                         <span class="technician-section-icon">
-
                             <i class="bi bi-tools"></i>
-
                         </span>
 
                         Hạng mục công việc
@@ -1207,7 +937,10 @@
                     </div>
 
 
-                    @foreach ($serviceOrder->items as $item)
+                    @foreach (
+                        $serviceOrder->items
+                        as $item
+                    )
 
                         @php
                             $itemStatusText = match (
@@ -1248,6 +981,48 @@
                                 default =>
                                     'pending',
                             };
+
+
+                            $canUpdateItem =
+                                $serviceOrder->status
+                                === 'IN_PROGRESS'
+                                &&
+                                in_array(
+                                    $item->status,
+                                    [
+                                        'PENDING',
+                                        'IN_PROGRESS',
+                                    ],
+                                    true
+                                );
+
+
+                            $isCurrentItemError =
+                                (string)
+                                old(
+                                    '_item_id'
+                                )
+                                ===
+                                (string)
+                                $item->id
+                                &&
+                                $errors->has(
+                                    'technician_note'
+                                );
+
+
+                            $technicianNoteValue =
+                                (string)
+                                old(
+                                    '_item_id'
+                                )
+                                ===
+                                (string)
+                                $item->id
+                                    ? old(
+                                        'technician_note'
+                                    )
+                                    : $item->technician_note;
                         @endphp
 
 
@@ -1258,11 +1033,8 @@
                                 <div>
 
                                     <div class="technician-item-name">
-
                                         {{ $item->service_name }}
-
                                     </div>
-
 
                                     <div class="technician-item-price">
 
@@ -1273,7 +1045,8 @@
                                                 ',',
                                                 '.'
                                             )
-                                        }} đ
+                                        }}
+                                        đ
 
                                     </div>
 
@@ -1291,17 +1064,11 @@
 
                                         <i class="bi bi-check-circle-fill"></i>
 
-                                    @elseif (
-                                        $item->status
-                                        === 'IN_PROGRESS'
-                                    )
+                                    @elseif ($item->status === 'IN_PROGRESS')
 
                                         <i class="bi bi-arrow-repeat"></i>
 
-                                    @elseif (
-                                        $item->status
-                                        === 'CANCELLED'
-                                    )
+                                    @elseif ($item->status === 'CANCELLED')
 
                                         <i class="bi bi-x-circle-fill"></i>
 
@@ -1319,13 +1086,7 @@
                             </div>
 
 
-                            @if (
-                                $serviceOrder->status
-                                === 'IN_PROGRESS'
-                                &&
-                                $item->status
-                                !== 'COMPLETED'
-                            )
+                            @if ($canUpdateItem)
 
                                 <form
                                     method="POST"
@@ -1337,10 +1098,19 @@
                                         ]
                                     ) }}"
                                     class="technician-item-form"
+                                    data-technician-item-form
+                                    novalidate
                                 >
 
                                     @csrf
                                     @method('PATCH')
+
+
+                                    <input
+                                        type="hidden"
+                                        name="_item_id"
+                                        value="{{ $item->id }}"
+                                    >
 
 
                                     @if ($item->status === 'PENDING')
@@ -1351,10 +1121,7 @@
                                             value="IN_PROGRESS"
                                         >
 
-                                    @elseif (
-                                        $item->status
-                                        === 'IN_PROGRESS'
-                                    )
+                                    @else
 
                                         <input
                                             type="hidden"
@@ -1367,7 +1134,7 @@
 
                                     <label
                                         for="technician_note_{{ $item->id }}"
-                                        class="form-label fw-bold"
+                                        class="technician-item-label"
                                     >
                                         Ghi chú kỹ thuật
                                     </label>
@@ -1376,11 +1143,43 @@
                                     <textarea
                                         id="technician_note_{{ $item->id }}"
                                         name="technician_note"
-                                        class="form-control"
+                                        class="
+                                            form-control
+                                            technician-item-input
+                                            {{
+                                                $isCurrentItemError
+                                                    ? 'is-invalid'
+                                                    : ''
+                                            }}
+                                        "
                                         rows="3"
                                         maxlength="1000"
                                         placeholder="Ghi chú kỹ thuật cho hạng mục..."
-                                    >{{ $item->technician_note }}</textarea>
+                                        aria-invalid="{{
+                                            $isCurrentItemError
+                                                ? 'true'
+                                                : 'false'
+                                        }}"
+                                    >{{ $technicianNoteValue }}</textarea>
+
+
+                                    <div class="technician-item-hint">
+
+                                        Ghi chú tối đa 1000 ký tự.
+
+                                        @if ($item->status === 'PENDING')
+
+                                            Hạng mục sẽ chuyển sang
+                                            <strong>Đang thực hiện</strong>.
+
+                                        @else
+
+                                            Hạng mục sẽ chuyển sang
+                                            <strong>Hoàn thành</strong>.
+
+                                        @endif
+
+                                    </div>
 
 
                                     <button
@@ -1393,24 +1192,25 @@
                                                     ? 'btn-primary'
                                                     : 'btn-success'
                                             }}
-                                            mt-3
+                                            technician-item-submit
                                         "
                                     >
 
-                                        @if (
-                                            $item->status
-                                            === 'PENDING'
-                                        )
+                                        @if ($item->status === 'PENDING')
 
-                                            <i class="bi bi-play-fill me-1"></i>
+                                            <i class="bi bi-play-fill"></i>
 
-                                            Bắt đầu hạng mục
+                                            <span>
+                                                Bắt đầu hạng mục
+                                            </span>
 
                                         @else
 
-                                            <i class="bi bi-check-lg me-1"></i>
+                                            <i class="bi bi-check-lg"></i>
 
-                                            Hoàn thành hạng mục
+                                            <span>
+                                                Hoàn thành hạng mục
+                                            </span>
 
                                         @endif
 
@@ -1422,8 +1222,7 @@
 
 
                             @if (
-                                $item->status
-                                === 'COMPLETED'
+                                $item->status === 'COMPLETED'
                                 &&
                                 $item->technician_note
                             )
@@ -1451,12 +1250,8 @@
                 </section>
 
 
-                {{-- =====================================
-                    TECHNICIAN FINAL NOTE
-                ====================================== --}}
                 @if (
-                    $serviceOrder->status
-                    === 'COMPLETED'
+                    $serviceOrder->status === 'COMPLETED'
                     &&
                     $serviceOrder->technician_note
                 )
@@ -1466,20 +1261,15 @@
                         <div class="technician-section-title">
 
                             <span class="technician-section-icon">
-
                                 <i class="bi bi-chat-square-check"></i>
-
                             </span>
 
                             Tổng kết kỹ thuật
 
                         </div>
 
-
                         <div class="technician-note">
-
                             {{ $serviceOrder->technician_note }}
-
                         </div>
 
                     </section>
@@ -1491,9 +1281,6 @@
         </article>
 
 
-        {{-- =========================================
-            STATUS SIDEBAR
-        ========================================== --}}
         <aside
             class="technician-sidebar"
             data-reveal="right"
@@ -1504,9 +1291,7 @@
                 <div class="technician-status-content">
 
                     <div class="technician-status-icon">
-
                         <i class="bi bi-wrench-adjustable-circle"></i>
-
                     </div>
 
 
@@ -1564,10 +1349,13 @@
 
                             {{
                                 number_format(
-                                    $serviceOrder
-                                        ->received_mileage
+                                    $serviceOrder->received_mileage,
+                                    0,
+                                    ',',
+                                    '.'
                                 )
-                            }} km
+                            }}
+                            km
 
                         </span>
 
@@ -1588,7 +1376,6 @@
 
                         </div>
 
-
                         <div class="technician-progress-track">
 
                             <div
@@ -1604,11 +1391,7 @@
                     </div>
 
 
-                    {{-- START --}}
-                    @if (
-                        $serviceOrder->status
-                        === 'RECEIVED'
-                    )
+                    @if ($serviceOrder->status === 'RECEIVED')
 
                         <form
                             id="startServiceOrderForm"
@@ -1641,11 +1424,7 @@
                     @endif
 
 
-                    {{-- COMPLETE --}}
-                    @if (
-                        $serviceOrder->status
-                        === 'IN_PROGRESS'
-                    )
+                    @if ($serviceOrder->status === 'IN_PROGRESS')
 
                         @if ($allItemsCompleted)
 
@@ -1672,11 +1451,8 @@
                                 <i class="bi bi-info-circle"></i>
 
                                 <span>
-
-                                    Hoàn thành tất cả
-                                    hạng mục trước khi
-                                    đóng phiếu bảo dưỡng.
-
+                                    Hoàn thành tất cả hạng mục
+                                    trước khi đóng phiếu bảo dưỡng.
                                 </span>
 
                             </div>
@@ -1686,11 +1462,7 @@
                     @endif
 
 
-                    {{-- COMPLETED --}}
-                    @if (
-                        $serviceOrder->status
-                        === 'COMPLETED'
-                    )
+                    @if ($serviceOrder->status === 'COMPLETED')
 
                         <div class="technician-completed-box">
 
@@ -1721,11 +1493,7 @@
                     @endif
 
 
-                    {{-- CANCELLED --}}
-                    @if (
-                        $serviceOrder->status
-                        === 'CANCELLED'
-                    )
+                    @if ($serviceOrder->status === 'CANCELLED')
 
                         <div
                             class="technician-completed-box"
@@ -1735,18 +1503,15 @@
                                         248,
                                         113,
                                         113,
-                                        0.35
+                                        .35
                                     );
-
-                                color:
-                                    #fee2e2;
-
+                                color: #fee2e2;
                                 background:
                                     rgba(
                                         239,
                                         68,
                                         68,
-                                        0.13
+                                        .13
                                     );
                             "
                         >
@@ -1789,9 +1554,6 @@
 </div>
 
 
-{{-- =====================================================
-    START SERVICE ORDER MODAL
-===================================================== --}}
 @if ($serviceOrder->status === 'RECEIVED')
 
     <div
@@ -1802,12 +1564,7 @@
         aria-hidden="true"
     >
 
-        <div
-            class="
-                modal-dialog
-                modal-dialog-centered
-            "
-        >
+        <div class="modal-dialog modal-dialog-centered">
 
             <div
                 class="
@@ -1818,25 +1575,10 @@
                 "
             >
 
-                <div
-                    class="
-                        modal-body
-                        p-4
-                        p-md-5
-                        text-center
-                    "
-                >
+                <div class="modal-body p-4 p-md-5 text-center">
 
-                    <div
-                        class="
-                            fs-1
-                            text-primary
-                            mb-3
-                        "
-                    >
-
+                    <div class="fs-1 text-primary mb-3">
                         <i class="bi bi-play-circle-fill"></i>
-
                     </div>
 
 
@@ -1850,8 +1592,7 @@
 
                     <p class="text-secondary mb-4">
 
-                        Bạn sẽ bắt đầu thực hiện
-                        phiếu
+                        Bạn sẽ bắt đầu thực hiện phiếu
 
                         <strong>
                             {{ $serviceOrder->order_code }}
@@ -1874,11 +1615,7 @@
 
                         <button
                             type="button"
-                            class="
-                                btn
-                                btn-light
-                                px-4
-                            "
+                            class="btn btn-light px-4"
                             data-bs-dismiss="modal"
                         >
                             Quay lại
@@ -1887,18 +1624,9 @@
 
                         <button
                             type="button"
-                            class="
-                                btn
-                                btn-primary
-                                px-4
-                            "
-                            onclick="
-                                document
-                                    .getElementById(
-                                        'startServiceOrderForm'
-                                    )
-                                    .requestSubmit();
-                            "
+                            id="confirmStartServiceOrderButton"
+                            class="btn btn-primary px-4"
+                            onclick="submitStartServiceOrder(this)"
                         >
 
                             <i class="bi bi-play-fill me-1"></i>
@@ -1920,9 +1648,6 @@
 @endif
 
 
-{{-- =====================================================
-    COMPLETE SERVICE ORDER MODAL
-===================================================== --}}
 @if (
     $serviceOrder->status === 'IN_PROGRESS'
     &&
@@ -1954,26 +1679,12 @@
                 "
             >
 
-                <div
-                    class="
-                        modal-body
-                        p-4
-                        p-md-5
-                    "
-                >
+                <div class="modal-body p-4 p-md-5">
 
                     <div class="text-center">
 
-                        <div
-                            class="
-                                fs-1
-                                text-success
-                                mb-3
-                            "
-                        >
-
+                        <div class="fs-1 text-success mb-3">
                             <i class="bi bi-patch-check-fill"></i>
-
                         </div>
 
 
@@ -1989,8 +1700,8 @@
 
                             Tất cả hạng mục đã hoàn thành.
 
-                            Hãy nhập ghi chú tổng kết
-                            trước khi đóng phiếu.
+                            Bạn có thể nhập ghi chú
+                            tổng kết kỹ thuật trước khi đóng phiếu.
 
                         </p>
 
@@ -2004,17 +1715,25 @@
                             'technician.service-orders.complete',
                             $serviceOrder->id
                         ) }}"
+                        novalidate
                     >
 
                         @csrf
                         @method('PATCH')
 
 
+                        <input
+                            type="hidden"
+                            name="_complete_order"
+                            value="1"
+                        >
+
+
                         <div class="mt-4">
 
                             <label
                                 for="final_technician_note"
-                                class="form-label fw-bold"
+                                class="technician-final-label"
                             >
                                 Ghi chú tổng kết kỹ thuật
                             </label>
@@ -2023,11 +1742,42 @@
                             <textarea
                                 id="final_technician_note"
                                 name="technician_note"
-                                class="form-control"
+                                class="
+                                    form-control
+                                    technician-final-input
+                                    {{
+                                        $isCompleteFormError
+                                            ? 'is-invalid'
+                                            : ''
+                                    }}
+                                "
                                 rows="5"
                                 maxlength="2000"
                                 placeholder="Ví dụ: Đã hoàn thành toàn bộ hạng mục, xe vận hành ổn định..."
-                            >{{ $serviceOrder->technician_note }}</textarea>
+                                aria-invalid="{{
+                                    $isCompleteFormError
+                                        ? 'true'
+                                        : 'false'
+                                }}"
+                            >{{
+                                (string) old(
+                                    '_complete_order'
+                                ) === '1'
+                                    ? old(
+                                        'technician_note'
+                                    )
+                                    : $serviceOrder
+                                        ->technician_note
+                            }}</textarea>
+
+
+                            <div class="technician-final-hint">
+
+                                Không bắt buộc.
+
+                                Tối đa 2000 ký tự.
+
+                            </div>
 
                         </div>
 
@@ -2044,11 +1794,7 @@
 
                             <button
                                 type="button"
-                                class="
-                                    btn
-                                    btn-light
-                                    px-4
-                                "
+                                class="btn btn-light px-4"
                                 data-bs-dismiss="modal"
                             >
                                 Quay lại
@@ -2057,16 +1803,15 @@
 
                             <button
                                 type="submit"
-                                class="
-                                    btn
-                                    btn-success
-                                    px-4
-                                "
+                                id="completeServiceOrderButton"
+                                class="btn btn-success px-4"
                             >
 
                                 <i class="bi bi-check2-circle me-1"></i>
 
-                                Hoàn thành phiếu
+                                <span>
+                                    Hoàn thành phiếu
+                                </span>
 
                             </button>
 
@@ -2085,3 +1830,139 @@
 @endif
 
 @endsection
+
+
+@push('scripts')
+
+<script>
+    document.addEventListener(
+        'DOMContentLoaded',
+        function () {
+            const itemForms =
+                document.querySelectorAll(
+                    '[data-technician-item-form]'
+                );
+
+
+            itemForms.forEach(
+                function (form) {
+                    form.addEventListener(
+                        'submit',
+                        function () {
+                            const button =
+                                form.querySelector(
+                                    '.technician-item-submit'
+                                );
+
+
+                            if (!button) {
+                                return;
+                            }
+
+
+                            button.disabled =
+                                true;
+
+
+                            button.innerHTML =
+                                '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>'
+                                +
+                                '<span>Đang cập nhật...</span>';
+                        }
+                    );
+                }
+            );
+
+
+            const completeForm =
+                document.getElementById(
+                    'completeServiceOrderForm'
+                );
+
+
+            const completeButton =
+                document.getElementById(
+                    'completeServiceOrderButton'
+                );
+
+
+            if (
+                completeForm
+                &&
+                completeButton
+            ) {
+                completeForm.addEventListener(
+                    'submit',
+                    function () {
+                        completeButton.disabled =
+                            true;
+
+
+                        completeButton.innerHTML =
+                            '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>'
+                            +
+                            '<span>Đang hoàn thành...</span>';
+                    }
+                );
+            }
+
+
+            const shouldOpenCompleteModal =
+                @json($isCompleteFormError);
+
+
+            if (
+                shouldOpenCompleteModal
+                &&
+                typeof bootstrap
+                !== 'undefined'
+            ) {
+                const modalElement =
+                    document.getElementById(
+                        'completeServiceOrderModal'
+                    );
+
+
+                if (modalElement) {
+                    const modal =
+                        bootstrap.Modal.getOrCreateInstance(
+                            modalElement
+                        );
+
+
+                    modal.show();
+                }
+            }
+        }
+    );
+
+
+    function submitStartServiceOrder(
+        button
+    ) {
+        const form =
+            document.getElementById(
+                'startServiceOrderForm'
+            );
+
+
+        if (!form) {
+            return;
+        }
+
+
+        button.disabled =
+            true;
+
+
+        button.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>'
+            +
+            'Đang bắt đầu...';
+
+
+        form.requestSubmit();
+    }
+</script>
+
+@endpush
