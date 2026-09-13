@@ -68,7 +68,11 @@
         margin: 7px 0 0;
         color: white;
         font-size:
-            clamp(2rem, 4vw, 3.2rem);
+            clamp(
+                2rem,
+                4vw,
+                3.2rem
+            );
         font-weight: 900;
         letter-spacing: -.055em;
     }
@@ -81,8 +85,10 @@
         border-radius: 21px;
         background:
             rgba(255, 255, 255, .92);
-        box-shadow: var(--ac-shadow);
-        backdrop-filter: blur(16px);
+        box-shadow:
+            var(--ac-shadow);
+        backdrop-filter:
+            blur(16px);
     }
 
     .order-card-body {
@@ -92,13 +98,18 @@
     .info-grid {
         display: grid;
         grid-template-columns:
-            repeat(5, minmax(0, 1fr));
+            repeat(
+                5,
+                minmax(0, 1fr)
+            );
         gap: 12px;
     }
 
     .info-card {
         padding: 14px;
-        border: 1px solid #e7edf4;
+        border:
+            1px solid
+            #e7edf4;
         border-radius: 14px;
         background: #f8fbff;
     }
@@ -140,7 +151,9 @@
             160px;
         gap: 15px;
         padding: 13px 0;
-        border-bottom: 1px solid #edf1f6;
+        border-bottom:
+            1px solid
+            #edf1f6;
         font-size: 12px;
     }
 
@@ -152,7 +165,9 @@
 
     .order-note {
         padding: 15px;
-        border: 1px solid #e4ebf3;
+        border:
+            1px solid
+            #e4ebf3;
         border-radius: 14px;
         color: #475569;
         background: #f8fbff;
@@ -160,13 +175,147 @@
         line-height: 1.7;
     }
 
+
+    /* =====================================================
+       PART FORM
+       ===================================================== */
+
     .part-form {
         margin-top: 18px;
         padding: 20px;
-        border: 1px solid #e5ecf4;
+        border:
+            1px solid
+            #e5ecf4;
         border-radius: 16px;
         background: #f8fbff;
     }
+
+    .part-form-title {
+        margin-bottom: 4px;
+        color: #0f172a;
+        font-size: 16px;
+        font-weight: 900;
+    }
+
+    .part-form-description {
+        margin-bottom: 18px;
+        color: #64748b;
+        font-size: 11px;
+        line-height: 1.6;
+    }
+
+    .part-field-label {
+        margin-bottom: 8px;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 850;
+    }
+
+    .part-form-control {
+        min-height: 46px;
+    }
+
+    textarea.part-form-control {
+        min-height: auto;
+    }
+
+    .part-form-control.is-invalid {
+        border-color: #f87171;
+        background-color: #fffafa;
+        box-shadow:
+            0 0 0 3px
+            rgba(239, 68, 68, .07);
+    }
+
+    .part-field-hint {
+        min-height: 16px;
+        margin-top: 6px;
+        color: #64748b;
+        font-size: 10px;
+        line-height: 1.5;
+    }
+
+    .part-stock-hint {
+        color: #2563eb;
+        font-weight: 750;
+    }
+
+    .part-stock-hint.stock-empty {
+        color: #dc2626;
+    }
+
+    .part-empty-notice {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 18px;
+        padding: 14px;
+        border:
+            1px solid
+            #fde68a;
+        border-radius: 13px;
+        color: #854d0e;
+        background:
+            linear-gradient(
+                135deg,
+                #fffbeb,
+                #fefce8
+            );
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    .part-empty-notice i {
+        margin-top: 1px;
+        color: #d97706;
+        font-size: 17px;
+    }
+
+    .part-submit-button {
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 17px;
+        padding: 0 17px;
+        border: none;
+        border-radius: 11px;
+        color: white;
+        background:
+            linear-gradient(
+                135deg,
+                #1683ff,
+                #4f46e5
+            );
+        box-shadow:
+            0 8px 22px
+            rgba(37, 99, 235, .2);
+        font-size: 12px;
+        font-weight: 850;
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease,
+            opacity .2s ease;
+    }
+
+    .part-submit-button:hover:not(:disabled) {
+        transform:
+            translateY(-2px);
+        box-shadow:
+            0 12px 28px
+            rgba(37, 99, 235, .28);
+    }
+
+    .part-submit-button:disabled {
+        cursor: not-allowed;
+        opacity: .55;
+    }
+
+
+    /* =====================================================
+       TOTALS
+       ===================================================== */
 
     .order-totals {
         margin-top: 28px;
@@ -217,7 +366,9 @@
                 #ecfdf5,
                 #f0fdf4
             );
-        border: 1px solid #bbf7d0;
+        border:
+            1px solid
+            #bbf7d0;
         color: #065f46;
     }
 
@@ -231,17 +382,24 @@
         font-weight: 750;
     }
 
+
     @media (max-width: 1100px) {
         .info-grid {
             grid-template-columns:
-                repeat(3, 1fr);
+                repeat(
+                    3,
+                    1fr
+                );
         }
     }
 
     @media (max-width: 767px) {
         .info-grid {
             grid-template-columns:
-                repeat(2, 1fr);
+                repeat(
+                    2,
+                    1fr
+                );
         }
 
         .item-row {
@@ -255,7 +413,20 @@
 
     @media (max-width: 575px) {
         .info-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns:
+                1fr;
+        }
+
+        .order-card-body {
+            padding: 20px;
+        }
+
+        .part-form {
+            padding: 17px;
+        }
+
+        .part-submit-button {
+            width: 100%;
         }
     }
 </style>
@@ -287,6 +458,7 @@
                 $serviceOrder->status,
         };
 
+
         $statusClass = match (
             $serviceOrder->status
         ) {
@@ -306,6 +478,7 @@
                 'status-confirmed',
         };
 
+
         $canAddParts = in_array(
             $serviceOrder->status,
             [
@@ -314,54 +487,35 @@
             ],
             true
         );
+
+
+        $hasAvailableStock =
+            $availableParts->contains(
+                fn ($part) =>
+                    (int)
+                    $part->stock_quantity
+                    > 0
+            );
     @endphp
 
 
-    @if (session('success'))
-
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-
-    @endif
-
-
-    @if (session('error'))
-
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-
-    @endif
-
-
-    @if ($errors->any())
-
-        <div class="alert alert-danger">
-
-            <ul class="mb-0">
-
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-
-            </ul>
-
-        </div>
-
-    @endif
-
-
-    <section class="order-hero" data-reveal="zoom">
+    <section
+        class="order-hero"
+        data-reveal="zoom"
+    >
 
         <div class="order-hero-inner">
 
             <div>
 
                 <div class="order-code">
+
                     <i class="bi bi-hash"></i>
+
                     {{ $serviceOrder->order_code }}
+
                 </div>
+
 
                 <h1>
                     Phiếu bảo dưỡng
@@ -369,13 +523,16 @@
 
             </div>
 
+
             <span
                 class="
                     status-badge
                     {{ $statusClass }}
                 "
             >
+
                 {{ $statusText }}
+
             </span>
 
         </div>
@@ -383,53 +540,103 @@
     </section>
 
 
-    <article class="order-card" data-reveal>
+    <article
+        class="order-card"
+        data-reveal
+    >
 
         <div class="order-card-body">
 
             <div class="info-grid">
 
                 <div class="info-card">
-                    <div class="info-label">Khách hàng</div>
+
+                    <div class="info-label">
+                        Khách hàng
+                    </div>
+
                     <div class="info-value">
+
                         {{ $serviceOrder->customer->full_name }}
+
                     </div>
+
                 </div>
 
+
                 <div class="info-card">
-                    <div class="info-label">Xe</div>
+
+                    <div class="info-label">
+                        Xe
+                    </div>
+
                     <div class="info-value">
+
                         {{ $serviceOrder->vehicle->brand->name }}
+
                         {{ $serviceOrder->vehicle->vehicleModel->name }}
+
                     </div>
+
                 </div>
 
+
                 <div class="info-card">
-                    <div class="info-label">Biển số</div>
+
+                    <div class="info-label">
+                        Biển số
+                    </div>
+
                     <div class="info-value">
+
                         {{ $serviceOrder->vehicle->license_plate }}
+
                     </div>
+
                 </div>
 
+
                 <div class="info-card">
-                    <div class="info-label">ODO</div>
+
+                    <div class="info-label">
+                        ODO
+                    </div>
+
                     <div class="info-value">
+
                         {{
                             number_format(
-                                $serviceOrder->received_mileage
+                                $serviceOrder
+                                    ->received_mileage,
+                                0,
+                                ',',
+                                '.'
                             )
-                        }} km
+                        }}
+                        km
+
                     </div>
+
                 </div>
 
+
                 <div class="info-card">
-                    <div class="info-label">Kỹ thuật viên</div>
+
+                    <div class="info-label">
+                        Kỹ thuật viên
+                    </div>
+
                     <div class="info-value">
+
                         {{
-                            $serviceOrder->technician->name
+                            $serviceOrder
+                                ->technician
+                                ->name
                             ?? 'Chưa phân công'
                         }}
+
                     </div>
+
                 </div>
 
             </div>
@@ -438,11 +645,18 @@
             <section class="order-section">
 
                 <div class="order-title">
+
                     <i class="bi bi-tools text-primary"></i>
+
                     Dịch vụ
+
                 </div>
 
-                @foreach ($serviceOrder->items as $item)
+
+                @foreach (
+                    $serviceOrder->items
+                    as $item
+                )
 
                     <div class="item-row">
 
@@ -450,11 +664,14 @@
                             {{ $item->service_name }}
                         </strong>
 
+
                         <span>
                             x {{ $item->quantity }}
                         </span>
 
+
                         <span class="item-price">
+
                             {{
                                 number_format(
                                     $item->line_total,
@@ -462,7 +679,9 @@
                                     ',',
                                     '.'
                                 )
-                            }} đ
+                            }}
+                            đ
+
                         </span>
 
                     </div>
@@ -475,12 +694,18 @@
             <section class="order-section">
 
                 <div class="order-title">
+
                     <i class="bi bi-box-seam text-primary"></i>
+
                     Phụ tùng
+
                 </div>
 
 
-                @forelse ($serviceOrder->parts as $part)
+                @forelse (
+                    $serviceOrder->parts
+                    as $part
+                )
 
                     <div class="item-row">
 
@@ -488,12 +713,18 @@
                             {{ $part->part_name }}
                         </strong>
 
+
                         <span>
+
                             {{ $part->quantity }}
+
                             {{ $part->unit }}
+
                         </span>
 
+
                         <span class="item-price">
+
                             {{
                                 number_format(
                                     $part->line_total,
@@ -501,7 +732,9 @@
                                     ',',
                                     '.'
                                 )
-                            }} đ
+                            }}
+                            đ
+
                         </span>
 
                     </div>
@@ -509,7 +742,9 @@
                 @empty
 
                     <div class="order-note">
+
                         Chưa sử dụng phụ tùng.
+
                     </div>
 
                 @endforelse
@@ -517,119 +752,319 @@
 
                 @if ($canAddParts)
 
-                    <form
-                        method="POST"
-                        action="{{ route(
-                            'staff.service-orders.parts.store',
-                            $serviceOrder->id
-                        ) }}"
-                        class="part-form"
-                    >
+                    @if ($availableParts->isEmpty())
 
-                        @csrf
+                        <div class="part-empty-notice">
 
-                        <h5 class="fw-bold mb-3">
-                            Xuất phụ tùng
-                        </h5>
+                            <i class="bi bi-exclamation-triangle-fill"></i>
 
-                        <div class="row g-3">
+                            <div>
 
-                            <div class="col-md-7">
+                                <strong>
+                                    Chưa có phụ tùng đang hoạt động.
+                                </strong>
 
-                                <label
-                                    for="part_id"
-                                    class="form-label"
-                                >
-                                    Phụ tùng
-                                </label>
-
-                                <select
-                                    id="part_id"
-                                    name="part_id"
-                                    class="form-select"
-                                    required
-                                >
-
-                                    <option value="">
-                                        -- Chọn phụ tùng --
-                                    </option>
-
-                                    @foreach ($availableParts as $part)
-
-                                        <option
-                                            value="{{ $part->id }}"
-                                            {{
-                                                $part->stock_quantity <= 0
-                                                    ? 'disabled'
-                                                    : ''
-                                            }}
-                                        >
-                                            {{ $part->name }}
-                                            -
-                                            tồn {{ $part->stock_quantity }}
-                                            {{ $part->unit }}
-                                        </option>
-
-                                    @endforeach
-
-                                </select>
-
-                            </div>
-
-
-                            <div class="col-md-5">
-
-                                <label
-                                    for="quantity"
-                                    class="form-label"
-                                >
-                                    Số lượng
-                                </label>
-
-                                <input
-                                    type="number"
-                                    id="quantity"
-                                    name="quantity"
-                                    class="form-control"
-                                    min="1"
-                                    value="1"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <div class="col-12">
-
-                                <label
-                                    for="note"
-                                    class="form-label"
-                                >
-                                    Ghi chú
-                                </label>
-
-                                <textarea
-                                    id="note"
-                                    name="note"
-                                    class="form-control"
-                                    rows="3"
-                                    maxlength="1000"
-                                ></textarea>
+                                <div>
+                                    Hãy kiểm tra lại danh mục
+                                    phụ tùng trong kho trước khi
+                                    thực hiện xuất kho.
+                                </div>
 
                             </div>
 
                         </div>
 
+                    @else
 
-                        <button
-                            type="submit"
-                            class="btn btn-primary mt-3"
+                        <form
+                            id="addPartForm"
+                            method="POST"
+                            action="{{ route(
+                                'staff.service-orders.parts.store',
+                                $serviceOrder->id
+                            ) }}"
+                            class="part-form"
+                            novalidate
                         >
-                            <i class="bi bi-box-arrow-right me-2"></i>
-                            Xuất phụ tùng
-                        </button>
 
-                    </form>
+                            @csrf
+
+
+                            <div class="part-form-title">
+
+                                Xuất phụ tùng
+
+                            </div>
+
+
+                            <div class="part-form-description">
+
+                                Chọn phụ tùng và số lượng thực tế
+                                sử dụng cho phiếu bảo dưỡng.
+
+                                Tồn kho sẽ được cập nhật ngay
+                                khi xuất thành công.
+
+                            </div>
+
+
+                            @if (!$hasAvailableStock)
+
+                                <div class="part-empty-notice mb-3">
+
+                                    <i class="bi bi-box-seam"></i>
+
+                                    <div>
+
+                                        <strong>
+                                            Các phụ tùng hiện đều hết hàng.
+                                        </strong>
+
+                                        <div>
+                                            Cần nhập thêm tồn kho trước
+                                            khi có thể xuất phụ tùng.
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            @endif
+
+
+                            <div class="row g-3">
+
+                                <div class="col-md-7">
+
+                                    <label
+                                        for="part_id"
+                                        class="part-field-label"
+                                    >
+
+                                        Phụ tùng *
+
+                                    </label>
+
+
+                                    <select
+                                        id="part_id"
+                                        name="part_id"
+                                        class="
+                                            form-select
+                                            part-form-control
+                                            @error('part_id')
+                                                is-invalid
+                                            @enderror
+                                        "
+                                        aria-invalid="{{
+                                            $errors->has(
+                                                'part_id'
+                                            )
+                                                ? 'true'
+                                                : 'false'
+                                        }}"
+                                    >
+
+                                        <option
+                                            value=""
+                                            data-stock=""
+                                            data-unit=""
+                                        >
+                                            -- Chọn phụ tùng --
+                                        </option>
+
+
+                                        @foreach (
+                                            $availableParts
+                                            as $part
+                                        )
+
+                                            <option
+                                                value="{{ $part->id }}"
+                                                data-stock="{{
+                                                    (int)
+                                                    $part->stock_quantity
+                                                }}"
+                                                data-unit="{{
+                                                    $part->unit
+                                                }}"
+                                                {{
+                                                    old('part_id')
+                                                    == $part->id
+                                                        ? 'selected'
+                                                        : ''
+                                                }}
+                                                {{
+                                                    (int)
+                                                    $part->stock_quantity
+                                                    <= 0
+                                                        ? 'disabled'
+                                                        : ''
+                                                }}
+                                            >
+
+                                                {{ $part->name }}
+
+                                                -
+
+                                                tồn
+                                                {{
+                                                    number_format(
+                                                        $part
+                                                            ->stock_quantity,
+                                                        0,
+                                                        ',',
+                                                        '.'
+                                                    )
+                                                }}
+
+                                                {{ $part->unit }}
+
+                                                @if (
+                                                    (int)
+                                                    $part->stock_quantity
+                                                    <= 0
+                                                )
+                                                    - Hết hàng
+                                                @endif
+
+                                            </option>
+
+                                        @endforeach
+
+                                    </select>
+
+
+                                    <div
+                                        id="partStockHint"
+                                        class="
+                                            part-field-hint
+                                            part-stock-hint
+                                        "
+                                    >
+
+                                        Chọn phụ tùng để xem
+                                        tồn kho khả dụng.
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-md-5">
+
+                                    <label
+                                        for="quantity"
+                                        class="part-field-label"
+                                    >
+
+                                        Số lượng *
+
+                                    </label>
+
+
+                                    <input
+                                        type="number"
+                                        id="quantity"
+                                        name="quantity"
+                                        class="
+                                            form-control
+                                            part-form-control
+                                            @error('quantity')
+                                                is-invalid
+                                            @enderror
+                                        "
+                                        min="1"
+                                        step="1"
+                                        inputmode="numeric"
+                                        value="{{ old(
+                                            'quantity',
+                                            1
+                                        ) }}"
+                                        aria-invalid="{{
+                                            $errors->has(
+                                                'quantity'
+                                            )
+                                                ? 'true'
+                                                : 'false'
+                                        }}"
+                                    >
+
+
+                                    <div class="part-field-hint">
+
+                                        Phải là số nguyên từ 1
+                                        và không được vượt tồn kho.
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="col-12">
+
+                                    <label
+                                        for="note"
+                                        class="part-field-label"
+                                    >
+
+                                        Ghi chú
+
+                                    </label>
+
+
+                                    <textarea
+                                        id="note"
+                                        name="note"
+                                        class="
+                                            form-control
+                                            part-form-control
+                                            @error('note')
+                                                is-invalid
+                                            @enderror
+                                        "
+                                        rows="3"
+                                        maxlength="1000"
+                                        placeholder="Ví dụ: Thay mới theo yêu cầu khách hàng..."
+                                        aria-invalid="{{
+                                            $errors->has(
+                                                'note'
+                                            )
+                                                ? 'true'
+                                                : 'false'
+                                        }}"
+                                    >{{ old('note') }}</textarea>
+
+
+                                    <div class="part-field-hint">
+
+                                        Tối đa 1000 ký tự.
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <button
+                                type="submit"
+                                id="addPartSubmitButton"
+                                class="part-submit-button"
+                                @disabled(
+                                    !$hasAvailableStock
+                                )
+                            >
+
+                                <i class="bi bi-box-arrow-right"></i>
+
+                                Xuất phụ tùng
+
+                            </button>
+
+                        </form>
+
+                    @endif
 
                 @endif
 
@@ -639,61 +1074,98 @@
             <div class="order-totals">
 
                 <div class="total-row">
-                    <span>Dịch vụ</span>
+
+                    <span>
+                        Dịch vụ
+                    </span>
+
                     <strong>
+
                         {{
                             number_format(
-                                $serviceOrder->service_total,
+                                $serviceOrder
+                                    ->service_total,
                                 0,
                                 ',',
                                 '.'
                             )
-                        }} đ
+                        }}
+                        đ
+
                     </strong>
+
                 </div>
+
 
                 <div class="total-row">
-                    <span>Phụ tùng</span>
+
+                    <span>
+                        Phụ tùng
+                    </span>
+
                     <strong>
+
                         {{
                             number_format(
-                                $serviceOrder->parts_total,
+                                $serviceOrder
+                                    ->parts_total,
                                 0,
                                 ',',
                                 '.'
                             )
-                        }} đ
+                        }}
+                        đ
+
                     </strong>
+
                 </div>
 
+
                 <div class="total-row grand-total">
-                    <span>Tổng cộng</span>
+
                     <span>
+                        Tổng cộng
+                    </span>
+
+                    <span>
+
                         {{
                             number_format(
-                                $serviceOrder->total_amount,
+                                $serviceOrder
+                                    ->total_amount,
                                 0,
                                 ',',
                                 '.'
                             )
-                        }} đ
+                        }}
+                        đ
+
                     </span>
+
                 </div>
 
             </div>
 
 
-            @if ($serviceOrder->status === 'COMPLETED')
+            @if (
+                $serviceOrder->status
+                === 'COMPLETED'
+            )
 
                 <section class="order-section">
 
                     <div class="order-title">
+
                         <i class="bi bi-receipt text-success"></i>
+
                         Hóa đơn
+
                     </div>
 
 
-                    @if ($serviceOrder->invoice)
+                    @if (
+                        $serviceOrder->invoice
+                    )
 
                         <div class="invoice-panel">
 
@@ -705,6 +1177,7 @@
 
                         </div>
 
+
                         <a
                             href="{{ route(
                                 'staff.invoices.show',
@@ -712,15 +1185,22 @@
                             ) }}"
                             class="btn btn-success mt-3"
                         >
+
                             Xem hóa đơn
+
                         </a>
 
                     @else
 
                         <div class="invoice-panel">
+
                             Phiếu đã hoàn thành.
-                            Bạn có thể lập hóa đơn cho khách hàng.
+
+                            Bạn có thể lập hóa đơn
+                            cho khách hàng.
+
                         </div>
+
 
                         <a
                             href="{{ route(
@@ -729,7 +1209,9 @@
                             ) }}"
                             class="btn btn-success mt-3"
                         >
+
                             Lập hóa đơn
+
                         </a>
 
                     @endif
@@ -739,7 +1221,9 @@
             @endif
 
 
-            @if ($serviceOrder->vehicle_condition)
+            @if (
+                $serviceOrder->vehicle_condition
+            )
 
                 <section class="order-section">
 
@@ -747,8 +1231,11 @@
                         Tình trạng xe
                     </div>
 
+
                     <div class="order-note">
+
                         {{ $serviceOrder->vehicle_condition }}
+
                     </div>
 
                 </section>
@@ -756,7 +1243,9 @@
             @endif
 
 
-            @if ($serviceOrder->diagnosis)
+            @if (
+                $serviceOrder->diagnosis
+            )
 
                 <section class="order-section">
 
@@ -764,8 +1253,11 @@
                         Chẩn đoán
                     </div>
 
+
                     <div class="order-note">
+
                         {{ $serviceOrder->diagnosis }}
+
                     </div>
 
                 </section>
@@ -773,7 +1265,9 @@
             @endif
 
 
-            @if ($serviceOrder->appointment)
+            @if (
+                $serviceOrder->appointment
+            )
 
                 <a
                     href="{{ route(
@@ -782,8 +1276,11 @@
                     ) }}"
                     class="staff-back"
                 >
+
                     <i class="bi bi-arrow-left"></i>
+
                     Quay lại lịch hẹn
+
                 </a>
 
             @endif
@@ -795,3 +1292,167 @@
 </div>
 
 @endsection
+
+
+@push('scripts')
+
+<script>
+    document.addEventListener(
+        'DOMContentLoaded',
+        function () {
+            const partSelect =
+                document.getElementById(
+                    'part_id'
+                );
+
+            const quantityInput =
+                document.getElementById(
+                    'quantity'
+                );
+
+            const stockHint =
+                document.getElementById(
+                    'partStockHint'
+                );
+
+            const form =
+                document.getElementById(
+                    'addPartForm'
+                );
+
+            const submitButton =
+                document.getElementById(
+                    'addPartSubmitButton'
+                );
+
+
+            function updatePartStockInfo() {
+                if (
+                    !partSelect
+                    ||
+                    !quantityInput
+                    ||
+                    !stockHint
+                ) {
+                    return;
+                }
+
+
+                const selectedOption =
+                    partSelect.options[
+                        partSelect.selectedIndex
+                    ];
+
+
+                if (
+                    !selectedOption
+                    ||
+                    !selectedOption.value
+                ) {
+                    quantityInput.removeAttribute(
+                        'max'
+                    );
+
+                    stockHint.textContent =
+                        'Chọn phụ tùng để xem tồn kho khả dụng.';
+
+                    stockHint.classList.remove(
+                        'stock-empty'
+                    );
+
+                    return;
+                }
+
+
+                const stock =
+                    Number.parseInt(
+                        selectedOption.dataset.stock,
+                        10
+                    );
+
+                const unit =
+                    selectedOption.dataset.unit
+                    || 'đơn vị';
+
+
+                if (
+                    Number.isNaN(stock)
+                ) {
+                    quantityInput.removeAttribute(
+                        'max'
+                    );
+
+                    stockHint.textContent =
+                        'Không xác định được tồn kho hiện tại.';
+
+                    return;
+                }
+
+
+                quantityInput.setAttribute(
+                    'max',
+                    stock
+                );
+
+
+                if (
+                    stock <= 0
+                ) {
+                    stockHint.textContent =
+                        'Phụ tùng này hiện đã hết hàng.';
+
+                    stockHint.classList.add(
+                        'stock-empty'
+                    );
+
+                    return;
+                }
+
+
+                stockHint.textContent =
+                    'Tồn kho hiện tại: '
+                    + stock.toLocaleString('vi-VN')
+                    + ' '
+                    + unit
+                    + '.';
+
+
+                stockHint.classList.remove(
+                    'stock-empty'
+                );
+            }
+
+
+            if (partSelect) {
+                partSelect.addEventListener(
+                    'change',
+                    updatePartStockInfo
+                );
+
+
+                updatePartStockInfo();
+            }
+
+
+            if (
+                form
+                &&
+                submitButton
+            ) {
+                form.addEventListener(
+                    'submit',
+                    function () {
+                        submitButton.disabled =
+                            true;
+
+                        submitButton.innerHTML =
+                            '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>'
+                            + '<span>Đang xuất kho...</span>';
+                    }
+                );
+            }
+        }
+    );
+</script>
+
+@endpush

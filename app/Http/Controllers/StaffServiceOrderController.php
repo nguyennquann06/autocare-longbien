@@ -17,10 +17,20 @@ use Illuminate\Validation\ValidationException;
 
 class StaffServiceOrderController extends Controller
 {
+    /**
+     * Giới hạn ODO hợp lý cho hệ thống.
+     */
+    private const MAX_MILEAGE = 5000000;
+
+
+    /**
+     * Form tạo phiếu bảo dưỡng.
+     */
     public function create(
         Appointment $appointment
     ) {
         $this->authorizeStaff();
+
 
         $appointment->load([
             'customer',
@@ -30,7 +40,11 @@ class StaffServiceOrderController extends Controller
             'serviceOrder',
         ]);
 
-        if ($appointment->status !== 'CONFIRMED') {
+
+        if (
+            $appointment->status
+            !== 'CONFIRMED'
+        ) {
             return redirect()
                 ->route(
                     'staff.appointments.show',
@@ -42,7 +56,10 @@ class StaffServiceOrderController extends Controller
                 );
         }
 
-        if ($appointment->serviceOrder) {
+
+        if (
+            $appointment->serviceOrder
+        ) {
             return redirect()
                 ->route(
                     'staff.appointments.show',
@@ -54,17 +71,20 @@ class StaffServiceOrderController extends Controller
                 );
         }
 
-        $technicians = User::whereHas(
-            'role',
-            function ($query) {
-                $query->where(
-                    'code',
-                    'TECHNICIAN'
-                );
-            }
-        )
-            ->orderBy('name')
-            ->get();
+
+        $technicians =
+            User::whereHas(
+                'role',
+                function ($query) {
+                    $query->where(
+                        'code',
+                        'TECHNICIAN'
+                    );
+                }
+            )
+                ->orderBy('name')
+                ->get();
+
 
         return view(
             'staff.service-orders.create',
@@ -76,11 +96,15 @@ class StaffServiceOrderController extends Controller
     }
 
 
+    /**
+     * Lưu phiếu bảo dưỡng.
+     */
     public function store(
         Request $request,
         Appointment $appointment
     ) {
         $this->authorizeStaff();
+
 
         $appointment->load([
             'vehicle',
@@ -88,7 +112,17 @@ class StaffServiceOrderController extends Controller
             'serviceOrder',
         ]);
 
-        if ($appointment->status !== 'CONFIRMED') {
+
+        /*
+        |--------------------------------------------------------------------------
+        | BUSINESS GUARD
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $appointment->status
+            !== 'CONFIRMED'
+        ) {
             return redirect()
                 ->route(
                     'staff.appointments.show',
@@ -100,7 +134,10 @@ class StaffServiceOrderController extends Controller
                 );
         }
 
-        if ($appointment->serviceOrder) {
+
+        if (
+            $appointment->serviceOrder
+        ) {
             return redirect()
                 ->route(
                     'staff.appointments.show',
@@ -112,193 +149,468 @@ class StaffServiceOrderController extends Controller
                 );
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE TEXT INPUT
+        |--------------------------------------------------------------------------
+        */
+
+        $request->merge([
+            'vehicle_condition' =>
+                $this->normalizeNullableText(
+                    $request->input(
+                        'vehicle_condition'
+                    )
+                ),
+
+            'diagnosis' =>
+                $this->normalizeNullableText(
+                    $request->input(
+                        'diagnosis'
+                    )
+                ),
+
+            'staff_note' =>
+                $this->normalizeNullableText(
+                    $request->input(
+                        'staff_note'
+                    )
+                ),
+        ]);
+
+
         $currentMileage =
-            (int) $appointment
+            (int)
+            $appointment
                 ->vehicle
                 ->current_mileage;
 
-        $validated = $request->validate(
-            [
-                'technician_id' => [
-                    'required',
 
-                    Rule::exists(
-                        'users',
-                        'id'
-                    )->where(
-                        function ($query) {
-                            $query->whereIn(
-                                'role_id',
-                                function ($subQuery) {
-                                    $subQuery
-                                        ->select('id')
-                                        ->from('roles')
-                                        ->where(
-                                            'code',
-                                            'TECHNICIAN'
-                                        );
-                                }
-                            );
-                        }
-                    ),
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        $validated =
+            $request->validate(
+                [
+                    'technician_id' => [
+                        'bail',
+                        'required',
+                        'integer',
+
+                        Rule::exists(
+                            'users',
+                            'id'
+                        )->where(
+                            function ($query) {
+                                $query->whereIn(
+                                    'role_id',
+                                    function (
+                                        $subQuery
+                                    ) {
+                                        $subQuery
+                                            ->select('id')
+                                            ->from('roles')
+                                            ->where(
+                                                'code',
+                                                'TECHNICIAN'
+                                            );
+                                    }
+                                );
+                            }
+                        ),
+                    ],
+
+
+                    'received_mileage' => [
+                        'bail',
+                        'required',
+                        'integer',
+                        'min:' . $currentMileage,
+                        'max:' . self::MAX_MILEAGE,
+                    ],
+
+
+                    'vehicle_condition' => [
+                        'bail',
+                        'nullable',
+                        'string',
+                        'max:2000',
+                    ],
+
+
+                    'diagnosis' => [
+                        'bail',
+                        'nullable',
+                        'string',
+                        'max:2000',
+                    ],
+
+
+                    'staff_note' => [
+                        'bail',
+                        'nullable',
+                        'string',
+                        'max:1000',
+                    ],
                 ],
+                [
+                    /*
+                    |--------------------------------------------------------------------------
+                    | TECHNICIAN
+                    |--------------------------------------------------------------------------
+                    */
 
-                'received_mileage' => [
-                    'required',
-                    'integer',
-                    'min:' . $currentMileage,
-                ],
+                    'technician_id.required' =>
+                        'Vui lòng chọn kỹ thuật viên phụ trách.',
 
-                'vehicle_condition' => [
-                    'nullable',
-                    'string',
-                    'max:2000',
-                ],
+                    'technician_id.integer' =>
+                        'Kỹ thuật viên được chọn không hợp lệ.',
 
-                'diagnosis' => [
-                    'nullable',
-                    'string',
-                    'max:2000',
-                ],
+                    'technician_id.exists' =>
+                        'Kỹ thuật viên không tồn tại hoặc tài khoản được chọn không có vai trò kỹ thuật viên.',
 
-                'staff_note' => [
-                    'nullable',
-                    'string',
-                    'max:1000',
-                ],
-            ]
-        );
 
-        $user = Auth::user();
+                    /*
+                    |--------------------------------------------------------------------------
+                    | ODO
+                    |--------------------------------------------------------------------------
+                    */
 
-        $serviceOrder = DB::transaction(
-            function () use (
-                $appointment,
-                $validated,
-                $user
-            ) {
-                $serviceTotal =
-                    $appointment
-                        ->services
-                        ->sum(
-                            fn ($service) =>
-                                (float)
-                                $service
-                                    ->pivot
-                                    ->price
-                        );
+                    'received_mileage.required' =>
+                        'Vui lòng nhập ODO khi tiếp nhận xe.',
 
-                $serviceOrder =
-                    ServiceOrder::create([
-                        'order_code' =>
-                            $this->generateOrderCode(),
+                    'received_mileage.integer' =>
+                        'ODO phải là số nguyên, không được nhập số thập phân.',
 
-                        'appointment_id' =>
-                            $appointment->id,
-
-                        'customer_id' =>
-                            $appointment->customer_id,
-
-                        'vehicle_id' =>
-                            $appointment->vehicle_id,
-
-                        'created_by' =>
-                            $user->id,
-
-                        'technician_id' =>
-                            $validated[
-                                'technician_id'
-                            ],
-
-                        'received_mileage' =>
-                            $validated[
-                                'received_mileage'
-                            ],
-
-                        'status' =>
-                            'RECEIVED',
-
-                        'received_at' =>
-                            now(),
-
-                        'vehicle_condition' =>
-                            $validated[
-                                'vehicle_condition'
-                            ]
-                            ?? null,
-
-                        'diagnosis' =>
-                            $validated[
-                                'diagnosis'
-                            ]
-                            ?? null,
-
-                        'staff_note' =>
-                            $validated[
-                                'staff_note'
-                            ]
-                            ?? null,
-
-                        'service_total' =>
-                            $serviceTotal,
-
-                        'parts_total' =>
+                    'received_mileage.min' =>
+                        'ODO khi tiếp nhận không được nhỏ hơn ODO hiện tại của xe là '
+                        . number_format(
+                            $currentMileage,
                             0,
+                            ',',
+                            '.'
+                        )
+                        . ' km.',
 
-                        'total_amount' =>
-                            $serviceTotal,
+                    'received_mileage.max' =>
+                        'ODO không được vượt quá '
+                        . number_format(
+                            self::MAX_MILEAGE,
+                            0,
+                            ',',
+                            '.'
+                        )
+                        . ' km.',
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | VEHICLE CONDITION
+                    |--------------------------------------------------------------------------
+                    */
+
+                    'vehicle_condition.string' =>
+                        'Tình trạng xe khi tiếp nhận không hợp lệ.',
+
+                    'vehicle_condition.max' =>
+                        'Tình trạng xe khi tiếp nhận không được vượt quá 2000 ký tự.',
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DIAGNOSIS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    'diagnosis.string' =>
+                        'Chẩn đoán ban đầu không hợp lệ.',
+
+                    'diagnosis.max' =>
+                        'Chẩn đoán ban đầu không được vượt quá 2000 ký tự.',
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | STAFF NOTE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    'staff_note.string' =>
+                        'Ghi chú nhân viên không hợp lệ.',
+
+                    'staff_note.max' =>
+                        'Ghi chú nhân viên không được vượt quá 1000 ký tự.',
+                ]
+            );
+
+
+        $user =
+            Auth::user();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CREATE SERVICE ORDER
+        |--------------------------------------------------------------------------
+        |
+        | Lock Appointment + Vehicle để:
+        |
+        | - tránh double-submit tạo 2 phiếu;
+        | - tránh ODO bị thay đổi đồng thời;
+        | - kiểm tra lại trạng thái ngay trước khi ghi DB.
+        |
+        */
+
+        $serviceOrder =
+            DB::transaction(
+                function () use (
+                    $appointment,
+                    $validated,
+                    $user
+                ) {
+                    $lockedAppointment =
+                        Appointment::query()
+                            ->whereKey(
+                                $appointment->id
+                            )
+                            ->lockForUpdate()
+                            ->firstOrFail();
+
+
+                    $lockedAppointment->load([
+                        'services',
+                        'serviceOrder',
                     ]);
 
-                foreach (
-                    $appointment->services
-                    as $service
-                ) {
-                    $price =
-                        (float)
-                        $service
-                            ->pivot
-                            ->price;
 
-                    $serviceOrder
-                        ->items()
-                        ->create([
-                            'service_id' =>
-                                $service->id,
+                    /*
+                    |--------------------------------------------------------------------------
+                    | RECHECK APPOINTMENT
+                    |--------------------------------------------------------------------------
+                    */
 
-                            'service_name' =>
-                                $service->name,
+                    if (
+                        $lockedAppointment->status
+                        !== 'CONFIRMED'
+                    ) {
+                        throw ValidationException::withMessages([
+                            'appointment' =>
+                                'Lịch hẹn không còn ở trạng thái đã xác nhận nên không thể tạo phiếu bảo dưỡng.',
+                        ]);
+                    }
 
-                            'unit_price' =>
-                                $price,
 
-                            'quantity' =>
-                                1,
+                    if (
+                        $lockedAppointment
+                            ->serviceOrder
+                    ) {
+                        throw ValidationException::withMessages([
+                            'appointment' =>
+                                'Lịch hẹn này đã có phiếu bảo dưỡng. Không thể tạo thêm phiếu mới.',
+                        ]);
+                    }
 
-                            'line_total' =>
-                                $price,
 
-                            'estimated_duration_minutes' =>
-                                $service
-                                    ->pivot
-                                    ->estimated_duration_minutes,
+                    /*
+                    |--------------------------------------------------------------------------
+                    | LOCK VEHICLE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $lockedVehicle =
+                        $lockedAppointment
+                            ->vehicle()
+                            ->lockForUpdate()
+                            ->firstOrFail();
+
+
+                    $latestMileage =
+                        (int)
+                        $lockedVehicle
+                            ->current_mileage;
+
+
+                    if (
+                        (int)
+                        $validated[
+                            'received_mileage'
+                        ]
+                        <
+                        $latestMileage
+                    ) {
+                        throw ValidationException::withMessages([
+                            'received_mileage' =>
+                                'ODO khi tiếp nhận không được nhỏ hơn ODO hiện tại của xe là '
+                                . number_format(
+                                    $latestMileage,
+                                    0,
+                                    ',',
+                                    '.'
+                                )
+                                . ' km.',
+                        ]);
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | SERVICE SNAPSHOT TOTAL
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $serviceTotal =
+                        $lockedAppointment
+                            ->services
+                            ->sum(
+                                fn ($service) =>
+                                    (float)
+                                    $service
+                                        ->pivot
+                                        ->price
+                            );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | CREATE ORDER
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $serviceOrder =
+                        ServiceOrder::create([
+                            'order_code' =>
+                                $this
+                                    ->generateOrderCode(),
+
+                            'appointment_id' =>
+                                $lockedAppointment
+                                    ->id,
+
+                            'customer_id' =>
+                                $lockedAppointment
+                                    ->customer_id,
+
+                            'vehicle_id' =>
+                                $lockedAppointment
+                                    ->vehicle_id,
+
+                            'created_by' =>
+                                $user->id,
+
+                            'technician_id' =>
+                                $validated[
+                                    'technician_id'
+                                ],
+
+                            'received_mileage' =>
+                                $validated[
+                                    'received_mileage'
+                                ],
 
                             'status' =>
-                                'PENDING',
-                        ]);
-                }
+                                'RECEIVED',
 
-                $appointment
-                    ->vehicle
-                    ->update([
+                            'received_at' =>
+                                now(),
+
+                            'vehicle_condition' =>
+                                $validated[
+                                    'vehicle_condition'
+                                ]
+                                ?? null,
+
+                            'diagnosis' =>
+                                $validated[
+                                    'diagnosis'
+                                ]
+                                ?? null,
+
+                            'staff_note' =>
+                                $validated[
+                                    'staff_note'
+                                ]
+                                ?? null,
+
+                            'service_total' =>
+                                $serviceTotal,
+
+                            'parts_total' =>
+                                0,
+
+                            'total_amount' =>
+                                $serviceTotal,
+                        ]);
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | CREATE SERVICE ORDER ITEMS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    foreach (
+                        $lockedAppointment
+                            ->services
+                        as $service
+                    ) {
+                        $price =
+                            (float)
+                            $service
+                                ->pivot
+                                ->price;
+
+
+                        $serviceOrder
+                            ->items()
+                            ->create([
+                                'service_id' =>
+                                    $service->id,
+
+                                'service_name' =>
+                                    $service->name,
+
+                                'unit_price' =>
+                                    $price,
+
+                                'quantity' =>
+                                    1,
+
+                                'line_total' =>
+                                    $price,
+
+                                'estimated_duration_minutes' =>
+                                    $service
+                                        ->pivot
+                                        ->estimated_duration_minutes,
+
+                                'status' =>
+                                    'PENDING',
+                            ]);
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | UPDATE VEHICLE ODO
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $lockedVehicle->update([
                         'current_mileage' =>
                             $validated[
                                 'received_mileage'
                             ],
                     ]);
 
-                return $serviceOrder;
-            }
-        );
+
+                    return $serviceOrder;
+                }
+            );
+
 
         return redirect()
             ->route(
@@ -312,10 +624,14 @@ class StaffServiceOrderController extends Controller
     }
 
 
+    /**
+     * Chi tiết phiếu bảo dưỡng.
+     */
     public function show(
         ServiceOrder $serviceOrder
     ) {
         $this->authorizeStaff();
+
 
         $serviceOrder->load([
             'appointment',
@@ -329,13 +645,16 @@ class StaffServiceOrderController extends Controller
             'invoice',
         ]);
 
-        $availableParts = Part::where(
-            'is_active',
-            true
-        )
-            ->orderBy('category')
-            ->orderBy('name')
-            ->get();
+
+        $availableParts =
+            Part::where(
+                'is_active',
+                true
+            )
+                ->orderBy('category')
+                ->orderBy('name')
+                ->get();
+
 
         return view(
             'staff.service-orders.show',
@@ -347,11 +666,21 @@ class StaffServiceOrderController extends Controller
     }
 
 
+    /**
+     * Xuất phụ tùng cho phiếu bảo dưỡng.
+     */
     public function addPart(
         Request $request,
         ServiceOrder $serviceOrder
     ) {
         $this->authorizeStaff();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BUSINESS GUARD
+        |--------------------------------------------------------------------------
+        */
 
         if (
             !in_array(
@@ -374,29 +703,131 @@ class StaffServiceOrderController extends Controller
                 );
         }
 
-        $validated = $request->validate(
-            [
-                'part_id' => [
-                    'required',
-                    'integer',
-                    'exists:parts,id',
-                ],
 
-                'quantity' => [
-                    'required',
-                    'integer',
-                    'min:1',
-                ],
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE INPUT
+        |--------------------------------------------------------------------------
+        */
 
-                'note' => [
-                    'nullable',
-                    'string',
-                    'max:1000',
-                ],
-            ]
-        );
+        $request->merge([
+            'note' =>
+                $this->normalizeNullableText(
+                    $request->input(
+                        'note'
+                    )
+                ),
+        ]);
 
-        $user = Auth::user();
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        $validated =
+            $request->validate(
+                [
+                    'part_id' => [
+                        'bail',
+                        'required',
+                        'integer',
+
+                        Rule::exists(
+                            'parts',
+                            'id'
+                        )->where(
+                            function ($query) {
+                                $query->where(
+                                    'is_active',
+                                    true
+                                );
+                            }
+                        ),
+                    ],
+
+
+                    'quantity' => [
+                        'bail',
+                        'required',
+                        'integer',
+                        'min:1',
+                    ],
+
+
+                    'note' => [
+                        'bail',
+                        'nullable',
+                        'string',
+                        'max:1000',
+                    ],
+                ],
+                [
+                    /*
+                    |--------------------------------------------------------------------------
+                    | PART
+                    |--------------------------------------------------------------------------
+                    */
+
+                    'part_id.required' =>
+                        'Vui lòng chọn phụ tùng cần xuất.',
+
+                    'part_id.integer' =>
+                        'Phụ tùng được chọn không hợp lệ.',
+
+                    'part_id.exists' =>
+                        'Phụ tùng không tồn tại hoặc đã ngừng sử dụng.',
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | QUANTITY
+                    |--------------------------------------------------------------------------
+                    */
+
+                    'quantity.required' =>
+                        'Vui lòng nhập số lượng phụ tùng cần xuất.',
+
+                    'quantity.integer' =>
+                        'Số lượng phụ tùng phải là số nguyên.',
+
+                    'quantity.min' =>
+                        'Số lượng phụ tùng phải từ 1 trở lên.',
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NOTE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    'note.string' =>
+                        'Ghi chú xuất phụ tùng không hợp lệ.',
+
+                    'note.max' =>
+                        'Ghi chú xuất phụ tùng không được vượt quá 1000 ký tự.',
+                ]
+            );
+
+
+        $user =
+            Auth::user();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | STOCK TRANSACTION
+        |--------------------------------------------------------------------------
+        |
+        | Lock cả Service Order và Part để tránh:
+        |
+        | - xuất phụ tùng sau khi phiếu vừa hoàn thành;
+        | - hai nhân viên cùng xuất một tồn kho;
+        | - stock_quantity bị âm;
+        | - dùng phụ tùng vừa bị khóa / ngừng sử dụng.
+        |
+        */
 
         DB::transaction(
             function () use (
@@ -404,12 +835,20 @@ class StaffServiceOrderController extends Controller
                 $validated,
                 $user
             ) {
+                /*
+                |--------------------------------------------------------------------------
+                | LOCK SERVICE ORDER
+                |--------------------------------------------------------------------------
+                */
+
                 $lockedOrder =
-                    ServiceOrder::whereKey(
-                        $serviceOrder->id
-                    )
+                    ServiceOrder::query()
+                        ->whereKey(
+                            $serviceOrder->id
+                        )
                         ->lockForUpdate()
                         ->firstOrFail();
+
 
                 if (
                     !in_array(
@@ -427,45 +866,107 @@ class StaffServiceOrderController extends Controller
                     ]);
                 }
 
-                $part = Part::whereKey(
-                    $validated['part_id']
-                )
-                    ->lockForUpdate()
-                    ->firstOrFail();
 
-                if (!$part->is_active) {
+                /*
+                |--------------------------------------------------------------------------
+                | LOCK PART
+                |--------------------------------------------------------------------------
+                */
+
+                $part =
+                    Part::query()
+                        ->whereKey(
+                            $validated[
+                                'part_id'
+                            ]
+                        )
+                        ->lockForUpdate()
+                        ->first();
+
+
+                if (
+                    !$part
+                ) {
+                    throw ValidationException::withMessages([
+                        'part_id' =>
+                            'Phụ tùng không còn tồn tại trong hệ thống.',
+                    ]);
+                }
+
+
+                if (
+                    !$part->is_active
+                ) {
                     throw ValidationException::withMessages([
                         'part_id' =>
                             'Phụ tùng này đã ngừng sử dụng.',
                     ]);
                 }
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | CHECK STOCK
+                |--------------------------------------------------------------------------
+                */
+
                 $quantity =
                     (int)
-                    $validated['quantity'];
+                    $validated[
+                        'quantity'
+                    ];
+
 
                 $quantityBefore =
                     (int)
-                    $part->stock_quantity;
+                    $part
+                        ->stock_quantity;
+
 
                 if (
-                    $quantity >
+                    $quantityBefore <= 0
+                ) {
+                    throw ValidationException::withMessages([
+                        'quantity' =>
+                            'Phụ tùng '
+                            . $part->name
+                            . ' hiện đã hết hàng.',
+                    ]);
+                }
+
+
+                if (
+                    $quantity
+                    >
                     $quantityBefore
                 ) {
                     throw ValidationException::withMessages([
                         'quantity' =>
-                            'Tồn kho hiện chỉ còn '
-                            . $quantityBefore
+                            'Số lượng yêu cầu vượt quá tồn kho. Hiện chỉ còn '
+                            . number_format(
+                                $quantityBefore,
+                                0,
+                                ',',
+                                '.'
+                            )
                             . ' '
                             . $part->unit
                             . '.',
                     ]);
                 }
 
+
                 $quantityAfter =
                     $quantityBefore
                     -
                     $quantity;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SERVICE ORDER PART
+                |--------------------------------------------------------------------------
+                */
 
                 $existingOrderPart =
                     ServiceOrderPart::where(
@@ -479,11 +980,15 @@ class StaffServiceOrderController extends Controller
                         ->lockForUpdate()
                         ->first();
 
-                if ($existingOrderPart) {
+
+                if (
+                    $existingOrderPart
+                ) {
                     $unitPrice =
                         (float)
                         $existingOrderPart
                             ->unit_price;
+
 
                     $newQuantity =
                         (int)
@@ -491,6 +996,7 @@ class StaffServiceOrderController extends Controller
                             ->quantity
                         +
                         $quantity;
+
 
                     $existingOrderPart->update([
                         'quantity' =>
@@ -503,19 +1009,23 @@ class StaffServiceOrderController extends Controller
 
                         'note' =>
                             !empty(
-                                $validated['note']
+                                $validated[
+                                    'note'
+                                ]
                                 ?? null
                             )
-                                ? trim(
-                                    $validated['note']
-                                )
+                                ? $validated[
+                                    'note'
+                                ]
                                 : $existingOrderPart
                                     ->note,
                     ]);
                 } else {
                     $unitPrice =
                         (float)
-                        $part->selling_price;
+                        $part
+                            ->selling_price;
+
 
                     ServiceOrderPart::create([
                         'service_order_id' =>
@@ -545,21 +1055,31 @@ class StaffServiceOrderController extends Controller
                             $quantity,
 
                         'note' =>
-                            !empty(
-                                $validated['note']
-                                ?? null
-                            )
-                                ? trim(
-                                    $validated['note']
-                                )
-                                : null,
+                            $validated[
+                                'note'
+                            ]
+                            ?? null,
                     ]);
                 }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | UPDATE STOCK
+                |--------------------------------------------------------------------------
+                */
 
                 $part->update([
                     'stock_quantity' =>
                         $quantityAfter,
                 ]);
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | INVENTORY TRANSACTION
+                |--------------------------------------------------------------------------
+                */
 
                 InventoryTransaction::create([
                     'part_id' =>
@@ -588,22 +1108,32 @@ class StaffServiceOrderController extends Controller
 
                     'note' =>
                         'Xuất cho phiếu '
-                        . $lockedOrder->order_code
+                        . $lockedOrder
+                            ->order_code
                         . (
                             !empty(
-                                $validated['note']
+                                $validated[
+                                    'note'
+                                ]
                                 ?? null
                             )
                                 ? ' - '
-                                    . trim(
-                                        $validated['note']
-                                    )
+                                    . $validated[
+                                        'note'
+                                    ]
                                 : ''
                         ),
 
                     'transaction_at' =>
                         now(),
                 ]);
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | RECALCULATE ORDER TOTAL
+                |--------------------------------------------------------------------------
+                */
 
                 $partsTotal =
                     ServiceOrderPart::where(
@@ -614,6 +1144,7 @@ class StaffServiceOrderController extends Controller
                             'line_total'
                         );
 
+
                 $totalAmount =
                     (float)
                     $lockedOrder
@@ -621,6 +1152,7 @@ class StaffServiceOrderController extends Controller
                     +
                     (float)
                     $partsTotal;
+
 
                 $lockedOrder->update([
                     'parts_total' =>
@@ -631,6 +1163,7 @@ class StaffServiceOrderController extends Controller
                 ]);
             }
         );
+
 
         return redirect()
             ->route(
@@ -644,12 +1177,18 @@ class StaffServiceOrderController extends Controller
     }
 
 
+    /**
+     * Kiểm tra STAFF / ADMIN.
+     */
     private function authorizeStaff(): void
     {
-        $user = Auth::user();
+        $user =
+            Auth::user();
+
 
         if (
-            !$user ||
+            !$user
+            ||
             !$user->role
         ) {
             abort(
@@ -657,6 +1196,7 @@ class StaffServiceOrderController extends Controller
                 'Bạn không có quyền truy cập.'
             );
         }
+
 
         if (
             !in_array(
@@ -676,14 +1216,21 @@ class StaffServiceOrderController extends Controller
     }
 
 
+    /**
+     * Sinh mã phiếu bảo dưỡng.
+     */
     private function generateOrderCode(): string
     {
         do {
             $code =
                 'SO'
-                . now()->format('Ymd')
+                . now()->format(
+                    'Ymd'
+                )
                 . strtoupper(
-                    Str::random(6)
+                    Str::random(
+                        6
+                    )
                 );
         } while (
             ServiceOrder::where(
@@ -692,6 +1239,36 @@ class StaffServiceOrderController extends Controller
             )->exists()
         );
 
+
         return $code;
+    }
+
+
+    /**
+     * Chuẩn hóa text nullable.
+     *
+     * Chỉ trim đầu/cuối để giữ nguyên
+     * xuống dòng trong ghi chú nghiệp vụ.
+     */
+    private function normalizeNullableText(
+        mixed $value
+    ): ?string {
+        if (
+            $value === null
+        ) {
+            return null;
+        }
+
+
+        $value =
+            trim(
+                (string)
+                $value
+            );
+
+
+        return $value !== ''
+            ? $value
+            : null;
     }
 }
