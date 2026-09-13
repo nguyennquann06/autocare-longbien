@@ -22,6 +22,7 @@ class StaffInvoiceController extends Controller
     ) {
         $this->authorizeStaff();
 
+
         $serviceOrder->load([
             'customer',
             'vehicle.brand',
@@ -31,9 +32,16 @@ class StaffInvoiceController extends Controller
             'invoice',
         ]);
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | BUSINESS GUARD
+        |--------------------------------------------------------------------------
+        */
+
         if (
-            $serviceOrder->status !==
-            'COMPLETED'
+            $serviceOrder->status
+            !== 'COMPLETED'
         ) {
             return redirect()
                 ->route(
@@ -46,11 +54,16 @@ class StaffInvoiceController extends Controller
                 );
         }
 
-        if ($serviceOrder->invoice) {
+
+        if (
+            $serviceOrder->invoice
+        ) {
             return redirect()
                 ->route(
                     'staff.invoices.show',
-                    $serviceOrder->invoice->id
+                    $serviceOrder
+                        ->invoice
+                        ->id
                 )
                 ->with(
                     'error',
@@ -58,20 +71,36 @@ class StaffInvoiceController extends Controller
                 );
         }
 
-        $serviceTotal = (float)
+
+        /*
+        |--------------------------------------------------------------------------
+        | CURRENT TOTALS
+        |--------------------------------------------------------------------------
+        */
+
+        $serviceTotal =
+            (float)
             $serviceOrder
                 ->items
-                ->sum('line_total');
+                ->sum(
+                    'line_total'
+                );
 
-        $partsTotal = (float)
+
+        $partsTotal =
+            (float)
             $serviceOrder
                 ->parts
-                ->sum('line_total');
+                ->sum(
+                    'line_total'
+                );
+
 
         $subtotal =
             $serviceTotal
             +
             $partsTotal;
+
 
         return view(
             'staff.invoices.create',
@@ -94,237 +123,494 @@ class StaffInvoiceController extends Controller
     ) {
         $this->authorizeStaff();
 
-        $validated = $request->validate(
-            [
-                'discount_amount' => [
-                    'nullable',
-                    'numeric',
-                    'min:0',
-                ],
 
-                'note' => [
-                    'nullable',
-                    'string',
-                    'max:2000',
-                ],
-            ],
-            [
-                'discount_amount.numeric' =>
-                    'Số tiền giảm giá phải là số.',
+        /*
+        |--------------------------------------------------------------------------
+        | LOAD CURRENT DATA
+        |--------------------------------------------------------------------------
+        */
 
-                'discount_amount.min' =>
-                    'Số tiền giảm giá không được âm.',
+        $serviceOrder->load([
+            'items',
+            'parts',
+            'invoice',
+        ]);
 
-                'note.max' =>
-                    'Ghi chú không được vượt quá 2000 ký tự.',
-            ]
-        );
 
-        $user = Auth::user();
+        /*
+        |--------------------------------------------------------------------------
+        | BUSINESS GUARD
+        |--------------------------------------------------------------------------
+        */
 
-        $invoice = DB::transaction(
-            function () use (
-                $serviceOrder,
-                $validated,
-                $user
-            ) {
-                $lockedOrder =
-                    ServiceOrder::whereKey(
-                        $serviceOrder->id
+        if (
+            $serviceOrder->status
+            !== 'COMPLETED'
+        ) {
+            return redirect()
+                ->route(
+                    'staff.service-orders.show',
+                    $serviceOrder->id
+                )
+                ->with(
+                    'error',
+                    'Chỉ phiếu bảo dưỡng đã hoàn thành mới có thể lập hóa đơn.'
+                );
+        }
+
+
+        if (
+            $serviceOrder->invoice
+        ) {
+            return redirect()
+                ->route(
+                    'staff.invoices.show',
+                    $serviceOrder
+                        ->invoice
+                        ->id
+                )
+                ->with(
+                    'error',
+                    'Phiếu bảo dưỡng này đã có hóa đơn.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CALCULATE CURRENT SUBTOTAL
+        |--------------------------------------------------------------------------
+        |
+        | Giá trị này chỉ phục vụ validation/UX ban đầu.
+        | Trong transaction sẽ tính lại từ DB đã lock.
+        |
+        */
+
+        $currentServiceTotal =
+            (float)
+            $serviceOrder
+                ->items
+                ->sum(
+                    'line_total'
+                );
+
+
+        $currentPartsTotal =
+            (float)
+            $serviceOrder
+                ->parts
+                ->sum(
+                    'line_total'
+                );
+
+
+        $currentSubtotal =
+            $currentServiceTotal
+            +
+            $currentPartsTotal;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE INPUT
+        |--------------------------------------------------------------------------
+        */
+
+        $request->merge([
+            'note' =>
+                $this->normalizeNullableText(
+                    $request->input(
+                        'note'
                     )
-                        ->lockForUpdate()
-                        ->firstOrFail();
+                ),
+        ]);
 
-                $lockedOrder->load([
-                    'items.service',
-                    'parts',
-                    'invoice',
-                ]);
 
-                if (
-                    $lockedOrder->status !==
-                    'COMPLETED'
-                ) {
-                    throw ValidationException::withMessages([
-                        'invoice' =>
-                            'Phiếu bảo dưỡng chưa hoàn thành.',
-                    ]);
-                }
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
 
-                if ($lockedOrder->invoice) {
-                    throw ValidationException::withMessages([
-                        'invoice' =>
-                            'Phiếu bảo dưỡng này đã có hóa đơn.',
-                    ]);
-                }
+        $validated =
+            $request->validate(
+                [
+                    'discount_amount' => [
+                        'bail',
+                        'nullable',
+                        'numeric',
+                        'min:0',
+                        'max:' . $currentSubtotal,
+                    ],
 
-                $serviceTotal = (float)
-                    $lockedOrder
-                        ->items
-                        ->sum('line_total');
+                    'note' => [
+                        'bail',
+                        'nullable',
+                        'string',
+                        'max:2000',
+                    ],
+                ],
+                [
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DISCOUNT
+                    |--------------------------------------------------------------------------
+                    */
 
-                $partsTotal = (float)
-                    $lockedOrder
-                        ->parts
-                        ->sum('line_total');
+                    'discount_amount.numeric' =>
+                        'Số tiền giảm giá phải là một giá trị số hợp lệ.',
 
-                $subtotal =
-                    $serviceTotal
-                    +
-                    $partsTotal;
+                    'discount_amount.min' =>
+                        'Số tiền giảm giá không được nhỏ hơn 0.',
 
-                $discountAmount = (float)
-                    (
-                        $validated[
-                            'discount_amount'
-                        ]
-                        ?? 0
-                    );
-
-                if (
-                    $discountAmount >
-                    $subtotal
-                ) {
-                    throw ValidationException::withMessages([
-                        'discount_amount' =>
-                            'Số tiền giảm giá không được lớn hơn tổng giá trị hóa đơn.',
-                    ]);
-                }
-
-                $taxAmount = 0;
-
-                $totalAmount =
-                    $subtotal
-                    -
-                    $discountAmount
-                    +
-                    $taxAmount;
-
-                $invoice = Invoice::create([
-                    'invoice_code' =>
-                        $this->generateInvoiceCode(),
-
-                    'service_order_id' =>
-                        $lockedOrder->id,
-
-                    'customer_id' =>
-                        $lockedOrder->customer_id,
-
-                    'created_by' =>
-                        $user->id,
-
-                    'service_total' =>
-                        $serviceTotal,
-
-                    'parts_total' =>
-                        $partsTotal,
-
-                    'subtotal' =>
-                        $subtotal,
-
-                    'discount_amount' =>
-                        $discountAmount,
-
-                    'tax_amount' =>
-                        $taxAmount,
-
-                    'total_amount' =>
-                        $totalAmount,
-
-                    'payment_status' =>
-                        Invoice::STATUS_UNPAID,
-
-                    'payment_method' =>
-                        null,
-
-                    'issued_at' =>
-                        now(),
-
-                    'paid_at' =>
-                        null,
-
-                    'note' =>
-                        !empty(
-                            $validated['note']
-                            ?? null
+                    'discount_amount.max' =>
+                        'Số tiền giảm giá không được lớn hơn tổng giá trị hóa đơn là '
+                        . number_format(
+                            $currentSubtotal,
+                            0,
+                            ',',
+                            '.'
                         )
-                            ? trim(
-                                $validated['note']
+                        . ' đ.',
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NOTE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    'note.string' =>
+                        'Ghi chú hóa đơn không hợp lệ.',
+
+                    'note.max' =>
+                        'Ghi chú hóa đơn không được vượt quá 2000 ký tự.',
+                ]
+            );
+
+
+        $user =
+            Auth::user();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CREATE INVOICE
+        |--------------------------------------------------------------------------
+        |
+        | Service Order được lock để:
+        |
+        | - chống double-submit;
+        | - chống tạo 2 hóa đơn cho cùng phiếu;
+        | - kiểm tra lại trạng thái cuối cùng;
+        | - snapshot đúng dữ liệu tại thời điểm lập hóa đơn.
+        |
+        */
+
+        $invoice =
+            DB::transaction(
+                function () use (
+                    $serviceOrder,
+                    $validated,
+                    $user
+                ) {
+                    $lockedOrder =
+                        ServiceOrder::query()
+                            ->whereKey(
+                                $serviceOrder->id
                             )
-                            : null,
-                ]);
+                            ->lockForUpdate()
+                            ->firstOrFail();
 
-                foreach (
-                    $lockedOrder->items
-                    as $item
-                ) {
-                    InvoiceItem::create([
-                        'invoice_id' =>
-                            $invoice->id,
 
-                        'item_type' =>
-                            InvoiceItem::TYPE_SERVICE,
-
-                        'source_id' =>
-                            $item->id,
-
-                        'item_code' =>
-                            $item->service?->code,
-
-                        'item_name' =>
-                            $item->service_name,
-
-                        'unit' =>
-                            'dịch vụ',
-
-                        'unit_price' =>
-                            $item->unit_price,
-
-                        'quantity' =>
-                            $item->quantity,
-
-                        'line_total' =>
-                            $item->line_total,
+                    $lockedOrder->load([
+                        'items.service',
+                        'parts',
+                        'invoice',
                     ]);
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | RECHECK ORDER STATUS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $lockedOrder->status
+                        !== 'COMPLETED'
+                    ) {
+                        throw ValidationException::withMessages([
+                            'invoice' =>
+                                'Phiếu bảo dưỡng không còn ở trạng thái hoàn thành nên chưa thể lập hóa đơn.',
+                        ]);
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | RECHECK DUPLICATE INVOICE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $lockedOrder->invoice
+                    ) {
+                        throw ValidationException::withMessages([
+                            'invoice' =>
+                                'Phiếu bảo dưỡng này đã có hóa đơn. Không thể lập thêm hóa đơn mới.',
+                        ]);
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | RECALCULATE TOTALS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $serviceTotal =
+                        (float)
+                        $lockedOrder
+                            ->items
+                            ->sum(
+                                'line_total'
+                            );
+
+
+                    $partsTotal =
+                        (float)
+                        $lockedOrder
+                            ->parts
+                            ->sum(
+                                'line_total'
+                            );
+
+
+                    $subtotal =
+                        $serviceTotal
+                        +
+                        $partsTotal;
+
+
+                    $discountAmount =
+                        (float)
+                        (
+                            $validated[
+                                'discount_amount'
+                            ]
+                            ?? 0
+                        );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | AUTHORITATIVE DISCOUNT CHECK
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $discountAmount
+                        >
+                        $subtotal
+                    ) {
+                        throw ValidationException::withMessages([
+                            'discount_amount' =>
+                                'Số tiền giảm giá không được lớn hơn tổng giá trị hóa đơn là '
+                                . number_format(
+                                    $subtotal,
+                                    0,
+                                    ',',
+                                    '.'
+                                )
+                                . ' đ.',
+                        ]);
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | TAX
+                    |--------------------------------------------------------------------------
+                    |
+                    | Hiện hệ thống chưa áp dụng thuế,
+                    | nên tax_amount = 0.
+                    |
+                    */
+
+                    $taxAmount =
+                        0;
+
+
+                    $totalAmount =
+                        $subtotal
+                        -
+                        $discountAmount
+                        +
+                        $taxAmount;
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | CREATE INVOICE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $invoice =
+                        Invoice::create([
+                            'invoice_code' =>
+                                $this
+                                    ->generateInvoiceCode(),
+
+                            'service_order_id' =>
+                                $lockedOrder
+                                    ->id,
+
+                            'customer_id' =>
+                                $lockedOrder
+                                    ->customer_id,
+
+                            'created_by' =>
+                                $user->id,
+
+                            'service_total' =>
+                                $serviceTotal,
+
+                            'parts_total' =>
+                                $partsTotal,
+
+                            'subtotal' =>
+                                $subtotal,
+
+                            'discount_amount' =>
+                                $discountAmount,
+
+                            'tax_amount' =>
+                                $taxAmount,
+
+                            'total_amount' =>
+                                $totalAmount,
+
+                            'payment_status' =>
+                                Invoice::STATUS_UNPAID,
+
+                            'payment_method' =>
+                                null,
+
+                            'issued_at' =>
+                                now(),
+
+                            'paid_at' =>
+                                null,
+
+                            'note' =>
+                                $validated[
+                                    'note'
+                                ]
+                                ?? null,
+                        ]);
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | SNAPSHOT SERVICE ITEMS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    foreach (
+                        $lockedOrder
+                            ->items
+                        as $item
+                    ) {
+                        InvoiceItem::create([
+                            'invoice_id' =>
+                                $invoice->id,
+
+                            'item_type' =>
+                                InvoiceItem::TYPE_SERVICE,
+
+                            'source_id' =>
+                                $item->id,
+
+                            'item_code' =>
+                                $item
+                                    ->service
+                                    ?->code,
+
+                            'item_name' =>
+                                $item
+                                    ->service_name,
+
+                            'unit' =>
+                                'dịch vụ',
+
+                            'unit_price' =>
+                                $item
+                                    ->unit_price,
+
+                            'quantity' =>
+                                $item
+                                    ->quantity,
+
+                            'line_total' =>
+                                $item
+                                    ->line_total,
+                        ]);
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | SNAPSHOT PART ITEMS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    foreach (
+                        $lockedOrder
+                            ->parts
+                        as $part
+                    ) {
+                        InvoiceItem::create([
+                            'invoice_id' =>
+                                $invoice->id,
+
+                            'item_type' =>
+                                InvoiceItem::TYPE_PART,
+
+                            'source_id' =>
+                                $part->id,
+
+                            'item_code' =>
+                                $part
+                                    ->part_code,
+
+                            'item_name' =>
+                                $part
+                                    ->part_name,
+
+                            'unit' =>
+                                $part
+                                    ->unit,
+
+                            'unit_price' =>
+                                $part
+                                    ->unit_price,
+
+                            'quantity' =>
+                                $part
+                                    ->quantity,
+
+                            'line_total' =>
+                                $part
+                                    ->line_total,
+                        ]);
+                    }
+
+
+                    return $invoice;
                 }
+            );
 
-                foreach (
-                    $lockedOrder->parts
-                    as $part
-                ) {
-                    InvoiceItem::create([
-                        'invoice_id' =>
-                            $invoice->id,
-
-                        'item_type' =>
-                            InvoiceItem::TYPE_PART,
-
-                        'source_id' =>
-                            $part->id,
-
-                        'item_code' =>
-                            $part->part_code,
-
-                        'item_name' =>
-                            $part->part_name,
-
-                        'unit' =>
-                            $part->unit,
-
-                        'unit_price' =>
-                            $part->unit_price,
-
-                        'quantity' =>
-                            $part->quantity,
-
-                        'line_total' =>
-                            $part->line_total,
-                    ]);
-                }
-
-                return $invoice;
-            }
-        );
 
         return redirect()
             ->route(
@@ -346,6 +632,7 @@ class StaffInvoiceController extends Controller
     ) {
         $this->authorizeStaff();
 
+
         $invoice->load([
             'customer',
             'creator',
@@ -354,6 +641,7 @@ class StaffInvoiceController extends Controller
             'serviceOrder.vehicle.vehicleModel',
             'serviceOrder.technician',
         ]);
+
 
         return view(
             'staff.invoices.show',
@@ -371,56 +659,103 @@ class StaffInvoiceController extends Controller
     ) {
         $this->authorizeStaff();
 
-        $validated = $request->validate(
-            [
-                'payment_method' => [
-                    'required',
 
-                    Rule::in([
-                        Invoice::METHOD_CASH,
-                        Invoice::METHOD_BANK_TRANSFER,
-                        Invoice::METHOD_CARD,
-                    ]),
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        $validated =
+            $request->validate(
+                [
+                    'payment_method' => [
+                        'bail',
+                        'required',
+                        'string',
+
+                        Rule::in([
+                            Invoice::METHOD_CASH,
+                            Invoice::METHOD_BANK_TRANSFER,
+                            Invoice::METHOD_CARD,
+                        ]),
+                    ],
                 ],
-            ],
-            [
-                'payment_method.required' =>
-                    'Vui lòng chọn phương thức thanh toán.',
+                [
+                    'payment_method.required' =>
+                        'Vui lòng chọn phương thức thanh toán.',
 
-                'payment_method.in' =>
-                    'Phương thức thanh toán không hợp lệ.',
-            ]
-        );
+                    'payment_method.string' =>
+                        'Phương thức thanh toán không hợp lệ.',
+
+                    'payment_method.in' =>
+                        'Phương thức thanh toán không hợp lệ.',
+                ]
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PAYMENT TRANSACTION
+        |--------------------------------------------------------------------------
+        */
 
         DB::transaction(
             function () use (
                 $invoice,
                 $validated
             ) {
-                /**
-                 * Khóa hóa đơn để tránh
-                 * xác nhận thanh toán hai lần.
-                 */
+                /*
+                |--------------------------------------------------------------------------
+                | LOCK INVOICE
+                |--------------------------------------------------------------------------
+                |
+                | Ngăn việc xác nhận thanh toán
+                | nhiều lần đồng thời.
+                |
+                */
+
                 $lockedInvoice =
-                    Invoice::whereKey(
-                        $invoice->id
-                    )
+                    Invoice::query()
+                        ->whereKey(
+                            $invoice->id
+                        )
                         ->lockForUpdate()
                         ->firstOrFail();
 
-                /**
-                 * Chỉ hóa đơn UNPAID
-                 * mới được thanh toán.
-                 */
+
+                /*
+                |--------------------------------------------------------------------------
+                | STATUS CHECK
+                |--------------------------------------------------------------------------
+                */
+
                 if (
-                    $lockedInvoice->payment_status !==
+                    $lockedInvoice
+                        ->payment_status
+                    !==
                     Invoice::STATUS_UNPAID
                 ) {
+                    $message =
+                        $lockedInvoice
+                            ->payment_status
+                        === Invoice::STATUS_PAID
+                            ? 'Hóa đơn này đã được thanh toán trước đó.'
+                            : 'Hóa đơn này không còn ở trạng thái chờ thanh toán.';
+
+
                     throw ValidationException::withMessages([
                         'payment_method' =>
-                            'Hóa đơn này không còn ở trạng thái chờ thanh toán.',
+                            $message,
                     ]);
                 }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | MARK AS PAID
+                |--------------------------------------------------------------------------
+                */
 
                 $lockedInvoice->update([
                     'payment_status' =>
@@ -436,6 +771,7 @@ class StaffInvoiceController extends Controller
                 ]);
             }
         );
+
 
         return redirect()
             ->route(
@@ -454,10 +790,13 @@ class StaffInvoiceController extends Controller
      */
     private function authorizeStaff(): void
     {
-        $user = Auth::user();
+        $user =
+            Auth::user();
+
 
         if (
-            !$user ||
+            !$user
+            ||
             !$user->role
         ) {
             abort(
@@ -465,6 +804,7 @@ class StaffInvoiceController extends Controller
                 'Bạn không có quyền truy cập.'
             );
         }
+
 
         if (
             !in_array(
@@ -492,9 +832,13 @@ class StaffInvoiceController extends Controller
         do {
             $code =
                 'INV'
-                . now()->format('Ymd')
+                . now()->format(
+                    'Ymd'
+                )
                 . strtoupper(
-                    Str::random(6)
+                    Str::random(
+                        6
+                    )
                 );
         } while (
             Invoice::where(
@@ -503,6 +847,36 @@ class StaffInvoiceController extends Controller
             )->exists()
         );
 
+
         return $code;
+    }
+
+
+    /**
+     * Chuẩn hóa text nullable.
+     *
+     * Chỉ loại khoảng trắng đầu/cuối,
+     * vẫn giữ nguyên xuống dòng trong ghi chú.
+     */
+    private function normalizeNullableText(
+        mixed $value
+    ): ?string {
+        if (
+            $value === null
+        ) {
+            return null;
+        }
+
+
+        $value =
+            trim(
+                (string)
+                $value
+            );
+
+
+        return $value !== ''
+            ? $value
+            : null;
     }
 }
