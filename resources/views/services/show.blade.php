@@ -3,26 +3,33 @@
 
 @section(
     'title',
-    'Dịch vụ bảo dưỡng - AutoCare Long Biên'
+    $service->name . ' - AutoCare Long Biên'
 )
 
 
 @push('styles')
 
 <style>
-    .services-page {
+    .service-detail-page {
+        width: 100%;
         max-width: 1240px;
+        margin: 0 auto;
     }
 
 
-    .services-hero {
-        position: relative;
+    /*
+    |--------------------------------------------------------------------------
+    | HERO
+    |--------------------------------------------------------------------------
+    */
 
+    .service-detail-hero {
+        position: relative;
         overflow: hidden;
 
-        margin-bottom: 32px;
+        padding: 42px 38px;
 
-        padding: 38px 34px;
+        margin-bottom: 26px;
 
         border-radius: 28px;
 
@@ -42,60 +49,60 @@
     }
 
 
-    .services-hero::before {
+    .service-detail-hero::before {
         content: "";
 
         position: absolute;
 
-        width: 380px;
-        height: 380px;
+        width: 420px;
+        height: 420px;
 
-        top: -230px;
-        right: -110px;
+        top: -250px;
+        right: -130px;
 
         border-radius: 50%;
 
         background:
             radial-gradient(
                 circle,
-                rgba(103, 232, 249, 0.42),
+                rgba(103, 232, 249, 0.43),
                 transparent 70%
             );
     }
 
 
-    .services-hero::after {
+    .service-detail-hero::after {
         content: "";
 
         position: absolute;
 
-        width: 300px;
-        height: 300px;
+        width: 320px;
+        height: 320px;
 
-        left: 36%;
-        bottom: -245px;
+        bottom: -255px;
+        left: 30%;
 
         border-radius: 50%;
 
         background:
             radial-gradient(
                 circle,
-                rgba(124, 58, 237, 0.34),
+                rgba(124, 58, 237, 0.37),
                 transparent 70%
             );
     }
 
 
-    .services-hero-content {
+    .service-detail-hero-content {
         position: relative;
 
         z-index: 2;
 
-        max-width: 760px;
+        max-width: 820px;
     }
 
 
-    .services-hero-chip {
+    .service-detail-category {
         width: fit-content;
 
         display: inline-flex;
@@ -106,7 +113,7 @@
 
         padding: 7px 12px;
 
-        margin-bottom: 17px;
+        margin-bottom: 18px;
 
         border:
             1px solid
@@ -121,15 +128,15 @@
 
         font-size: 11px;
 
-        font-weight: 800;
+        font-weight: 850;
+
+        letter-spacing: 0.06em;
 
         text-transform: uppercase;
-
-        letter-spacing: 0.07em;
     }
 
 
-    .services-hero-dot {
+    .service-detail-category-dot {
         width: 8px;
         height: 8px;
 
@@ -138,79 +145,121 @@
         background: #67e8f9;
 
         box-shadow:
-            0 0 12px #67e8f9;
+            0 0 12px
+            #67e8f9;
     }
 
 
-    .services-hero h1 {
+    .service-detail-title {
+        max-width: 800px;
+
         margin: 0;
 
         color: white;
 
         font-size:
             clamp(
-                2.2rem,
-                4vw,
-                3.7rem
+                2.25rem,
+                5vw,
+                4rem
             );
 
         font-weight: 900;
+
+        line-height: 1.04;
 
         letter-spacing: -0.06em;
     }
 
 
-    .services-hero p {
-        margin:
-            14px 0 0;
+    .service-detail-code {
+        display: inline-flex;
 
-        color: #cbd5e1;
+        align-items: center;
 
-        line-height: 1.8;
+        gap: 7px;
 
-        font-size: 15px;
+        margin-top: 15px;
+
+        color: #bfdbfe;
+
+        font-size: 12px;
+
+        font-weight: 750;
     }
 
 
-    .service-category-section {
-        margin-bottom: 38px;
+    /*
+    |--------------------------------------------------------------------------
+    | LAYOUT
+    |--------------------------------------------------------------------------
+    */
+
+    .service-detail-layout {
+        display: grid;
+
+        grid-template-columns:
+            minmax(0, 1fr)
+            350px;
+
+        gap: 24px;
+
+        align-items: start;
     }
 
 
-    .service-category-header {
-        display: flex;
+    /*
+    |--------------------------------------------------------------------------
+    | MAIN CARD
+    |--------------------------------------------------------------------------
+    */
 
-        align-items: flex-start;
+    .service-detail-card {
+        overflow: hidden;
 
-        justify-content: space-between;
+        border:
+            1px solid
+            rgba(255, 255, 255, 0.88);
 
-        gap: 20px;
+        border-radius: 22px;
 
-        margin-bottom: 18px;
+        background:
+            rgba(255, 255, 255, 0.93);
 
-        flex-wrap: wrap;
+        box-shadow:
+            var(--ac-shadow);
+
+        backdrop-filter:
+            blur(18px);
     }
 
 
-    .service-category-heading {
-        display: flex;
-
-        align-items: flex-start;
-
-        gap: 13px;
+    .service-detail-card-body {
+        padding: 30px;
     }
 
 
-    .service-category-icon {
-        width: 43px;
-        height: 43px;
-
-        flex: 0 0 auto;
-
+    .service-detail-heading {
         display: flex;
 
         align-items: center;
 
+        gap: 13px;
+
+        margin-bottom: 18px;
+    }
+
+
+    .service-detail-heading-icon {
+        width: 46px;
+        height: 46px;
+
+        flex:
+            0 0 auto;
+
+        display: flex;
+
+        align-items: center;
         justify-content: center;
 
         border-radius: 14px;
@@ -232,7 +281,7 @@
     }
 
 
-    .service-category-title {
+    .service-detail-heading h2 {
         margin: 0;
 
         color: #0f172a;
@@ -245,322 +294,453 @@
     }
 
 
-    .service-category-description {
-        max-width: 720px;
-
+    .service-detail-heading p {
         margin:
-            5px 0 0;
+            3px 0 0;
 
         color: #64748b;
 
-        font-size: 13px;
-
-        line-height: 1.7;
+        font-size: 12px;
     }
 
 
-    .service-count-badge {
-        display: inline-flex;
+    .service-detail-description {
+        margin: 0;
 
-        align-items: center;
+        color: #475569;
 
-        gap: 6px;
+        font-size: 14px;
 
-        padding: 7px 11px;
+        line-height: 1.9;
 
-        border-radius: 999px;
-
-        color: #1d4ed8;
-
-        background: #eff6ff;
-
-        font-size: 11px;
-
-        font-weight: 850;
+        white-space: pre-line;
     }
 
 
-    .service-grid {
+    .service-detail-divider {
+        height: 1px;
+
+        margin:
+            28px 0;
+
+        background: #edf1f6;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INFORMATION GRID
+    |--------------------------------------------------------------------------
+    */
+
+    .service-info-grid {
         display: grid;
 
         grid-template-columns:
             repeat(
-                3,
+                2,
                 minmax(0, 1fr)
             );
 
-        gap: 17px;
+        gap: 14px;
     }
 
 
-    .service-card {
+    .service-info-item {
         position: relative;
-
         overflow: hidden;
 
-        min-height: 100%;
+        min-height: 120px;
 
-        display: flex;
-
-        flex-direction: column;
+        padding: 19px;
 
         border:
             1px solid
-            rgba(255, 255, 255, 0.88);
+            #e5eaf1;
 
-        border-radius: 20px;
+        border-radius: 17px;
 
         background:
-            rgba(255, 255, 255, 0.92);
-
-        box-shadow:
-            var(--ac-shadow);
-
-        backdrop-filter:
-            blur(16px);
+            linear-gradient(
+                180deg,
+                #ffffff,
+                #f8fbff
+            );
 
         transition:
-            transform 0.24s ease,
-            box-shadow 0.24s ease,
-            border-color 0.24s ease;
+            transform 0.22s ease,
+            border-color 0.22s ease,
+            box-shadow 0.22s ease;
     }
 
 
-    .service-card:hover {
+    .service-info-item:hover {
         transform:
-            translateY(-7px);
+            translateY(-3px);
 
-        border-color:
-            rgba(147, 197, 253, 0.65);
+        border-color: #bfdbfe;
 
         box-shadow:
-            var(--ac-shadow-lg);
+            0 12px 28px
+            rgba(37, 99, 235, 0.09);
     }
 
 
-    .service-card::before {
-        content: "";
-
-        position: absolute;
-
-        width: 150px;
-        height: 150px;
-
-        top: -95px;
-        right: -85px;
-
-        border-radius: 50%;
-
-        background:
-            radial-gradient(
-                circle,
-                rgba(59, 130, 246, 0.14),
-                transparent 70%
-            );
-    }
-
-
-    .service-card-body {
-        position: relative;
-
-        z-index: 2;
-
-        flex: 1;
-
-        display: flex;
-
-        flex-direction: column;
-
-        padding: 22px;
-    }
-
-
-    .service-card-icon {
-        width: 46px;
-        height: 46px;
+    .service-info-icon {
+        width: 36px;
+        height: 36px;
 
         display: flex;
 
         align-items: center;
-
         justify-content: center;
 
-        margin-bottom: 17px;
+        margin-bottom: 12px;
 
-        border-radius: 14px;
+        border-radius: 11px;
 
         color: #2563eb;
 
-        background:
-            linear-gradient(
-                135deg,
-                #dbeafe,
-                #ecfeff
-            );
+        background: #eff6ff;
 
-        font-size: 20px;
+        font-size: 16px;
     }
 
 
-    .service-name {
-        margin: 0;
+    .service-info-label {
+        color: #64748b;
+
+        font-size: 10px;
+
+        font-weight: 850;
+
+        letter-spacing: 0.055em;
+
+        text-transform: uppercase;
+    }
+
+
+    .service-info-value {
+        margin-top: 5px;
 
         color: #0f172a;
 
         font-size: 17px;
 
         font-weight: 900;
-
-        letter-spacing: -0.03em;
     }
 
 
-    .service-description {
-        flex: 1;
-
-        margin:
-            10px 0 18px;
-
-        color: #64748b;
-
-        font-size: 12px;
-
-        line-height: 1.75;
-    }
-
-
-    .service-divider {
-        height: 1px;
-
-        margin-bottom: 17px;
-
-        background: #edf1f6;
-    }
-
-
-    .service-price-label {
-        color: #64748b;
-
-        font-size: 10px;
-
-        font-weight: 800;
-
-        text-transform: uppercase;
-
-        letter-spacing: 0.05em;
-    }
-
-
-    .service-price {
-        margin-top: 4px;
-
+    .service-info-value.price {
         color: #1d4ed8;
 
         font-size: 22px;
 
-        font-weight: 900;
-
-        letter-spacing: -0.04em;
+        letter-spacing: -0.035em;
     }
 
 
-    .service-meta {
+    /*
+    |--------------------------------------------------------------------------
+    | MAINTENANCE INFO
+    |--------------------------------------------------------------------------
+    */
+
+    .service-maintenance-box {
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+
+        gap: 14px;
+
+        margin-top: 18px;
+    }
+
+
+    .service-maintenance-item {
         display: flex;
-
-        flex-wrap: wrap;
-
-        gap: 7px;
-
-        margin-top: 15px;
-    }
-
-
-    .service-meta-item {
-        display: inline-flex;
 
         align-items: center;
 
-        gap: 5px;
+        gap: 13px;
 
-        padding: 6px 9px;
+        padding: 17px;
 
-        border-radius: 999px;
+        border:
+            1px solid
+            #e5eaf1;
 
-        color: #475569;
+        border-radius: 16px;
 
-        background: #f1f5f9;
+        background: #f8fafc;
+    }
 
-        font-size: 10px;
+
+    .service-maintenance-icon {
+        width: 42px;
+        height: 42px;
+
+        flex:
+            0 0 auto;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 13px;
+
+        color: #2563eb;
+
+        background: white;
+
+        box-shadow:
+            0 7px 18px
+            rgba(15, 23, 42, 0.06);
+
+        font-size: 18px;
+    }
+
+
+    .service-maintenance-label {
+        color: #64748b;
+
+        font-size: 11px;
 
         font-weight: 750;
     }
 
 
-    .service-card-footer {
-        margin-top: 20px;
+    .service-maintenance-value {
+        margin-top: 2px;
+
+        color: #0f172a;
+
+        font-size: 15px;
+
+        font-weight: 900;
     }
 
 
-    .service-detail-button {
-        width: 100%;
+    /*
+    |--------------------------------------------------------------------------
+    | SIDE SUMMARY
+    |--------------------------------------------------------------------------
+    */
 
-        min-height: 44px;
+    .service-summary-card {
+        position: sticky;
+
+        top: 100px;
+
+        overflow: hidden;
+
+        padding: 25px;
+
+        border-radius: 22px;
+
+        color: white;
+
+        background:
+            linear-gradient(
+                145deg,
+                #07111f,
+                #0d2f69 55%,
+                #155bd1
+            );
+
+        box-shadow:
+            0 25px 60px
+            rgba(13, 47, 105, 0.26);
+    }
+
+
+    .service-summary-card::before {
+        content: "";
+
+        position: absolute;
+
+        width: 230px;
+        height: 230px;
+
+        top: -145px;
+        right: -110px;
+
+        border-radius: 50%;
+
+        background:
+            radial-gradient(
+                circle,
+                rgba(34, 211, 238, 0.34),
+                transparent 70%
+            );
+    }
+
+
+    .service-summary-content {
+        position: relative;
+
+        z-index: 2;
+    }
+
+
+    .service-summary-icon {
+        width: 50px;
+        height: 50px;
 
         display: flex;
 
         align-items: center;
-
         justify-content: center;
 
-        gap: 8px;
+        margin-bottom: 18px;
 
-        border-radius: 12px;
+        border-radius: 15px;
+
+        color: #67e8f9;
+
+        background:
+            rgba(255, 255, 255, 0.09);
+
+        font-size: 22px;
+    }
+
+
+    .service-summary-title {
+        margin: 0;
 
         color: white;
+
+        font-size: 19px;
+
+        font-weight: 900;
+    }
+
+
+    .service-summary-description {
+        margin:
+            7px 0 19px;
+
+        color: #bfdbfe;
+
+        font-size: 12px;
+
+        line-height: 1.7;
+    }
+
+
+    .service-summary-row {
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: flex-start;
+
+        gap: 18px;
+
+        padding:
+            13px 0;
+
+        border-bottom:
+            1px solid
+            rgba(255, 255, 255, 0.10);
+    }
+
+
+    .service-summary-row:last-of-type {
+        border-bottom: none;
+    }
+
+
+    .service-summary-label {
+        color: #bfdbfe;
+
+        font-size: 11px;
+    }
+
+
+    .service-summary-value {
+        color: white;
+
+        text-align: right;
+
+        font-size: 12px;
+
+        font-weight: 900;
+    }
+
+
+    .service-booking-button {
+        width: 100%;
+
+        min-height: 50px;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        gap: 9px;
+
+        margin-top: 20px;
+
+        border-radius: 14px;
+
+        color: #07111f;
 
         text-decoration: none;
 
         background:
             linear-gradient(
                 135deg,
-                #1683ff,
-                #4f46e5
+                #67e8f9,
+                #bfdbfe
             );
 
         box-shadow:
-            0 9px 23px
-            rgba(37, 99, 235, 0.20);
+            0 12px 28px
+            rgba(103, 232, 249, 0.20);
 
-        font-size: 12px;
+        font-size: 13px;
 
-        font-weight: 850;
+        font-weight: 900;
 
         transition:
-            transform 0.2s ease,
-            box-shadow 0.2s ease;
+            transform 0.22s ease,
+            box-shadow 0.22s ease;
     }
 
 
-    .service-detail-button:hover {
-        color: white;
+    .service-booking-button:hover {
+        color: #07111f;
 
         transform:
-            translateY(-2px);
+            translateY(-3px);
 
         box-shadow:
-            0 13px 30px
-            rgba(37, 99, 235, 0.28);
+            0 18px 36px
+            rgba(103, 232, 249, 0.30);
     }
 
 
-    .services-back {
+    /*
+    |--------------------------------------------------------------------------
+    | BACK LINK
+    |--------------------------------------------------------------------------
+    */
+
+    .service-detail-back {
         display: inline-flex;
 
         align-items: center;
 
         gap: 7px;
 
-        margin-top: 5px;
+        margin-top: 21px;
 
         color: #64748b;
 
@@ -569,39 +749,63 @@
         font-size: 13px;
 
         font-weight: 750;
+
+        transition:
+            color 0.2s ease,
+            transform 0.2s ease;
     }
 
 
-    .services-back:hover {
+    .service-detail-back:hover {
         color: #2563eb;
+
+        transform:
+            translateX(-3px);
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESPONSIVE
+    |--------------------------------------------------------------------------
+    */
 
     @media (max-width: 991px) {
-        .service-grid {
+        .service-detail-layout {
             grid-template-columns:
-                repeat(
-                    2,
-                    minmax(0, 1fr)
-                );
+                1fr;
+        }
+
+
+        .service-summary-card {
+            position: static;
         }
     }
 
 
     @media (max-width: 767px) {
-        .services-hero {
-            padding: 27px 24px;
+        .service-detail-hero {
+            padding:
+                30px 24px;
+        }
+
+
+        .service-detail-card-body {
+            padding: 22px;
         }
     }
 
 
     @media (max-width: 575px) {
-        .service-grid {
-            grid-template-columns: 1fr;
+        .service-info-grid,
+        .service-maintenance-box {
+            grid-template-columns:
+                1fr;
         }
 
-        .service-category-title {
-            font-size: 18px;
+
+        .service-detail-title {
+            font-size: 2.2rem;
         }
     }
 </style>
@@ -611,102 +815,193 @@
 
 @section('content')
 
-<div class="container services-page">
+<div class="container service-detail-page">
 
     <section
-        class="services-hero"
+        class="service-detail-hero"
         data-reveal="zoom"
     >
 
-        <div class="services-hero-content">
+        <div class="service-detail-hero-content">
 
-            <div class="services-hero-chip">
+            <div class="service-detail-category">
 
-                <span class="services-hero-dot"></span>
+                <span class="service-detail-category-dot"></span>
 
-                AutoCare Service Center
+                {{ $service->category->name }}
 
             </div>
 
 
-            <h1>
-                Dịch vụ bảo dưỡng ô tô
+            <h1 class="service-detail-title">
+
+                {{ $service->name }}
+
             </h1>
 
 
-            <p>
+            @if ($service->code)
 
-                Khám phá các dịch vụ kiểm tra,
-                chăm sóc và bảo dưỡng phương tiện
-                tại AutoCare Long Biên với thông tin
-                chi phí, thời gian và chu kỳ tham khảo rõ ràng.
+                <div class="service-detail-code">
 
-            </p>
+                    <i class="bi bi-upc-scan"></i>
+
+                    Mã dịch vụ:
+
+                    {{ $service->code }}
+
+                </div>
+
+            @endif
 
         </div>
 
     </section>
 
 
-    @if ($categories->isEmpty())
+    <div class="service-detail-layout">
 
-        <div
-            class="empty-state"
-            data-reveal="zoom"
+        <main
+            class="service-detail-card"
+            data-reveal="left"
         >
 
-            <div class="empty-state-icon">
+            <div class="service-detail-card-body">
 
-                <i class="bi bi-tools"></i>
+                <section>
 
-            </div>
+                    <div class="service-detail-heading">
+
+                        <div class="service-detail-heading-icon">
+
+                            <i class="bi bi-card-text"></i>
+
+                        </div>
 
 
-            <h3>
-                Chưa có dịch vụ
-            </h3>
+                        <div>
+
+                            <h2>
+                                Thông tin dịch vụ
+                            </h2>
+
+                            <p>
+                                Mô tả chi tiết dịch vụ bảo dưỡng.
+                            </p>
+
+                        </div>
+
+                    </div>
 
 
-            <p>
-                Danh mục dịch vụ đang được cập nhật.
-            </p>
+                    <p class="service-detail-description">
 
-        </div>
+                        {{
+                            $service->description
+                            ?: 'Thông tin mô tả dịch vụ đang được cập nhật.'
+                        }}
 
-    @else
+                    </p>
 
-        @foreach ($categories as $category)
+                </section>
 
-            @if ($category->services->isNotEmpty())
 
-                <section
-                    class="service-category-section"
-                    data-reveal
-                >
+                <div class="service-detail-divider"></div>
 
-                    <div class="service-category-header">
 
-                        <div class="service-category-heading">
+                <section>
 
-                            <div class="service-category-icon">
+                    <div class="service-detail-heading">
 
-                                <i class="bi bi-tools"></i>
+                        <div class="service-detail-heading-icon">
+
+                            <i class="bi bi-info-circle"></i>
+
+                        </div>
+
+
+                        <div>
+
+                            <h2>
+                                Thông tin tham khảo
+                            </h2>
+
+                            <p>
+                                Chi phí và thời gian dự kiến của dịch vụ.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="service-info-grid">
+
+                        <div class="service-info-item">
+
+                            <div class="service-info-icon">
+
+                                <i class="bi bi-cash-stack"></i>
 
                             </div>
 
 
-                            <div>
-
-                                <h2 class="service-category-title">
-                                    {{ $category->name }}
-                                </h2>
+                            <div class="service-info-label">
+                                Giá tham khảo
+                            </div>
 
 
-                                @if ($category->description)
+                            <div
+                                class="
+                                    service-info-value
+                                    price
+                                "
+                            >
 
-                                    <p class="service-category-description">
-                                        {{ $category->description }}
-                                    </p>
+                                {{
+                                    number_format(
+                                        (float)
+                                        $service->base_price,
+                                        0,
+                                        ',',
+                                        '.'
+                                    )
+                                }} đ
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="service-info-item">
+
+                            <div class="service-info-icon">
+
+                                <i class="bi bi-clock"></i>
+
+                            </div>
+
+
+                            <div class="service-info-label">
+                                Thời gian dự kiến
+                            </div>
+
+
+                            <div class="service-info-value">
+
+                                @if (
+                                    $service
+                                        ->estimated_duration_minutes
+                                )
+
+                                    {{
+                                        $service
+                                            ->estimated_duration_minutes
+                                    }} phút
+
+                                @else
+
+                                    Đang cập nhật
 
                                 @endif
 
@@ -714,177 +1009,306 @@
 
                         </div>
 
+                    </div>
 
-                        <div class="service-count-badge">
+                </section>
 
-                            <i class="bi bi-grid"></i>
 
-                            {{ $category->services->count() }}
-                            dịch vụ
+                @if (
+                    $service->mileage_interval
+                    ||
+                    $service->month_interval
+                )
+
+                    <div class="service-detail-divider"></div>
+
+
+                    <section>
+
+                        <div class="service-detail-heading">
+
+                            <div class="service-detail-heading-icon">
+
+                                <i class="bi bi-arrow-repeat"></i>
+
+                            </div>
+
+
+                            <div>
+
+                                <h2>
+                                    Chu kỳ bảo dưỡng tham khảo
+                                </h2>
+
+                                <p>
+                                    Thông tin chu kỳ được cấu hình
+                                    cho dịch vụ này.
+                                </p>
+
+                            </div>
 
                         </div>
 
-                    </div>
 
+                        <div class="service-maintenance-box">
 
-                    <div class="service-grid">
+                            @if ($service->mileage_interval)
 
-                        @foreach ($category->services as $service)
+                                <div class="service-maintenance-item">
 
-                            <article
-                                class="service-card"
-                                data-tilt
-                            >
+                                    <div class="service-maintenance-icon">
 
-                                <div class="service-card-body">
-
-                                    <div class="service-card-icon">
-
-                                        <i class="bi bi-wrench-adjustable"></i>
+                                        <i class="bi bi-speedometer2"></i>
 
                                     </div>
 
 
-                                    <h3 class="service-name">
-                                        {{ $service->name }}
-                                    </h3>
+                                    <div>
 
+                                        <div class="service-maintenance-label">
+                                            Theo quãng đường
+                                        </div>
 
-                                    <p class="service-description">
+                                        <div class="service-maintenance-value">
 
-                                        {{
-                                            $service->description
-                                            ?? 'Chưa có mô tả.'
-                                        }}
-
-                                    </p>
-
-
-                                    <div class="service-divider"></div>
-
-
-                                    <div class="service-price-label">
-                                        Giá tham khảo
-                                    </div>
-
-
-                                    <div class="service-price">
-
-                                        {{
-                                            number_format(
-                                                $service->base_price,
-                                                0,
-                                                ',',
-                                                '.'
-                                            )
-                                        }} đ
-
-                                    </div>
-
-
-                                    <div class="service-meta">
-
-                                        @if (
-                                            $service
-                                                ->estimated_duration_minutes
-                                        )
-
-                                            <span class="service-meta-item">
-
-                                                <i class="bi bi-clock"></i>
-
-                                                {{
+                                            {{
+                                                number_format(
                                                     $service
-                                                        ->estimated_duration_minutes
-                                                }} phút
+                                                        ->mileage_interval,
+                                                    0,
+                                                    ',',
+                                                    '.'
+                                                )
+                                            }} km
 
-                                            </span>
-
-                                        @endif
-
-
-                                        @if ($service->mileage_interval)
-
-                                            <span class="service-meta-item">
-
-                                                <i class="bi bi-speedometer2"></i>
-
-                                                {{
-                                                    number_format(
-                                                        $service
-                                                            ->mileage_interval,
-                                                        0,
-                                                        ',',
-                                                        '.'
-                                                    )
-                                                }} km
-
-                                            </span>
-
-                                        @endif
-
-
-                                        @if ($service->month_interval)
-
-                                            <span class="service-meta-item">
-
-                                                <i class="bi bi-calendar3"></i>
-
-                                                {{
-                                                    $service
-                                                        ->month_interval
-                                                }} tháng
-
-                                            </span>
-
-                                        @endif
-
-                                    </div>
-
-
-                                    <div class="service-card-footer">
-
-                                        <a
-                                            href="{{ route(
-                                                'services.show',
-                                                $service->id
-                                            ) }}"
-                                            class="service-detail-button"
-                                        >
-
-                                            Xem chi tiết
-
-                                            <i class="bi bi-arrow-right"></i>
-
-                                        </a>
+                                        </div>
 
                                     </div>
 
                                 </div>
 
-                            </article>
+                            @endif
 
-                        @endforeach
+
+                            @if ($service->month_interval)
+
+                                <div class="service-maintenance-item">
+
+                                    <div class="service-maintenance-icon">
+
+                                        <i class="bi bi-calendar3"></i>
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <div class="service-maintenance-label">
+                                            Theo thời gian
+                                        </div>
+
+                                        <div class="service-maintenance-value">
+
+                                            {{
+                                                $service
+                                                    ->month_interval
+                                            }} tháng
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            @endif
+
+                        </div>
+
+                    </section>
+
+                @endif
+
+            </div>
+
+        </main>
+
+
+        <aside
+            class="service-summary-card"
+            data-reveal="right"
+        >
+
+            <div class="service-summary-content">
+
+                <div class="service-summary-icon">
+
+                    <i class="bi bi-wrench-adjustable-circle"></i>
+
+                </div>
+
+
+                <h2 class="service-summary-title">
+
+                    {{ $service->name }}
+
+                </h2>
+
+
+                <p class="service-summary-description">
+
+                    Thông tin tóm tắt để bạn
+                    tham khảo trước khi đặt lịch.
+
+                </p>
+
+
+                <div class="service-summary-row">
+
+                    <span class="service-summary-label">
+                        Nhóm dịch vụ
+                    </span>
+
+
+                    <span class="service-summary-value">
+
+                        {{ $service->category->name }}
+
+                    </span>
+
+                </div>
+
+
+                <div class="service-summary-row">
+
+                    <span class="service-summary-label">
+                        Giá tham khảo
+                    </span>
+
+
+                    <span class="service-summary-value">
+
+                        {{
+                            number_format(
+                                (float)
+                                $service->base_price,
+                                0,
+                                ',',
+                                '.'
+                            )
+                        }} đ
+
+                    </span>
+
+                </div>
+
+
+                <div class="service-summary-row">
+
+                    <span class="service-summary-label">
+                        Thời gian
+                    </span>
+
+
+                    <span class="service-summary-value">
+
+                        @if (
+                            $service
+                                ->estimated_duration_minutes
+                        )
+
+                            {{
+                                $service
+                                    ->estimated_duration_minutes
+                            }} phút
+
+                        @else
+
+                            Đang cập nhật
+
+                        @endif
+
+                    </span>
+
+                </div>
+
+
+                @if ($service->mileage_interval)
+
+                    <div class="service-summary-row">
+
+                        <span class="service-summary-label">
+                            Chu kỳ km
+                        </span>
+
+
+                        <span class="service-summary-value">
+
+                            {{
+                                number_format(
+                                    $service
+                                        ->mileage_interval,
+                                    0,
+                                    ',',
+                                    '.'
+                                )
+                            }} km
+
+                        </span>
 
                     </div>
 
-                </section>
+                @endif
 
-            @endif
 
-        @endforeach
+                @if ($service->month_interval)
 
-    @endif
+                    <div class="service-summary-row">
+
+                        <span class="service-summary-label">
+                            Chu kỳ thời gian
+                        </span>
+
+
+                        <span class="service-summary-value">
+
+                            {{
+                                $service
+                                    ->month_interval
+                            }} tháng
+
+                        </span>
+
+                    </div>
+
+                @endif
+
+
+                <a
+                    href="{{ route('appointments.create') }}"
+                    class="service-booking-button"
+                >
+
+                    <i class="bi bi-calendar2-check"></i>
+
+                    Đặt lịch bảo dưỡng
+
+                </a>
+
+            </div>
+
+        </aside>
+
+    </div>
 
 
     <a
-        href="{{ route('home') }}"
-        class="services-back"
+        href="{{ route('services.index') }}"
+        class="service-detail-back"
     >
 
         <i class="bi bi-arrow-left"></i>
 
-        Quay lại trang chủ
+        Quay lại danh sách dịch vụ
 
     </a>
 
