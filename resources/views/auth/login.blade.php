@@ -694,7 +694,7 @@
     .auth-divider {
         position: relative;
 
-        margin: 27px 0;
+        margin: 24px 0;
 
         text-align: center;
 
@@ -734,6 +734,122 @@
 
         background:
             rgba(255, 255, 255, 0.92);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GOOGLE LOGIN
+    |--------------------------------------------------------------------------
+    */
+
+    .auth-google {
+        position: relative;
+
+        width: 100%;
+        min-height: 52px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        gap: 12px;
+
+        padding:
+            0 18px;
+
+        border:
+            1px solid
+            #d7e0ea;
+
+        border-radius: 14px;
+
+        color: #1e293b;
+
+        text-decoration: none;
+
+        background: #ffffff;
+
+        font-size: 14px;
+        font-weight: 850;
+
+        box-shadow:
+            0 8px 22px
+            rgba(15, 23, 42, 0.055);
+
+        transition:
+            transform 0.22s ease,
+            border-color 0.22s ease,
+            box-shadow 0.22s ease,
+            background 0.22s ease;
+    }
+
+
+    .auth-google:hover {
+        color: #0f172a;
+
+        border-color: #93c5fd;
+
+        background:
+            linear-gradient(
+                180deg,
+                #ffffff,
+                #f8fbff
+            );
+
+        transform:
+            translateY(-2px);
+
+        box-shadow:
+            0 14px 32px
+            rgba(37, 99, 235, 0.11);
+    }
+
+
+    .auth-google:focus-visible {
+        outline: none;
+
+        border-color: #3b82f6;
+
+        box-shadow:
+            0 0 0 4px
+            rgba(59, 130, 246, 0.12),
+
+            0 14px 32px
+            rgba(37, 99, 235, 0.11);
+    }
+
+
+    .auth-google-icon {
+        width: 24px;
+        height: 24px;
+
+        flex:
+            0 0 24px;
+
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        line-height: 0;
+    }
+
+
+    .auth-google-icon svg {
+        display: block;
+
+        width: 24px;
+        height: 24px;
+    }
+
+
+    .auth-google-text {
+        display: inline-flex;
+
+        align-items: center;
+
+        line-height: 1;
     }
 
 
@@ -881,6 +997,13 @@
 
         .auth-form-title {
             font-size: 29px;
+        }
+
+
+        .auth-google {
+            min-height: 50px;
+
+            font-size: 13px;
         }
     }
 
@@ -1082,12 +1205,16 @@
             <div class="auth-form-container">
 
                 <div class="auth-form-icon">
+
                     <i class="bi bi-person-lock"></i>
+
                 </div>
 
 
                 <h2 class="auth-form-title">
+
                     Chào mừng trở lại.
+
                 </h2>
 
 
@@ -1114,9 +1241,11 @@
                             for="email"
                             class="auth-label"
                         >
+
                             <i class="bi bi-envelope"></i>
 
                             Email
+
                         </label>
 
 
@@ -1129,6 +1258,7 @@
                                     auth-input-icon
                                 "
                             ></i>
+
 
                             <input
                                 type="email"
@@ -1163,9 +1293,11 @@
                             for="password"
                             class="auth-label"
                         >
+
                             <i class="bi bi-shield-lock"></i>
 
                             Mật khẩu
+
                         </label>
 
 
@@ -1178,6 +1310,7 @@
                                     auth-input-icon
                                 "
                             ></i>
+
 
                             <input
                                 type="password"
@@ -1252,6 +1385,125 @@
                     </button>
 
                 </form>
+
+
+                <div class="auth-divider">
+
+                    <span>
+                        Hoặc
+                    </span>
+
+                </div>
+
+
+                <a
+                    href="{{ route('auth.google.redirect') }}"
+                    class="auth-google"
+                >
+
+                    <span
+                        class="auth-google-icon"
+                        aria-hidden="true"
+                    >
+
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            role="img"
+                        >
+
+                            <path
+                                fill="#4285F4"
+                                d="
+                                    M21.35 11.1
+                                    H12.17
+                                    v3.74
+                                    h5.28
+                                    c-.23 1.2
+                                    -.92 2.22
+                                    -1.96 2.91
+                                    v2.42
+                                    h3.17
+                                    c1.86-1.71
+                                    2.94-4.23
+                                    2.94-7.23
+                                    0-.64
+                                    -.06-1.26
+                                    -.17-1.84
+                                    z
+                                "
+                            />
+
+                            <path
+                                fill="#34A853"
+                                d="
+                                    M12.17 22
+                                    c2.66 0
+                                    4.89-.88
+                                    6.52-2.39
+                                    l-3.17-2.42
+                                    c-.88.59
+                                    -2 .94
+                                    -3.35.94
+                                    -2.57 0
+                                    -4.75-1.73
+                                    -5.53-4.06
+                                    H3.36
+                                    v2.55
+                                    A9.85 9.85 0 0 0
+                                    12.17 22
+                                    z
+                                "
+                            />
+
+                            <path
+                                fill="#FBBC05"
+                                d="
+                                    M6.64 14.07
+                                    a5.94 5.94 0 0 1
+                                    0-3.81
+                                    V7.71
+                                    H3.36
+                                    a9.85 9.85 0 0 0
+                                    0 8.91
+                                    l3.28-2.55
+                                    z
+                                "
+                            />
+
+                            <path
+                                fill="#EA4335"
+                                d="
+                                    M12.17 6.2
+                                    c1.45 0
+                                    2.75.5
+                                    3.77 1.47
+                                    l2.83-2.83
+                                    C17.05 3.23
+                                    14.82 2.25
+                                    12.17 2.25
+                                    a9.85 9.85 0 0 0
+                                    -8.81 5.46
+                                    l3.28 2.55
+                                    c.78-2.33
+                                    2.96-4.06
+                                    5.53-4.06
+                                    z
+                                "
+                            />
+
+                        </svg>
+
+                    </span>
+
+
+                    <span class="auth-google-text">
+
+                        Tiếp tục với Google
+
+                    </span>
+
+                </a>
 
 
                 <div class="auth-divider">

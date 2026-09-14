@@ -20,6 +20,8 @@ class User extends Authenticatable
         'role_id',
         'name',
         'email',
+        'email_verified_at',
+        'google_id',
         'password',
     ];
 

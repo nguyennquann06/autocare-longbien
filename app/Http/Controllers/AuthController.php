@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -29,11 +31,6 @@ class AuthController extends Controller
         |--------------------------------------------------------------------------
         | NORMALIZE INPUT
         |--------------------------------------------------------------------------
-        |
-        | - Họ tên: bỏ khoảng trắng thừa
-        | - Email: trim + lowercase
-        | - Tuyệt đối không trim password
-        |
         */
 
         $normalizedName =
@@ -113,12 +110,6 @@ class AuthController extends Controller
                     ],
                 ],
                 [
-                    /*
-                    |--------------------------------------------------------------------------
-                    | NAME
-                    |--------------------------------------------------------------------------
-                    */
-
                     'name.required' =>
                         'Vui lòng nhập họ và tên.',
 
@@ -134,13 +125,6 @@ class AuthController extends Controller
                     'name.regex' =>
                         'Họ và tên chỉ được chứa chữ cái, khoảng trắng và một số ký tự tên hợp lệ.',
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | EMAIL
-                    |--------------------------------------------------------------------------
-                    */
-
                     'email.required' =>
                         'Vui lòng nhập địa chỉ email.',
 
@@ -155,13 +139,6 @@ class AuthController extends Controller
 
                     'email.unique' =>
                         'Email này đã được sử dụng. Vui lòng sử dụng email khác.',
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PASSWORD
-                    |--------------------------------------------------------------------------
-                    */
 
                     'password.required' =>
                         'Vui lòng nhập mật khẩu.',
@@ -181,13 +158,6 @@ class AuthController extends Controller
                     'password.confirmed' =>
                         'Mật khẩu nhập lại không khớp.',
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PASSWORD CONFIRMATION
-                    |--------------------------------------------------------------------------
-                    */
-
                     'password_confirmation.required' =>
                         'Vui lòng nhập lại mật khẩu.',
 
@@ -200,24 +170,12 @@ class AuthController extends Controller
             );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | CUSTOMER ROLE
-        |--------------------------------------------------------------------------
-        */
-
         $customerRole =
             Role::where(
                 'code',
                 'CUSTOMER'
             )->firstOrFail();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CREATE ACCOUNT
-        |--------------------------------------------------------------------------
-        */
 
         DB::transaction(
             function () use (
@@ -272,16 +230,10 @@ class AuthController extends Controller
 
 
     /**
-     * Xử lý đăng nhập.
+     * Xử lý đăng nhập email / mật khẩu.
      */
     public function login(Request $request)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALIZE EMAIL
-        |--------------------------------------------------------------------------
-        */
-
         $request->merge([
             'email' =>
                 Str::lower(
@@ -295,17 +247,6 @@ class AuthController extends Controller
                 ),
         ]);
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDATION
-        |--------------------------------------------------------------------------
-        |
-        | Không áp dụng min:8 khi login
-        | vì hệ thống có thể còn tài khoản cũ
-        | được tạo với mật khẩu ngắn hơn.
-        |
-        */
 
         $credentials =
             $request->validate(
@@ -348,12 +289,6 @@ class AuthController extends Controller
             );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | AUTHENTICATE
-        |--------------------------------------------------------------------------
-        */
-
         if (
             Auth::attempt(
                 $credentials,
@@ -362,9 +297,6 @@ class AuthController extends Controller
                 )
             )
         ) {
-            /*
-             * Chống session fixation.
-             */
             $request
                 ->session()
                 ->regenerate();
@@ -378,12 +310,6 @@ class AuthController extends Controller
                 'role'
             );
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | USER CHƯA CÓ ROLE
-            |--------------------------------------------------------------------------
-            */
 
             if (!$user->role) {
                 Auth::logout();
@@ -409,12 +335,6 @@ class AuthController extends Controller
                     );
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | CUSTOMER
-            |--------------------------------------------------------------------------
-            */
 
             if (
                 $user->role->code
@@ -456,12 +376,6 @@ class AuthController extends Controller
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | STAFF
-            |--------------------------------------------------------------------------
-            */
-
             if (
                 $user->role->code
                 === 'STAFF'
@@ -483,12 +397,6 @@ class AuthController extends Controller
                     );
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | ADMIN
-            |--------------------------------------------------------------------------
-            */
 
             if (
                 $user->role->code
@@ -512,12 +420,6 @@ class AuthController extends Controller
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | TECHNICIAN
-            |--------------------------------------------------------------------------
-            */
-
             if (
                 $user->role->code
                 === 'TECHNICIAN'
@@ -539,12 +441,6 @@ class AuthController extends Controller
                     );
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | ROLE KHÔNG HỢP LỆ
-            |--------------------------------------------------------------------------
-            */
 
             Auth::logout();
 
@@ -568,12 +464,6 @@ class AuthController extends Controller
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | WRONG CREDENTIALS
-        |--------------------------------------------------------------------------
-        */
-
         return back()
             ->withErrors([
                 'email' =>
@@ -581,6 +471,454 @@ class AuthController extends Controller
             ])
             ->onlyInput(
                 'email'
+            );
+    }
+
+
+    /**
+     * Chuyển người dùng tới Google OAuth.
+     */
+    public function redirectToGoogle()
+    {
+        if (Auth::check()) {
+            return redirect()
+                ->route('home');
+        }
+
+
+        return Socialite::driver(
+            'google'
+        )->redirect();
+    }
+
+
+    /**
+     * Xử lý callback Google OAuth.
+     */
+    public function handleGoogleCallback(
+        Request $request
+    ) {
+        if (Auth::check()) {
+            return redirect()
+                ->route('home');
+        }
+
+
+        try {
+            $googleUser =
+                Socialite::driver(
+                    'google'
+                )->user();
+        } catch (Throwable $exception) {
+            report(
+                $exception
+            );
+
+
+            return redirect()
+                ->route('login')
+                ->with(
+                    'error',
+                    'Không thể xác thực với Google. Vui lòng thử lại.'
+                );
+        }
+
+
+        $googleId =
+            trim(
+                (string)
+                $googleUser->getId()
+            );
+
+
+        $email =
+            Str::lower(
+                trim(
+                    (string)
+                    $googleUser->getEmail()
+                )
+            );
+
+
+        if (
+            $googleId === ''
+            ||
+            $email === ''
+        ) {
+            return redirect()
+                ->route('login')
+                ->with(
+                    'error',
+                    'Google không cung cấp đủ thông tin tài khoản để đăng nhập.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | EMAIL VERIFICATION
+        |--------------------------------------------------------------------------
+        |
+        | Google thường trả email_verified.
+        | Nếu provider trả rõ false thì không cho liên kết.
+        |
+        */
+
+        $rawVerified =
+            data_get(
+                $googleUser->user,
+                'email_verified',
+                data_get(
+                    $googleUser->user,
+                    'verified_email'
+                )
+            );
+
+
+        if (
+            $rawVerified !== null
+            &&
+            filter_var(
+                $rawVerified,
+                FILTER_VALIDATE_BOOLEAN,
+                FILTER_NULL_ON_FAILURE
+            ) === false
+        ) {
+            return redirect()
+                ->route('login')
+                ->with(
+                    'error',
+                    'Email Google chưa được xác minh nên chưa thể sử dụng để đăng nhập.'
+                );
+        }
+
+
+        $googleName =
+            $this->normalizeGoogleName(
+                $googleUser->getName(),
+                $email
+            );
+
+
+        try {
+            $result =
+                DB::transaction(
+                    function () use (
+                        $googleId,
+                        $email,
+                        $googleName
+                    ) {
+                        /*
+                        |--------------------------------------------------------------------------
+                        | ĐÃ LIÊN KẾT GOOGLE ID
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $userByGoogleId =
+                            User::query()
+                                ->where(
+                                    'google_id',
+                                    $googleId
+                                )
+                                ->lockForUpdate()
+                                ->first();
+
+
+                        if ($userByGoogleId) {
+                            $userByGoogleId
+                                ->load(
+                                    'role'
+                                );
+
+
+                            if (
+                                !$userByGoogleId->role
+                                ||
+                                $userByGoogleId
+                                    ->role
+                                    ->code
+                                !== 'CUSTOMER'
+                            ) {
+                                return [
+                                    'error' =>
+                                        'Đăng nhập Google chỉ dành cho tài khoản khách hàng.',
+                                ];
+                            }
+
+
+                            if (
+                                !$userByGoogleId
+                                    ->email_verified_at
+                            ) {
+                                $userByGoogleId
+                                    ->forceFill([
+                                        'email_verified_at' =>
+                                            now(),
+                                    ])
+                                    ->save();
+                            }
+
+
+                            $this->ensureCustomerProfile(
+                                $userByGoogleId,
+                                $googleName,
+                                $email
+                            );
+
+
+                            return [
+                                'user' =>
+                                    $userByGoogleId,
+                            ];
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | EMAIL ĐÃ TỒN TẠI
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $userByEmail =
+                            User::query()
+                                ->where(
+                                    'email',
+                                    $email
+                                )
+                                ->lockForUpdate()
+                                ->first();
+
+
+                        if ($userByEmail) {
+                            $userByEmail
+                                ->load(
+                                    'role'
+                                );
+
+
+                            if (
+                                !$userByEmail->role
+                                ||
+                                $userByEmail
+                                    ->role
+                                    ->code
+                                !== 'CUSTOMER'
+                            ) {
+                                return [
+                                    'error' =>
+                                        'Email này thuộc tài khoản nhân viên hoặc kỹ thuật viên. Vui lòng đăng nhập bằng mật khẩu.',
+                                ];
+                            }
+
+
+                            if (
+                                $userByEmail->google_id
+                                &&
+                                $userByEmail->google_id
+                                !== $googleId
+                            ) {
+                                return [
+                                    'error' =>
+                                        'Email này đã được liên kết với một tài khoản Google khác.',
+                                ];
+                            }
+
+
+                            $userByEmail
+                                ->forceFill([
+                                    'google_id' =>
+                                        $googleId,
+
+                                    'email_verified_at' =>
+                                        $userByEmail
+                                            ->email_verified_at
+                                        ?? now(),
+                                ])
+                                ->save();
+
+
+                            $this->ensureCustomerProfile(
+                                $userByEmail,
+                                $googleName,
+                                $email
+                            );
+
+
+                            return [
+                                'user' =>
+                                    $userByEmail,
+                            ];
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | GOOGLE ACCOUNT MỚI
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $customerRole =
+                            Role::query()
+                                ->where(
+                                    'code',
+                                    'CUSTOMER'
+                                )
+                                ->first();
+
+
+                        if (!$customerRole) {
+                            return [
+                                'error' =>
+                                    'Hệ thống chưa cấu hình vai trò khách hàng.',
+                            ];
+                        }
+
+
+                        $newUser =
+                            User::create([
+                                'role_id' =>
+                                    $customerRole->id,
+
+                                'name' =>
+                                    $googleName,
+
+                                'email' =>
+                                    $email,
+
+                                'email_verified_at' =>
+                                    now(),
+
+                                'google_id' =>
+                                    $googleId,
+
+                                /*
+                                 * Google Login không sử dụng
+                                 * mật khẩu này.
+                                 *
+                                 * User model sẽ tự hash
+                                 * thông qua cast "hashed".
+                                 */
+                                'password' =>
+                                    Str::random(
+                                        64
+                                    ),
+                            ]);
+
+
+                        $newUser
+                            ->customer()
+                            ->create([
+                                'full_name' =>
+                                    $googleName,
+
+                                'email' =>
+                                    $email,
+                            ]);
+
+
+                        $newUser->load(
+                            'role'
+                        );
+
+
+                        return [
+                            'user' =>
+                                $newUser,
+                        ];
+                    }
+                );
+        } catch (Throwable $exception) {
+            report(
+                $exception
+            );
+
+
+            return redirect()
+                ->route('login')
+                ->with(
+                    'error',
+                    'Không thể hoàn tất đăng nhập Google. Vui lòng thử lại.'
+                );
+        }
+
+
+        if (
+            isset(
+                $result['error']
+            )
+        ) {
+            return redirect()
+                ->route('login')
+                ->with(
+                    'error',
+                    $result['error']
+                );
+        }
+
+
+        $user =
+            $result['user']
+            ?? null;
+
+
+        if (!$user) {
+            return redirect()
+                ->route('login')
+                ->with(
+                    'error',
+                    'Không thể xác định tài khoản khách hàng.'
+                );
+        }
+
+
+        Auth::login(
+            $user
+        );
+
+
+        $request
+            ->session()
+            ->regenerate();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GIỮ INTENDED URL CHO ĐẶT LỊCH
+        |--------------------------------------------------------------------------
+        */
+
+        $intendedUrl =
+            $request
+                ->session()
+                ->pull(
+                    'url.intended'
+                );
+
+
+        if (
+            $intendedUrl
+            &&
+            str_contains(
+                $intendedUrl,
+                '/appointments/create'
+            )
+        ) {
+            return redirect(
+                $intendedUrl
+            )->with(
+                'success',
+                'Đăng nhập bằng Google thành công.'
+            );
+        }
+
+
+        return redirect()
+            ->route(
+                'customer.dashboard'
+            )
+            ->with(
+                'success',
+                'Đăng nhập bằng Google thành công.'
             );
     }
 
@@ -609,5 +947,75 @@ class AuthController extends Controller
                 'success',
                 'Bạn đã đăng xuất thành công.'
             );
+    }
+
+
+    /**
+     * Chuẩn hóa tên lấy từ Google.
+     */
+    private function normalizeGoogleName(
+        mixed $name,
+        string $email
+    ): string {
+        $normalized =
+            preg_replace(
+                '/\s+/u',
+                ' ',
+                trim(
+                    (string)
+                    $name
+                )
+            );
+
+
+        if (
+            !$normalized
+            ||
+            trim(
+                $normalized
+            ) === ''
+        ) {
+            $normalized =
+                Str::before(
+                    $email,
+                    '@'
+                );
+        }
+
+
+        return Str::substr(
+            $normalized,
+            0,
+            100
+        );
+    }
+
+
+    /**
+     * Bảo đảm CUSTOMER có hồ sơ customer.
+     */
+    private function ensureCustomerProfile(
+        User $user,
+        string $name,
+        string $email
+    ): void {
+        if (
+            $user
+                ->customer()
+                ->exists()
+        ) {
+            return;
+        }
+
+
+        $user
+            ->customer()
+            ->create([
+                'full_name' =>
+                    $name,
+
+                'email' =>
+                    $email,
+            ]);
     }
 }
