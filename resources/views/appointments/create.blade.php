@@ -1,2307 +1,1600 @@
-@php
-    $currentUser = Auth::user();
-
-    if (
-        $currentUser
-        && !$currentUser->relationLoaded('role')
-    ) {
-        $currentUser->load('role');
-    }
-
-    $roleCode =
-        $currentUser?->role?->code;
+@extends('layouts.app')
 
 
-    $roleLabel = match ($roleCode) {
-        'CUSTOMER' =>
-            'Khách hàng',
-
-        'STAFF' =>
-            'Nhân viên',
-
-        'ADMIN' =>
-            'Quản trị viên',
-
-        'TECHNICIAN' =>
-            'Kỹ thuật viên',
-
-        default =>
-            $roleCode ?? 'Tài khoản',
-    };
+@section(
+    'title',
+    'Đặt lịch bảo dưỡng - AutoCare Long Biên'
+)
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | BRAND URL THEO VAI TRÒ
-    |--------------------------------------------------------------------------
-    |
-    | CUSTOMER / GUEST
-    | → Trang chủ
-    |
-    | STAFF / ADMIN
-    | → Staff Dashboard
-    |
-    | TECHNICIAN
-    | → Công việc của tôi
-    |
-    */
-
-    $brandUrl = match ($roleCode) {
-        'STAFF',
-        'ADMIN' =>
-            route(
-                'staff.dashboard'
-            ),
-
-        'TECHNICIAN' =>
-            route(
-                'technician.service-orders.index'
-            ),
-
-        default =>
-            route('home'),
-    };
-@endphp
-
+@push('styles')
 
 <style>
-    :root {
-        --nav-dark: #07111f;
-        --nav-dark-2: #0b1630;
-        --nav-blue: #0d6efd;
-        --nav-blue-light: #38bdf8;
-        --nav-cyan: #22d3ee;
-        --nav-purple: #7c3aed;
-
-        --nav-text: #e2e8f0;
-        --nav-muted: #94a3b8;
-
-        --nav-border:
-            rgba(255, 255, 255, 0.10);
-
-        --nav-glass:
-            rgba(255, 255, 255, 0.07);
+    .booking-page {
+        max-width: 1250px;
     }
 
-
-    /* =====================================================
-       NAVBAR WRAPPER
-       ===================================================== */
-
-    .app-navbar {
-        position: sticky;
-        top: 0;
-
-        z-index: 1050;
-
+    .booking-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 32px;
+        margin-bottom: 28px;
+        border-radius: 26px;
         color: white;
-
         background:
             linear-gradient(
-                115deg,
+                120deg,
                 #07111f 0%,
-                #0f1d40 38%,
-                #0b3a88 72%,
-                #0756c9 100%
+                #0b2f6b 48%,
+                #1467df 100%
             );
-
         box-shadow:
-            0 12px 35px
-            rgba(2, 12, 27, 0.28);
-
-        border-bottom:
-            1px solid
-            rgba(255, 255, 255, 0.10);
-
-        overflow: visible;
+            0 25px 70px
+            rgba(20, 103, 223, 0.22);
     }
 
-
-    .app-navbar::before {
+    .booking-hero::before {
         content: "";
-
         position: absolute;
-
-        width: 430px;
-        height: 430px;
-
-        top: -330px;
-        left: 12%;
-
+        width: 340px;
+        height: 340px;
+        right: -120px;
+        top: -190px;
         border-radius: 50%;
-
         background:
             radial-gradient(
                 circle,
-                rgba(34, 211, 238, 0.20),
-                transparent 68%
+                rgba(103, 232, 249, 0.40),
+                transparent 70%
             );
-
-        pointer-events: none;
     }
 
-
-    .app-navbar::after {
+    .booking-hero::after {
         content: "";
-
         position: absolute;
-
-        width: 380px;
-        height: 380px;
-
-        right: 5%;
-        top: -300px;
-
+        width: 260px;
+        height: 260px;
+        left: 38%;
+        bottom: -210px;
         border-radius: 50%;
-
         background:
             radial-gradient(
                 circle,
-                rgba(124, 58, 237, 0.17),
-                transparent 68%
+                rgba(124, 58, 237, 0.35),
+                transparent 70%
             );
-
-        pointer-events: none;
     }
 
-
-    .app-navbar-inner {
+    .booking-hero-content {
         position: relative;
-
         z-index: 2;
-
-        max-width: 1480px;
-
-        margin: 0 auto;
-
-        padding: 11px 24px;
-
-        display: flex;
-
-        align-items: center;
-
-        gap: 18px;
     }
 
-
-    /* =====================================================
-       BRAND
-       ===================================================== */
-
-    .app-navbar-brand {
+    .booking-badge {
         display: inline-flex;
-
         align-items: center;
-
-        gap: 12px;
-
-        text-decoration: none;
-
-        color: white;
-
-        white-space: nowrap;
-    }
-
-
-    .app-navbar-brand:hover {
-        color: white;
-    }
-
-
-    .brand-logo {
-        position: relative;
-
-        width: 46px;
-        height: 46px;
-
-        flex: 0 0 auto;
-
-        display: inline-flex;
-
-        align-items: center;
-
-        justify-content: center;
-
-        border-radius: 14px;
-
-        color: white;
-
-        font-size: 16px;
-
-        font-weight: 900;
-
-        font-style: italic;
-
-        letter-spacing: -1px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #38bdf8,
-                #0d6efd 60%,
-                #6d28d9
-            );
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.25);
-
-        box-shadow:
-            0 0 0 4px
-            rgba(56, 189, 248, 0.08),
-
-            0 9px 24px
-            rgba(13, 110, 253, 0.45);
-
-        transition:
-            transform 0.25s ease,
-            box-shadow 0.25s ease;
-    }
-
-
-    .brand-logo::after {
-        content: "";
-
-        position: absolute;
-
-        width: 14px;
-        height: 5px;
-
-        top: 6px;
-        right: 6px;
-
-        border-radius: 50%;
-
-        background:
-            rgba(255, 255, 255, 0.65);
-
-        filter:
-            blur(2px);
-    }
-
-
-    .app-navbar-brand:hover .brand-logo {
-        transform:
-            rotate(-4deg)
-            scale(1.06);
-
-        box-shadow:
-            0 0 0 5px
-            rgba(56, 189, 248, 0.11),
-
-            0 12px 30px
-            rgba(13, 110, 253, 0.55);
-    }
-
-
-    .brand-content {
-        line-height: 1.12;
-    }
-
-
-    .brand-name {
-        display: block;
-
-        color: white;
-
-        font-size: 18px;
-
-        font-weight: 850;
-
-        letter-spacing: -0.4px;
-
-        text-shadow:
-            0 2px 10px
-            rgba(0, 0, 0, 0.18);
-    }
-
-
-    .brand-subtitle {
-        display: block;
-
-        margin-top: 4px;
-
-        color: #bfdbfe;
-
-        font-size: 9px;
-
-        font-weight: 700;
-
-        text-transform: uppercase;
-
-        letter-spacing: 0.16em;
-    }
-
-
-    /* =====================================================
-       TOGGLE
-       ===================================================== */
-
-    .app-navbar-toggle-input {
-        display: none;
-    }
-
-
-    .app-navbar-toggle {
-        display: none;
-
-        width: 43px;
-        height: 43px;
-
-        margin-left: auto;
-
-        align-items: center;
-
-        justify-content: center;
-
+        gap: 8px;
+        padding: 7px 12px;
+        margin-bottom: 18px;
         border:
             1px solid
             rgba(255, 255, 255, 0.16);
-
-        border-radius: 12px;
-
-        background:
-            rgba(255, 255, 255, 0.08);
-
-        backdrop-filter:
-            blur(10px);
-
-        color: white;
-
-        cursor: pointer;
-
-        font-size: 23px;
-    }
-
-
-    /* =====================================================
-       MENU
-       ===================================================== */
-
-    .app-navbar-menu {
-        flex: 1;
-
-        display: flex;
-
-        align-items: center;
-
-        justify-content: flex-end;
-
-        gap: 10px;
-
-        min-width: 0;
-    }
-
-
-    .app-nav-links {
-        display: flex;
-
-        align-items: center;
-
-        gap: 4px;
-
-        padding: 4px;
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.08);
-
-        border-radius: 14px;
-
-        background:
-            rgba(255, 255, 255, 0.035);
-
-        backdrop-filter:
-            blur(12px);
-    }
-
-
-    .app-nav-link {
-        position: relative;
-
-        min-height: 39px;
-
-        padding: 9px 11px;
-
-        display: inline-flex;
-
-        align-items: center;
-
-        gap: 7px;
-
-        border-radius: 10px;
-
+        border-radius: 999px;
         color: #dbeafe;
-
-        text-decoration: none;
-
-        font-size: 12px;
-
-        font-weight: 650;
-
-        white-space: nowrap;
-
-        transition:
-            all 0.22s ease;
-    }
-
-
-    .app-nav-link:hover {
-        color: white;
-
         background:
-            rgba(255, 255, 255, 0.09);
-
-        transform:
-            translateY(-1px);
-    }
-
-
-    .app-nav-link.active {
-        color: white;
-
-        background:
-            linear-gradient(
-                135deg,
-                rgba(14, 165, 233, 0.38),
-                rgba(37, 99, 235, 0.52)
-            );
-
-        box-shadow:
-            0 6px 18px
-            rgba(13, 110, 253, 0.20),
-
-            inset 0 0 0 1px
-            rgba(125, 211, 252, 0.20);
-    }
-
-
-    .nav-dot {
-        position: relative;
-
-        width: 7px;
-        height: 7px;
-
-        flex: 0 0 auto;
-
-        border-radius: 50%;
-
-        background: #60a5fa;
-
-        box-shadow:
-            0 0 8px
-            rgba(96, 165, 250, 0.75);
-    }
-
-
-    .app-nav-link.active .nav-dot {
-        background: #67e8f9;
-
-        box-shadow:
-            0 0 12px
-            rgba(103, 232, 249, 1);
-    }
-
-
-    /* =====================================================
-       GUEST AUTH ACTIONS
-       ===================================================== */
-
-    .guest-auth-links {
-        display: flex;
-
-        align-items: center;
-
-        gap: 9px;
-
-        padding: 4px;
-    }
-
-
-    .guest-login-link,
-    .guest-register-link {
-        min-height: 42px;
-
-        padding:
-            9px 17px;
-
-        display: inline-flex;
-
-        align-items: center;
-
-        justify-content: center;
-
-        gap: 8px;
-
-        border-radius: 11px;
-
-        text-decoration: none;
-
-        white-space: nowrap;
-
+            rgba(255, 255, 255, 0.08);
         font-size: 12px;
-
         font-weight: 800;
-
-        transition:
-            transform 0.22s ease,
-            background 0.22s ease,
-            border-color 0.22s ease,
-            box-shadow 0.22s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
     }
 
-
-    .guest-login-link {
-        color: #e0f2fe;
-
-        border:
-            1px solid
-            rgba(186, 230, 253, 0.25);
-
-        background:
-            rgba(255, 255, 255, 0.065);
-
-        backdrop-filter:
-            blur(12px);
-    }
-
-
-    .guest-login-link:hover {
-        color: white;
-
-        border-color:
-            rgba(125, 211, 252, 0.50);
-
-        background:
-            rgba(255, 255, 255, 0.12);
-
-        transform:
-            translateY(-2px);
-
+    .booking-badge-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #67e8f9;
         box-shadow:
-            0 8px 20px
-            rgba(2, 132, 199, 0.15);
+            0 0 12px #67e8f9;
     }
 
+    .booking-hero h1 {
+        margin: 0;
+        color: white;
+        font-size:
+            clamp(
+                2rem,
+                4vw,
+                3.4rem
+            );
+        font-weight: 900;
+        letter-spacing: -0.055em;
+    }
 
-    .guest-register-link {
-        color: #07111f;
+    .booking-hero p {
+        max-width: 650px;
+        margin: 12px 0 0;
+        color: #cbd5e1;
+        line-height: 1.8;
+    }
 
+    .booking-layout {
+        display: grid;
+        grid-template-columns:
+            minmax(0, 1fr)
+            350px;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .booking-card {
+        position: relative;
+        overflow: hidden;
+        background:
+            rgba(255, 255, 255, 0.92);
         border:
             1px solid
-            rgba(255, 255, 255, 0.38);
+            rgba(255, 255, 255, 0.88);
+        border-radius: 22px;
+        box-shadow:
+            var(--ac-shadow);
+        backdrop-filter: blur(18px);
+    }
 
+    .booking-card-body {
+        padding: 28px;
+    }
+
+    .booking-section {
+        position: relative;
+        padding: 24px 0;
+        border-bottom:
+            1px solid #edf1f6;
+    }
+
+    .booking-section:first-child {
+        padding-top: 0;
+    }
+
+    .booking-section:last-child {
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+
+    .booking-section-heading {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        margin-bottom: 20px;
+    }
+
+    .booking-step {
+        width: 40px;
+        height: 40px;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        color: white;
         background:
             linear-gradient(
                 135deg,
-                #67e8f9,
-                #bfdbfe 55%,
-                #ffffff
+                #1683ff,
+                #4f46e5
             );
-
         box-shadow:
-            0 8px 24px
-            rgba(56, 189, 248, 0.24),
-
-            inset 0 1px 0
-            rgba(255, 255, 255, 0.70);
+            0 9px 22px
+            rgba(37, 99, 235, 0.24);
+        font-weight: 900;
     }
 
+    .booking-section-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 18px;
+        font-weight: 850;
+    }
 
-    .guest-register-link:hover {
-        color: #07111f;
+    .booking-section-description {
+        margin: 3px 0 0;
+        color: #64748b;
+        font-size: 12px;
+    }
 
+    .booking-label {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 8px;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .booking-control {
+        min-height: 49px;
+    }
+
+    .booking-control.is-invalid,
+    .booking-note.is-invalid {
+        border-color: #ef4444;
+        box-shadow:
+            0 0 0 0.2rem
+            rgba(239, 68, 68, 0.08);
+    }
+
+    .service-category {
+        margin-bottom: 26px;
+    }
+
+    .service-category:last-child {
+        margin-bottom: 0;
+    }
+
+    .service-category-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 13px;
+        color: #0f172a;
+        font-size: 15px;
+        font-weight: 850;
+    }
+
+    .service-category-title i {
+        color: #2563eb;
+    }
+
+    .service-grid {
+        display: grid;
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+        gap: 12px;
+        padding: 3px;
+        border-radius: 18px;
+        transition:
+            background 0.2s ease;
+    }
+
+    .service-grid.has-validation-error {
+        background:
+            rgba(239, 68, 68, 0.07);
+    }
+
+    .service-grid.has-validation-error
+    .service-option-label {
+        border-color: #fca5a5;
+    }
+
+    .service-option {
+        position: relative;
+    }
+
+    .service-option input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .service-option-label {
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+        display: block;
+        padding: 17px;
+        border:
+            1px solid #e2e8f0;
+        border-radius: 16px;
+        background:
+            linear-gradient(
+                180deg,
+                #ffffff,
+                #f8fbff
+            );
+        cursor: pointer;
+        transition:
+            transform 0.23s ease,
+            border-color 0.23s ease,
+            box-shadow 0.23s ease,
+            background 0.23s ease;
+    }
+
+    .service-option-label:hover {
         transform:
-            translateY(-2px);
-
+            translateY(-3px);
+        border-color: #93c5fd;
         box-shadow:
             0 12px 30px
-            rgba(56, 189, 248, 0.34),
-
-            inset 0 1px 0
-            rgba(255, 255, 255, 0.75);
+            rgba(37, 99, 235, 0.10);
     }
 
-
-    .guest-login-link i,
-    .guest-register-link i {
-        font-size: 14px;
-    }
-
-
-    /* =====================================================
-       AUTOCARE AI NAV ITEM
-       ===================================================== */
-
-    .app-nav-link.ai-nav-link {
-        color: #ecfeff;
-
-        border:
-            1px solid
-            rgba(103, 232, 249, 0.13);
-
+    .service-option input:checked
+    + .service-option-label {
+        border-color: #3b82f6;
         background:
             linear-gradient(
                 135deg,
-                rgba(34, 211, 238, 0.08),
-                rgba(124, 58, 237, 0.11)
+                #eff6ff,
+                #ecfeff
             );
-    }
-
-
-    .app-nav-link.ai-nav-link:hover {
-        color: white;
-
-        border-color:
-            rgba(103, 232, 249, 0.32);
-
-        background:
-            linear-gradient(
-                135deg,
-                rgba(34, 211, 238, 0.19),
-                rgba(99, 102, 241, 0.24)
-            );
-
         box-shadow:
-            0 8px 22px
-            rgba(34, 211, 238, 0.12);
+            0 0 0 3px
+            rgba(59, 130, 246, 0.09),
+            0 14px 32px
+            rgba(37, 99, 235, 0.12);
     }
 
-
-    .app-nav-link.ai-nav-link.active {
-        color: white;
-
-        border-color:
-            rgba(165, 243, 252, 0.40);
-
-        background:
-            linear-gradient(
-                135deg,
-                #0891b2,
-                #2563eb 52%,
-                #6d28d9
-            );
-
-        box-shadow:
-            0 8px 24px
-            rgba(37, 99, 235, 0.32),
-
-            inset 0 0 0 1px
-            rgba(255, 255, 255, 0.12);
+    .service-option input:focus-visible
+    + .service-option-label {
+        outline:
+            3px solid
+            rgba(59, 130, 246, 0.25);
+        outline-offset: 2px;
     }
 
-
-    .ai-nav-icon {
-        color: #67e8f9;
-
-        font-size: 13px;
-
-        filter:
-            drop-shadow(
-                0 0 6px
-                rgba(103, 232, 249, 0.75)
-            );
-    }
-
-
-    .app-nav-link.ai-nav-link.active
-    .ai-nav-icon {
-        color: white;
-    }
-
-
-    .ai-nav-badge {
-        display: inline-flex;
-
-        align-items: center;
-
-        justify-content: center;
-
-        padding: 2px 5px;
-
-        border-radius: 999px;
-
-        color: #cffafe;
-
-        background:
-            rgba(34, 211, 238, 0.14);
-
-        font-size: 7px;
-
-        font-weight: 900;
-
-        letter-spacing: 0.04em;
-
-        text-transform: uppercase;
-    }
-
-
-    .app-nav-link.ai-nav-link.active
-    .ai-nav-badge {
-        color: white;
-
-        background:
-            rgba(255, 255, 255, 0.15);
-    }
-
-
-    /* =====================================================
-       ACCOUNT
-       ===================================================== */
-
-    .app-navbar-account {
-        display: flex;
-
-        align-items: center;
-
-        gap: 10px;
-
-        margin-left: 6px;
-
-        padding: 5px 5px 5px 10px;
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.10);
-
-        border-radius: 14px;
-
-        background:
-            rgba(255, 255, 255, 0.055);
-
-        backdrop-filter:
-            blur(12px);
-    }
-
-
-    .app-navbar-user {
-        display: flex;
-
-        align-items: center;
-
-        gap: 9px;
-
-        min-width: 0;
-    }
-
-
-    .user-avatar {
-        width: 39px;
-        height: 39px;
-
-        flex: 0 0 auto;
-
-        display: flex;
-
-        align-items: center;
-
-        justify-content: center;
-
-        border-radius: 50%;
-
-        color: #1d4ed8;
-
-        background:
-            linear-gradient(
-                135deg,
-                white,
-                #dbeafe
-            );
-
-        font-size: 13px;
-
-        font-weight: 900;
-
-        text-transform: uppercase;
-
-        border:
-            2px solid
-            rgba(255, 255, 255, 0.30);
-
-        box-shadow:
-            0 5px 16px
-            rgba(0, 0, 0, 0.20);
-    }
-
-
-    .user-information {
-        min-width: 0;
-
-        line-height: 1.2;
-    }
-
-
-    .user-name {
-        display: block;
-
-        max-width: 145px;
-
-        overflow: hidden;
-
-        text-overflow: ellipsis;
-
-        white-space: nowrap;
-
-        color: white;
-
-        font-size: 12px;
-
-        font-weight: 750;
-    }
-
-
-    .user-role {
-        display: block;
-
-        margin-top: 3px;
-
-        color: #93c5fd;
-
-        font-size: 9px;
-
-        font-weight: 700;
-
-        text-transform: uppercase;
-
-        letter-spacing: 0.07em;
-    }
-
-
-    /* =====================================================
-       LOGOUT BUTTON
-       ===================================================== */
-
-    .logout-open-button {
-        min-height: 38px;
-
-        padding: 8px 13px;
-
-        border:
-            1px solid
-            rgba(248, 113, 113, 0.35);
-
-        border-radius: 10px;
-
-        background:
-            linear-gradient(
-                135deg,
-                rgba(239, 68, 68, 0.14),
-                rgba(220, 38, 38, 0.07)
-            );
-
-        color: #fee2e2;
-
-        cursor: pointer;
-
-        font-size: 12px;
-
-        font-weight: 750;
-
-        transition:
-            all 0.22s ease;
-    }
-
-
-    .logout-open-button:hover {
-        color: white;
-
-        border-color:
-            rgba(248, 113, 113, 0.65);
-
-        background:
-            linear-gradient(
-                135deg,
-                rgba(239, 68, 68, 0.35),
-                rgba(220, 38, 38, 0.20)
-            );
-
-        box-shadow:
-            0 7px 18px
-            rgba(239, 68, 68, 0.18);
-
-        transform:
-            translateY(-1px);
-    }
-
-
-    /* =====================================================
-       CUSTOMER AI FLOATING LAUNCHER
-       ===================================================== */
-
-    .autocare-ai-launcher {
-        position: fixed;
-
-        right: 24px;
-        bottom: 24px;
-
-        z-index: 1040;
-
-        display: inline-flex;
-
-        align-items: center;
-
-        gap: 11px;
-
-        min-height: 58px;
-
-        padding:
-            9px 17px 9px 9px;
-
-        overflow: hidden;
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.30);
-
-        border-radius: 999px;
-
-        color: white;
-
-        text-decoration: none;
-
-        background:
-            linear-gradient(
-                135deg,
-                #0891b2 0%,
-                #2563eb 48%,
-                #6d28d9 100%
-            );
-
-        box-shadow:
-            0 17px 42px
-            rgba(37, 99, 235, 0.32),
-
-            0 0 0 5px
-            rgba(59, 130, 246, 0.07);
-
-        transition:
-            transform 0.25s ease,
-            box-shadow 0.25s ease;
-
-        isolation: isolate;
-    }
-
-
-    .autocare-ai-launcher::before {
-        content: "";
-
+    .service-check {
         position: absolute;
-
-        width: 90px;
-        height: 90px;
-
-        top: -60px;
-        right: 15px;
-
-        border-radius: 50%;
-
-        background:
-            radial-gradient(
-                circle,
-                rgba(255, 255, 255, 0.34),
-                transparent 67%
-            );
-
-        pointer-events: none;
-
-        z-index: -1;
-    }
-
-
-    .autocare-ai-launcher:hover {
-        color: white;
-
-        transform:
-            translateY(-4px)
-            scale(1.02);
-
-        box-shadow:
-            0 23px 52px
-            rgba(37, 99, 235, 0.42),
-
-            0 0 0 7px
-            rgba(34, 211, 238, 0.08);
-    }
-
-
-    .autocare-ai-launcher-icon {
-        position: relative;
-
-        width: 42px;
-        height: 42px;
-
-        flex: 0 0 auto;
-
+        top: 12px;
+        right: 12px;
+        width: 26px;
+        height: 26px;
         display: flex;
-
         align-items: center;
-
         justify-content: center;
-
-        border-radius: 50%;
-
-        color: white;
-
-        background:
-            rgba(255, 255, 255, 0.15);
-
         border:
-            1px solid
-            rgba(255, 255, 255, 0.18);
-
-        font-size: 19px;
-
-        box-shadow:
-            inset 0 0 18px
-            rgba(255, 255, 255, 0.08);
-    }
-
-
-    .autocare-ai-launcher-icon::after {
-        content: "";
-
-        position: absolute;
-
-        width: 9px;
-        height: 9px;
-
-        right: 0;
-        bottom: 1px;
-
-        border-radius: 50%;
-
-        background: #4ade80;
-
-        border: 2px solid #2563eb;
-
-        box-shadow:
-            0 0 9px
-            rgba(74, 222, 128, 0.85);
-    }
-
-
-    .autocare-ai-launcher-content {
-        display: flex;
-
-        flex-direction: column;
-
-        line-height: 1.08;
-    }
-
-
-    .autocare-ai-launcher-label {
-        color: white;
-
-        font-size: 12px;
-
-        font-weight: 900;
-
-        white-space: nowrap;
-    }
-
-
-    .autocare-ai-launcher-subtitle {
-        margin-top: 4px;
-
-        color: #cffafe;
-
-        font-size: 8px;
-
-        font-weight: 700;
-
-        white-space: nowrap;
-    }
-
-
-    /* =====================================================
-       LOGOUT MODAL
-       ===================================================== */
-
-    .autocare-modal-overlay {
-        position: fixed;
-
-        inset: 0;
-
-        z-index: 99999;
-
-        display: none;
-
-        align-items: center;
-
-        justify-content: center;
-
-        padding: 20px;
-
-        background:
-            rgba(2, 6, 23, 0.74);
-
-        backdrop-filter:
-            blur(8px);
-
-        animation:
-            autocareFadeIn
-            0.22s ease;
-    }
-
-
-    .autocare-modal-overlay.show {
-        display: flex;
-    }
-
-
-    .autocare-modal {
-        position: relative;
-
-        width: 100%;
-
-        max-width: 460px;
-
-        overflow: hidden;
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.15);
-
-        border-radius: 24px;
-
-        background:
-            linear-gradient(
-                160deg,
-                rgba(15, 23, 42, 0.98),
-                rgba(15, 38, 78, 0.98)
-            );
-
-        color: white;
-
-        box-shadow:
-            0 30px 100px
-            rgba(0, 0, 0, 0.55);
-
-        animation:
-            autocareModalIn
-            0.28s cubic-bezier(
-                0.2,
-                0.8,
-                0.2,
-                1
-            );
-    }
-
-
-    .autocare-modal::before {
-        content: "";
-
-        position: absolute;
-
-        width: 240px;
-        height: 240px;
-
-        right: -100px;
-        top: -120px;
-
-        border-radius: 50%;
-
-        background:
-            radial-gradient(
-                circle,
-                rgba(56, 189, 248, 0.30),
-                transparent 70%
-            );
-
-        pointer-events: none;
-    }
-
-
-    .autocare-modal::after {
-        content: "";
-
-        position: absolute;
-
-        width: 220px;
-        height: 220px;
-
-        left: -110px;
-        bottom: -140px;
-
-        border-radius: 50%;
-
-        background:
-            radial-gradient(
-                circle,
-                rgba(124, 58, 237, 0.26),
-                transparent 70%
-            );
-
-        pointer-events: none;
-    }
-
-
-    .autocare-modal-content {
-        position: relative;
-
-        z-index: 2;
-
-        padding: 32px;
-    }
-
-
-    .logout-modal-icon {
-        width: 68px;
-        height: 68px;
-
-        margin-bottom: 22px;
-
-        display: flex;
-
-        align-items: center;
-
-        justify-content: center;
-
-        border-radius: 20px;
-
-        color: white;
-
-        font-size: 30px;
-
-        background:
-            linear-gradient(
-                135deg,
-                #ef4444,
-                #dc2626
-            );
-
-        box-shadow:
-            0 13px 32px
-            rgba(239, 68, 68, 0.32);
-    }
-
-
-    .logout-modal-title {
-        margin:
-            0 0 10px;
-
-        color: white;
-
-        font-size: 25px;
-
-        font-weight: 850;
-
-        letter-spacing: -0.4px;
-    }
-
-
-    .logout-modal-description {
-        margin: 0;
-
-        color: #cbd5e1;
-
-        font-size: 14px;
-
-        line-height: 1.7;
-    }
-
-
-    .logout-modal-user {
-        display: flex;
-
-        align-items: center;
-
-        gap: 12px;
-
-        margin-top: 24px;
-
-        padding: 14px;
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.09);
-
-        border-radius: 14px;
-
-        background:
-            rgba(255, 255, 255, 0.055);
-    }
-
-
-    .logout-modal-user-avatar {
-        width: 42px;
-        height: 42px;
-
-        display: flex;
-
-        align-items: center;
-
-        justify-content: center;
-
-        flex: 0 0 auto;
-
-        border-radius: 50%;
-
-        background:
-            linear-gradient(
-                135deg,
-                #38bdf8,
-                #2563eb
-            );
-
-        color: white;
-
-        font-weight: 900;
-    }
-
-
-    .logout-modal-user-name {
-        color: white;
-
-        font-size: 14px;
-
-        font-weight: 750;
-    }
-
-
-    .logout-modal-user-role {
-        margin-top: 3px;
-
-        color: #93c5fd;
-
-        font-size: 11px;
-    }
-
-
-    .logout-modal-actions {
-        display: grid;
-
-        grid-template-columns:
-            1fr 1fr;
-
-        gap: 12px;
-
-        margin-top: 28px;
-    }
-
-
-    .logout-modal-cancel,
-    .logout-modal-submit {
-        min-height: 46px;
-
-        border-radius: 12px;
-
-        font-size: 14px;
-
-        font-weight: 750;
-
-        cursor: pointer;
-
+            1px solid #cbd5e1;
+        border-radius: 8px;
+        color: transparent;
+        background: white;
         transition:
             all 0.2s ease;
     }
 
-
-    .logout-modal-cancel {
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.14);
-
-        color: #e2e8f0;
-
-        background:
-            rgba(255, 255, 255, 0.065);
-    }
-
-
-    .logout-modal-cancel:hover {
+    .service-option input:checked
+    + .service-option-label
+    .service-check {
         color: white;
-
-        background:
-            rgba(255, 255, 255, 0.12);
-    }
-
-
-    .logout-modal-submit {
-        border:
-            1px solid
-            rgba(248, 113, 113, 0.35);
-
-        color: white;
-
+        border-color: #2563eb;
         background:
             linear-gradient(
                 135deg,
-                #ef4444,
-                #b91c1c
+                #1683ff,
+                #4f46e5
             );
-
-        box-shadow:
-            0 8px 20px
-            rgba(239, 68, 68, 0.25);
     }
 
+    .service-name {
+        padding-right: 35px;
+        color: #0f172a;
+        font-size: 14px;
+        font-weight: 850;
+    }
 
-    .logout-modal-submit:hover {
-        transform:
-            translateY(-1px);
+    .service-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
 
+    .service-meta-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 8px;
+        border-radius: 999px;
+        color: #475569;
+        background: #f1f5f9;
+        font-size: 11px;
+        font-weight: 750;
+    }
+
+    .summary-card {
+        position: sticky;
+        top: 100px;
+        overflow: hidden;
+        padding: 24px;
+        color: white;
+        border-radius: 22px;
+        background:
+            linear-gradient(
+                145deg,
+                #07111f,
+                #0d2f69 55%,
+                #155bd1
+            );
+        box-shadow:
+            0 25px 60px
+            rgba(13, 47, 105, 0.26);
+    }
+
+    .summary-card::before {
+        content: "";
+        position: absolute;
+        width: 220px;
+        height: 220px;
+        top: -140px;
+        right: -100px;
+        border-radius: 50%;
+        background:
+            radial-gradient(
+                circle,
+                rgba(34, 211, 238, 0.32),
+                transparent 70%
+            );
+    }
+
+    .summary-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .summary-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 18px;
+        border-radius: 15px;
+        color: #67e8f9;
+        background:
+            rgba(255, 255, 255, 0.09);
+        font-size: 21px;
+    }
+
+    .summary-title {
+        margin-bottom: 20px;
+        color: white;
+        font-size: 18px;
+        font-weight: 850;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 13px 0;
+        border-bottom:
+            1px solid
+            rgba(255, 255, 255, 0.10);
+    }
+
+    .summary-row:last-of-type {
+        border-bottom: none;
+    }
+
+    .summary-label {
+        color: #bfdbfe;
+        font-size: 12px;
+    }
+
+    .summary-value {
+        color: white;
+        text-align: right;
+        font-weight: 850;
+    }
+
+    .booking-submit {
+        width: 100%;
+        min-height: 51px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 20px;
+        border: none;
+        border-radius: 14px;
+        color: #07111f;
+        background:
+            linear-gradient(
+                135deg,
+                #67e8f9,
+                #bfdbfe
+            );
+        font-weight: 900;
         box-shadow:
             0 12px 28px
-            rgba(239, 68, 68, 0.35);
+            rgba(103, 232, 249, 0.20);
+        transition:
+            all 0.23s ease;
     }
 
+    .booking-submit:hover:not(:disabled) {
+        transform:
+            translateY(-3px);
+        box-shadow:
+            0 18px 36px
+            rgba(103, 232, 249, 0.30);
+    }
 
-    @keyframes autocareFadeIn {
-        from {
-            opacity: 0;
+    .booking-submit:disabled {
+        cursor: wait;
+        opacity: 0.76;
+        transform: none;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 18px;
+        color: #64748b;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 750;
+    }
+
+    .back-link:hover {
+        color: #2563eb;
+    }
+
+    @media (max-width: 991px) {
+        .booking-layout {
+            grid-template-columns: 1fr;
         }
 
-        to {
-            opacity: 1;
+        .summary-card {
+            position: static;
         }
     }
 
-
-    @keyframes autocareModalIn {
-        from {
-            opacity: 0;
-
-            transform:
-                translateY(18px)
-                scale(0.96);
+    @media (max-width: 767px) {
+        .booking-card-body {
+            padding: 20px;
         }
 
-        to {
-            opacity: 1;
-
-            transform:
-                translateY(0)
-                scale(1);
-        }
-    }
-
-
-    /* =====================================================
-       RESPONSIVE
-       ===================================================== */
-
-    @media (max-width: 1280px) {
-
-        .app-navbar-inner {
-            flex-wrap: wrap;
+        .service-grid {
+            grid-template-columns: 1fr;
         }
 
-
-        .app-navbar-toggle {
-            display: inline-flex;
+        .booking-hero {
+            padding: 24px;
         }
-
-
-        .app-navbar-menu {
-            display: none;
-
-            width: 100%;
-
-            flex-basis: 100%;
-
-            flex-direction: column;
-
-            align-items: stretch;
-
-            padding-top: 12px;
-
-            border-top:
-                1px solid
-                rgba(255, 255, 255, 0.10);
-        }
-
-
-        .app-navbar-toggle-input:checked
-        ~ .app-navbar-menu {
-            display: flex;
-        }
-
-
-        .app-nav-links {
-            width: 100%;
-
-            flex-direction: column;
-
-            align-items: stretch;
-        }
-
-
-        .app-nav-link {
-            width: 100%;
-
-            min-height: 44px;
-
-            font-size: 13px;
-        }
-
-
-        .guest-auth-links {
-            width: 100%;
-
-            flex-direction: column;
-
-            align-items: stretch;
-
-            padding: 0;
-        }
-
-
-        .guest-login-link,
-        .guest-register-link {
-            width: 100%;
-
-            min-height: 46px;
-        }
-
-
-        .app-navbar-account {
-            width: 100%;
-
-            margin-left: 0;
-
-            padding: 12px;
-
-            justify-content:
-                space-between;
-        }
-
-    }
-
-
-    @media (max-width: 575px) {
-
-        .app-navbar-inner {
-            padding:
-                10px 14px;
-        }
-
-
-        .brand-logo {
-            width: 40px;
-            height: 40px;
-        }
-
-
-        .brand-name {
-            font-size: 16px;
-        }
-
-
-        .brand-subtitle {
-            font-size: 8px;
-        }
-
-
-        .app-navbar-account {
-            align-items: center;
-        }
-
-
-        .user-name {
-            max-width: 135px;
-        }
-
-
-        .autocare-modal-content {
-            padding: 25px;
-        }
-
-
-        .logout-modal-actions {
-            grid-template-columns:
-                1fr;
-        }
-
-
-        .autocare-ai-launcher {
-            right: 15px;
-            bottom: 15px;
-
-            width: 54px;
-            height: 54px;
-
-            min-height: 54px;
-
-            padding: 5px;
-
-            justify-content: center;
-        }
-
-
-        .autocare-ai-launcher-icon {
-            width: 42px;
-            height: 42px;
-        }
-
-
-        .autocare-ai-launcher-content {
-            display: none;
-        }
-
     }
 </style>
 
+@endpush
 
-<header class="app-navbar">
 
-    <div class="app-navbar-inner">
+@section('content')
 
-        <a
-            href="{{ $brandUrl }}"
-            class="app-navbar-brand"
-        >
+<div class="container booking-page">
 
-            <span class="brand-logo">
-                AC
-            </span>
-
-
-            <span class="brand-content">
-
-                <span class="brand-name">
-                    AutoCare Long Biên
-                </span>
-
-                <span class="brand-subtitle">
-                    Car Service System
-                </span>
-
-            </span>
-
-        </a>
-
-
-        <input
-            type="checkbox"
-            id="app-navbar-toggle"
-            class="app-navbar-toggle-input"
-        >
-
-
-        <label
-            for="app-navbar-toggle"
-            class="app-navbar-toggle"
-            aria-label="Mở menu"
-        >
-            ☰
-        </label>
-
-
-        <nav class="app-navbar-menu">
-
-            {{-- =====================================================
-                AUTHENTICATED NAVIGATION
-            ====================================================== --}}
-            @auth
-
-                <div class="app-nav-links">
-
-                    {{-- CUSTOMER --}}
-                    @if ($roleCode === 'CUSTOMER')
-
-                        <a
-                            href="{{ route(
-                                'customer.dashboard'
-                            ) }}"
-                            class="
-                                app-nav-link
-                                {{
-                                    request()->routeIs(
-                                        'customer.dashboard'
-                                    )
-                                        ? 'active'
-                                        : ''
-                                }}
-                            "
-                        >
-                            <span class="nav-dot"></span>
-                            Tổng quan
-                        </a>
-
-
-                        <a
-                            href="{{ route(
-                                'vehicles.index'
-                            ) }}"
-                            class="
-                                app-nav-link
-                                {{
-                                    request()->routeIs(
-                                        'vehicles.*'
-                                    )
-                                        ? 'active'
-                                        : ''
-                                }}
-                            "
-                        >
-                            <span class="nav-dot"></span>
-                            Xe của tôi
-                        </a>
-
-
-                        <a
-                            href="{{ route(
-                                'appointments.create'
-                            ) }}"
-                            class="
-                                app-nav-link
-                                {{
-                                    request()->routeIs(
-                                        'appointments.create'
-                                    )
-                                        ? 'active'
-                                        : ''
-                                }}
-                            "
-                        >
-                            <span class="nav-dot"></span>
-                            Đặt lịch
-                        </a>
-
-
-                        <a
-                            href="{{ route(
-                                'appointments.index'
-                            ) }}"
-                            class="
-                                app-nav-link
-                                {{
-                                    request()->routeIs(
-                                        'appointments.index',
-                                        'appointments.show'
-                                    )
-                                        ? 'active'
-                                        : ''
-                                }}
-                            "
-                        >
-                            <span class="nav-dot"></span>
-                            Lịch hẹn
-                        </a>
-
-
-                        <a
-                            href="{{ route(
-                                'maintenance-history.index'
-                            ) }}"
-                            class="
-                                app-nav-link
-                                {{
-                                    request()->routeIs(
-                                        'maintenance-history.*'
-                                    )
-                                        ? 'active'
-                                        : ''
-                                }}
-                            "
-                        >
-                            <span class="nav-dot"></span>
-                            Lịch sử bảo dưỡng
-                        </a>
-
-
-                        <a
-                            href="{{ route(
-                                'customer.invoices.index'
-                            ) }}"
-                            class="
-                                app-nav-link
-                                {{
-                                    request()->routeIs(
-                                        'customer.invoices.*'
-                                    )
-                                        ? 'active'
-                                        : ''
-                                }}
-                            "
-                        >
-                            <span class="nav-dot"></span>
-                            Hóa đơn
-                        </a>
-
-
-                        <a
-                            href="{{ route(
-                                'chat.index'
-                            ) }}"
-                            class="
-                                app-nav-link
-                                ai-nav-link
-                                {{
-                                    request()->routeIs(
-                                        'chat.*'
-                                    )
-                                        ? 'active'
-                                        : ''
-                                }}
-                            "
-                        >
-
-                            <i
-                                class="
-                                    bi
-                                    bi-stars
-                                    ai-nav-icon
-                                "
-                            ></i>
-
-                            AutoCare AI
-
-                            <span class="ai-nav-badge">
-                                AI
-                            </span>
-
-                        </a>
-
-
-                    {{-- STAFF / ADMIN --}}
-                    @elseif (
-                        in_array(
-                            $roleCode,
-                            [
-                                'STAFF',
-                                'ADMIN',
-                            ],
-                            true
-                        )
-                    )
-
-                        <a
-                            href="{{ route(
-                                'staff.dashboard'
-                            ) }}"
-                            class="
-                                app-nav-link
-                                {{
-                                    request()->routeIs(
-                                        'staff.dashboard'
-                                    )
-                                        ? 'active'
-                                        : ''
-                                }}
-                            "
-                        >
-                            <span class="nav-dot"></span>
-                            Dashboard
-                        </a>
-
-
-                        <a
-                            href="{{ route(
-                                'staff.appointments.index'
-                            ) }}"
-                            class="
-                                app-nav-link
-                                {{
-                                    request()->routeIs(
-                                        'staff.appointments.*',
-                                        'staff.service-orders.*',
-                                        'staff.invoices.*'
-                                    )
-                                        ? 'active'
-                                        : ''
-                                }}
-                            "
-                        >
-                            <span class="nav-dot"></span>
-                            Lịch hẹn
-                        </a>
-
-
-                        <a
-                            href="{{ route(
-                                'staff.parts.index'
-                            ) }}"
-                            class="
-                                app-nav-link
-                                {{
-                                    request()->routeIs(
-                                        'staff.parts.*'
-                                    )
-                                        ? 'active'
-                                        : ''
-                                }}
-                            "
-                        >
-                            <span class="nav-dot"></span>
-                            Kho phụ tùng
-                        </a>
-
-
-                        <a
-                            href="{{ route(
-                                'services.index'
-                            ) }}"
-                            class="
-                                app-nav-link
-                                {{
-                                    request()->routeIs(
-                                        'services.*'
-                                    )
-                                        ? 'active'
-                                        : ''
-                                }}
-                            "
-                        >
-                            <span class="nav-dot"></span>
-                            Dịch vụ
-                        </a>
-
-
-                    {{-- TECHNICIAN --}}
-                    @elseif (
-                        $roleCode === 'TECHNICIAN'
-                    )
-
-                        <a
-                            href="{{ route(
-                                'technician.service-orders.index'
-                            ) }}"
-                            class="
-                                app-nav-link
-                                {{
-                                    request()->routeIs(
-                                        'technician.service-orders.*'
-                                    )
-                                        ? 'active'
-                                        : ''
-                                }}
-                            "
-                        >
-                            <span class="nav-dot"></span>
-                            Công việc của tôi
-                        </a>
-
-                    @endif
-
-                </div>
-
-
-                <div class="app-navbar-account">
-
-                    <div class="app-navbar-user">
-
-                        <div class="user-avatar">
-
-                            {{
-                                mb_strtoupper(
-                                    mb_substr(
-                                        $currentUser->name,
-                                        0,
-                                        1
-                                    )
-                                )
-                            }}
-
-                        </div>
-
-
-                        <div class="user-information">
-
-                            <span class="user-name">
-                                {{ $currentUser->name }}
-                            </span>
-
-                            <span class="user-role">
-                                {{ $roleLabel }}
-                            </span>
-
-                        </div>
-
-                    </div>
-
-
-                    <button
-                        type="button"
-                        class="logout-open-button"
-                        onclick="openLogoutModal()"
-                    >
-                        Đăng xuất
-                    </button>
-
-                </div>
-
-            @endauth
-
-
-            {{-- =====================================================
-                GUEST ACTIONS
-                Chỉ hiển thị tại URL /
-            ====================================================== --}}
-            @guest
-
-                @if (
-                    request()->routeIs(
-                        'home'
-                    )
+    @php
+        $oldServices =
+            array_map(
+                'intval',
+                (array) old(
+                    'service_ids',
+                    []
                 )
+            );
 
-                    <div class="guest-auth-links">
+        $hasServiceError =
+            $errors->has('service_ids')
+            ||
+            collect(
+                $errors->keys()
+            )->contains(
+                fn ($key) =>
+                    str_starts_with(
+                        $key,
+                        'service_ids.'
+                    )
+            );
 
-                        <a
-                            href="{{ route('login') }}"
-                            class="guest-login-link"
-                        >
+        $todayHanoi =
+            now(
+                'Asia/Ho_Chi_Minh'
+            )->toDateString();
 
-                            <i
-                                class="
-                                    bi
-                                    bi-box-arrow-in-right
-                                "
-                            ></i>
-
-                            Đăng nhập
-
-                        </a>
-
-
-                        <a
-                            href="{{ route('register') }}"
-                            class="guest-register-link"
-                        >
-
-                            <i
-                                class="
-                                    bi
-                                    bi-person-plus-fill
-                                "
-                            ></i>
-
-                            Đăng ký
-
-                        </a>
-
-                    </div>
-
-                @endif
-
-            @endguest
-
-        </nav>
-
-    </div>
-
-</header>
+        $currentTimeHanoi =
+            now(
+                'Asia/Ho_Chi_Minh'
+            )->format('H:i');
+    @endphp
 
 
-{{-- =====================================================
-    CUSTOMER AI FLOATING LAUNCHER
-===================================================== --}}
-@if (
-    $roleCode === 'CUSTOMER'
-    &&
-    !request()->routeIs('chat.*')
-)
-
-    <a
-        href="{{ route('chat.index') }}"
-        class="autocare-ai-launcher"
-        title="Mở AutoCare AI"
-        aria-label="Mở trợ lý AutoCare AI"
+    <section
+        class="booking-hero"
+        data-reveal="zoom"
     >
 
-        <span class="autocare-ai-launcher-icon">
+        <div class="booking-hero-content">
 
-            <i class="bi bi-robot"></i>
+            <div class="booking-badge">
 
-        </span>
+                <span class="booking-badge-dot"></span>
 
+                Smart Booking
 
-        <span class="autocare-ai-launcher-content">
-
-            <span class="autocare-ai-launcher-label">
-                AutoCare AI
-            </span>
-
-            <span class="autocare-ai-launcher-subtitle">
-                Hỏi trợ lý bảo dưỡng
-            </span>
-
-        </span>
-
-    </a>
-
-@endif
+            </div>
 
 
-{{-- =====================================================
-    CUSTOM LOGOUT MODAL
-===================================================== --}}
-@auth
+            <h1>
+                Đặt lịch bảo dưỡng
+            </h1>
 
-    <div
-        id="logoutModal"
-        class="autocare-modal-overlay"
-        onclick="handleLogoutOverlayClick(event)"
-    >
+
+            <p>
+                Chọn phương tiện, dịch vụ và thời gian
+                phù hợp. AutoCare sẽ tổng hợp chi phí
+                và thời gian dự kiến ngay khi bạn lựa chọn.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    @if ($vehicles->isEmpty())
 
         <div
-            class="autocare-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="logoutModalTitle"
+            class="empty-state"
+            data-reveal="zoom"
         >
 
-            <div class="autocare-modal-content">
+            <div class="empty-state-icon">
 
-                <div class="logout-modal-icon">
-                    ↪
-                </div>
+                <i class="bi bi-car-front"></i>
+
+            </div>
 
 
-                <h2
-                    id="logoutModalTitle"
-                    class="logout-modal-title"
+            <h3>
+                Bạn chưa có phương tiện
+            </h3>
+
+
+            <p>
+                Thêm phương tiện trước khi
+                đặt lịch bảo dưỡng.
+            </p>
+
+
+            <a
+                href="{{ route('vehicles.create') }}"
+                class="
+                    btn
+                    btn-primary
+                    btn-shine
+                    px-4
+                "
+            >
+
+                <i class="bi bi-plus-lg me-2"></i>
+
+                Thêm phương tiện
+
+            </a>
+
+        </div>
+
+    @else
+
+        <form
+            method="POST"
+            action="{{ route('appointments.store') }}"
+            id="appointment-booking-form"
+            novalidate
+        >
+
+            @csrf
+
+
+            <div class="booking-layout">
+
+                <div
+                    class="booking-card"
+                    data-reveal="left"
                 >
-                    Xác nhận đăng xuất
-                </h2>
 
+                    <div class="booking-card-body">
 
-                <p class="logout-modal-description">
+                        {{-- VEHICLE --}}
+                        <section class="booking-section">
 
-                    Bạn sắp rời khỏi phiên làm việc
-                    hiện tại.
+                            <div class="booking-section-heading">
 
-                    Các thao tác chưa lưu trên trang
-                    có thể bị mất.
-
-                </p>
-
-
-                <div class="logout-modal-user">
-
-                    <div class="logout-modal-user-avatar">
-
-                        {{
-                            mb_strtoupper(
-                                mb_substr(
-                                    $currentUser->name,
-                                    0,
+                                <div class="booking-step">
                                     1
-                                )
-                            )
-                        }}
+                                </div>
 
-                    </div>
+                                <div>
+
+                                    <h2 class="booking-section-title">
+                                        Chọn phương tiện
+                                    </h2>
+
+                                    <p class="booking-section-description">
+                                        Xe cần được kiểm tra hoặc bảo dưỡng.
+                                    </p>
+
+                                </div>
+
+                            </div>
 
 
-                    <div>
+                            <label
+                                for="vehicle_id"
+                                class="booking-label"
+                            >
 
-                        <div class="logout-modal-user-name">
-                            {{ $currentUser->name }}
-                        </div>
+                                <i class="bi bi-car-front"></i>
 
-                        <div class="logout-modal-user-role">
-                            {{ $roleLabel }}
-                        </div>
+                                Phương tiện *
+
+                            </label>
+
+
+                            <select
+                                name="vehicle_id"
+                                id="vehicle_id"
+                                class="
+                                    form-select
+                                    booking-control
+                                    @error('vehicle_id')
+                                        is-invalid
+                                    @enderror
+                                "
+                                aria-invalid="{{
+                                    $errors->has('vehicle_id')
+                                        ? 'true'
+                                        : 'false'
+                                }}"
+                            >
+
+                                <option value="">
+                                    -- Chọn phương tiện --
+                                </option>
+
+
+                                @foreach ($vehicles as $vehicle)
+
+                                    <option
+                                        value="{{ $vehicle->id }}"
+                                        {{
+                                            (string) old(
+                                                'vehicle_id'
+                                            )
+                                            ===
+                                            (string) $vehicle->id
+                                                ? 'selected'
+                                                : ''
+                                        }}
+                                    >
+
+                                        {{ $vehicle->brand->name }}
+
+                                        {{ $vehicle->vehicleModel->name }}
+
+                                        -
+
+                                        {{ $vehicle->license_plate }}
+
+                                    </option>
+
+                                @endforeach
+
+                            </select>
+
+                        </section>
+
+
+                        {{-- CONTACT --}}
+                        <section class="booking-section">
+
+                            <div class="booking-section-heading">
+
+                                <div class="booking-step">
+                                    2
+                                </div>
+
+                                <div>
+
+                                    <h2 class="booking-section-title">
+                                        Thông tin liên hệ
+                                    </h2>
+
+                                    <p class="booking-section-description">
+                                        AutoCare sử dụng thông tin này
+                                        để xác nhận lịch hẹn.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="row g-3">
+
+                                <div class="col-md-6">
+
+                                    <label
+                                        for="contact_name"
+                                        class="booking-label"
+                                    >
+
+                                        <i class="bi bi-person"></i>
+
+                                        Người liên hệ *
+
+                                    </label>
+
+
+                                    <input
+                                        type="text"
+                                        name="contact_name"
+                                        id="contact_name"
+                                        class="
+                                            form-control
+                                            booking-control
+                                            @error('contact_name')
+                                                is-invalid
+                                            @enderror
+                                        "
+                                        value="{{ old(
+                                            'contact_name',
+                                            $user
+                                                ->customer
+                                                ->full_name
+                                        ) }}"
+                                        maxlength="100"
+                                        autocomplete="name"
+                                        aria-invalid="{{
+                                            $errors->has(
+                                                'contact_name'
+                                            )
+                                                ? 'true'
+                                                : 'false'
+                                        }}"
+                                    >
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <label
+                                        for="contact_phone"
+                                        class="booking-label"
+                                    >
+
+                                        <i class="bi bi-telephone"></i>
+
+                                        Số điện thoại *
+
+                                    </label>
+
+
+                                    <input
+                                        type="tel"
+                                        name="contact_phone"
+                                        id="contact_phone"
+                                        class="
+                                            form-control
+                                            booking-control
+                                            @error('contact_phone')
+                                                is-invalid
+                                            @enderror
+                                        "
+                                        value="{{ old(
+                                            'contact_phone',
+                                            $user
+                                                ->customer
+                                                ->phone
+                                        ) }}"
+                                        maxlength="20"
+                                        inputmode="tel"
+                                        autocomplete="tel"
+                                        placeholder="Ví dụ: 0912345678"
+                                        aria-invalid="{{
+                                            $errors->has(
+                                                'contact_phone'
+                                            )
+                                                ? 'true'
+                                                : 'false'
+                                        }}"
+                                    >
+
+                                </div>
+
+
+                                <div class="col-12">
+
+                                    <label
+                                        for="contact_email"
+                                        class="booking-label"
+                                    >
+
+                                        <i class="bi bi-envelope"></i>
+
+                                        Email
+
+                                    </label>
+
+
+                                    <input
+                                        type="email"
+                                        name="contact_email"
+                                        id="contact_email"
+                                        class="
+                                            form-control
+                                            booking-control
+                                            @error('contact_email')
+                                                is-invalid
+                                            @enderror
+                                        "
+                                        value="{{ old(
+                                            'contact_email',
+                                            $user
+                                                ->customer
+                                                ->email
+                                            ?? $user->email
+                                        ) }}"
+                                        maxlength="254"
+                                        autocomplete="email"
+                                        aria-invalid="{{
+                                            $errors->has(
+                                                'contact_email'
+                                            )
+                                                ? 'true'
+                                                : 'false'
+                                        }}"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+
+                        {{-- TIME --}}
+                        <section class="booking-section">
+
+                            <div class="booking-section-heading">
+
+                                <div class="booking-step">
+                                    3
+                                </div>
+
+                                <div>
+
+                                    <h2 class="booking-section-title">
+                                        Thời gian mong muốn
+                                    </h2>
+
+                                    <p class="booking-section-description">
+                                        Chọn ngày và giờ phù hợp với bạn.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="row g-3">
+
+                                <div class="col-md-6">
+
+                                    <label
+                                        for="appointment_date"
+                                        class="booking-label"
+                                    >
+
+                                        <i class="bi bi-calendar3"></i>
+
+                                        Ngày đặt lịch *
+
+                                    </label>
+
+
+                                    <input
+                                        type="date"
+                                        name="appointment_date"
+                                        id="appointment_date"
+                                        class="
+                                            form-control
+                                            booking-control
+                                            @error('appointment_date')
+                                                is-invalid
+                                            @enderror
+                                        "
+                                        value="{{ old(
+                                            'appointment_date'
+                                        ) }}"
+                                        min="{{ $todayHanoi }}"
+                                        aria-invalid="{{
+                                            $errors->has(
+                                                'appointment_date'
+                                            )
+                                                ? 'true'
+                                                : 'false'
+                                        }}"
+                                    >
+
+                                </div>
+
+
+                                <div class="col-md-6">
+
+                                    <label
+                                        for="appointment_time"
+                                        class="booking-label"
+                                    >
+
+                                        <i class="bi bi-clock"></i>
+
+                                        Giờ đặt lịch *
+
+                                    </label>
+
+
+                                    <input
+                                        type="time"
+                                        name="appointment_time"
+                                        id="appointment_time"
+                                        class="
+                                            form-control
+                                            booking-control
+                                            @error('appointment_time')
+                                                is-invalid
+                                            @enderror
+                                        "
+                                        value="{{ old(
+                                            'appointment_time'
+                                        ) }}"
+                                        aria-invalid="{{
+                                            $errors->has(
+                                                'appointment_time'
+                                            )
+                                                ? 'true'
+                                                : 'false'
+                                        }}"
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+
+                        {{-- SERVICES --}}
+                        <section class="booking-section">
+
+                            <div class="booking-section-heading">
+
+                                <div class="booking-step">
+                                    4
+                                </div>
+
+                                <div>
+
+                                    <h2 class="booking-section-title">
+                                        Chọn dịch vụ
+                                    </h2>
+
+                                    <p class="booking-section-description">
+                                        Có thể chọn nhiều dịch vụ
+                                        trong cùng một lịch hẹn.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            @foreach ($categories as $category)
+
+                                @if ($category->services->isNotEmpty())
+
+                                    <div class="service-category">
+
+                                        <div class="service-category-title">
+
+                                            <i class="bi bi-tools"></i>
+
+                                            {{ $category->name }}
+
+                                        </div>
+
+
+                                        <div
+                                            class="
+                                                service-grid
+                                                {{
+                                                    $hasServiceError
+                                                        ? 'has-validation-error'
+                                                        : ''
+                                                }}
+                                            "
+                                        >
+
+                                            @foreach ($category->services as $service)
+
+                                                <div class="service-option">
+
+                                                    <input
+                                                        type="checkbox"
+                                                        class="service-checkbox"
+                                                        id="service_{{ $service->id }}"
+                                                        name="service_ids[]"
+                                                        value="{{ $service->id }}"
+                                                        data-price="{{
+                                                            (float)
+                                                            $service
+                                                                ->base_price
+                                                        }}"
+                                                        data-duration="{{
+                                                            (int) (
+                                                                $service
+                                                                    ->estimated_duration_minutes
+                                                                ?? 0
+                                                            )
+                                                        }}"
+                                                        aria-invalid="{{
+                                                            $hasServiceError
+                                                                ? 'true'
+                                                                : 'false'
+                                                        }}"
+                                                        {{
+                                                            in_array(
+                                                                (int)
+                                                                $service->id,
+                                                                $oldServices,
+                                                                true
+                                                            )
+                                                                ? 'checked'
+                                                                : ''
+                                                        }}
+                                                    >
+
+
+                                                    <label
+                                                        for="service_{{ $service->id }}"
+                                                        class="service-option-label"
+                                                    >
+
+                                                        <span class="service-check">
+
+                                                            <i class="bi bi-check-lg"></i>
+
+                                                        </span>
+
+
+                                                        <div class="service-name">
+
+                                                            {{ $service->name }}
+
+                                                        </div>
+
+
+                                                        <div class="service-meta">
+
+                                                            <span class="service-meta-badge">
+
+                                                                <i class="bi bi-cash-stack"></i>
+
+                                                                {{
+                                                                    number_format(
+                                                                        $service
+                                                                            ->base_price,
+                                                                        0,
+                                                                        ',',
+                                                                        '.'
+                                                                    )
+                                                                }} đ
+
+                                                            </span>
+
+
+                                                            @if (
+                                                                $service
+                                                                    ->estimated_duration_minutes
+                                                            )
+
+                                                                <span class="service-meta-badge">
+
+                                                                    <i class="bi bi-clock"></i>
+
+                                                                    {{
+                                                                        $service
+                                                                            ->estimated_duration_minutes
+                                                                    }} phút
+
+                                                                </span>
+
+                                                            @endif
+
+                                                        </div>
+
+                                                    </label>
+
+                                                </div>
+
+                                            @endforeach
+
+                                        </div>
+
+                                    </div>
+
+                                @endif
+
+                            @endforeach
+
+                        </section>
+
+
+                        {{-- NOTE --}}
+                        <section class="booking-section">
+
+                            <div class="booking-section-heading">
+
+                                <div class="booking-step">
+                                    5
+                                </div>
+
+                                <div>
+
+                                    <h2 class="booking-section-title">
+                                        Ghi chú
+                                    </h2>
+
+                                    <p class="booking-section-description">
+                                        Mô tả tình trạng xe hoặc
+                                        yêu cầu bổ sung nếu có.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <label
+                                for="customer_note"
+                                class="booking-label"
+                            >
+
+                                <i class="bi bi-chat-left-text"></i>
+
+                                Tình trạng xe / yêu cầu thêm
+
+                            </label>
+
+
+                            <textarea
+                                name="customer_note"
+                                id="customer_note"
+                                class="
+                                    form-control
+                                    booking-note
+                                    @error('customer_note')
+                                        is-invalid
+                                    @enderror
+                                "
+                                rows="5"
+                                maxlength="1000"
+                                placeholder="Ví dụ: Xe có tiếng kêu khi phanh..."
+                                aria-invalid="{{
+                                    $errors->has(
+                                        'customer_note'
+                                    )
+                                        ? 'true'
+                                        : 'false'
+                                }}"
+                            >{{ old('customer_note') }}</textarea>
+
+                        </section>
 
                     </div>
 
                 </div>
 
 
-                <div class="logout-modal-actions">
+                {{-- SUMMARY --}}
+                <aside
+                    class="summary-card"
+                    data-reveal="right"
+                >
 
-                    <button
-                        type="button"
-                        class="logout-modal-cancel"
-                        onclick="closeLogoutModal()"
-                    >
-                        Tiếp tục làm việc
-                    </button>
+                    <div class="summary-content">
+
+                        <div class="summary-icon">
+
+                            <i class="bi bi-receipt-cutoff"></i>
+
+                        </div>
 
 
-                    <form
-                        method="POST"
-                        action="{{ route('logout') }}"
-                        style="margin: 0;"
-                    >
+                        <div class="summary-title">
+                            Tóm tắt lịch hẹn
+                        </div>
 
-                        @csrf
+
+                        <div class="summary-row">
+
+                            <span class="summary-label">
+                                Dịch vụ đã chọn
+                            </span>
+
+                            <span
+                                id="selected-count"
+                                class="summary-value"
+                            >
+                                0
+                            </span>
+
+                        </div>
+
+
+                        <div class="summary-row">
+
+                            <span class="summary-label">
+                                Giá tham khảo
+                            </span>
+
+                            <span
+                                id="estimated-total"
+                                class="summary-value"
+                            >
+                                0 đ
+                            </span>
+
+                        </div>
+
+
+                        <div class="summary-row">
+
+                            <span class="summary-label">
+                                Thời gian dự kiến
+                            </span>
+
+                            <span
+                                id="estimated-duration"
+                                class="summary-value"
+                            >
+                                0 phút
+                            </span>
+
+                        </div>
 
 
                         <button
                             type="submit"
-                            class="logout-modal-submit"
-                            style="width: 100%;"
+                            class="booking-submit"
+                            id="booking-submit-button"
                         >
-                            Đăng xuất ngay
+
+                            <i class="bi bi-calendar2-check"></i>
+
+                            <span>
+                                Xác nhận đặt lịch
+                            </span>
+
                         </button>
 
-                    </form>
 
-                </div>
+                        <div
+                            class="
+                                small
+                                text-center
+                                mt-3
+                            "
+                            style="color: #93c5fd;"
+                        >
+
+                            Giá hiển thị là giá tham khảo
+                            trước khi kỹ thuật viên kiểm tra xe.
+
+                        </div>
+
+                    </div>
+
+                </aside>
 
             </div>
 
-        </div>
+        </form>
 
-    </div>
+    @endif
 
-@endauth
 
+    <a
+        href="{{ route('appointments.index') }}"
+        class="back-link"
+    >
+
+        <i class="bi bi-arrow-left"></i>
+
+        Quay lại Lịch hẹn của tôi
+
+    </a>
+
+</div>
+
+@endsection
+
+
+@push('scripts')
 
 <script>
-    function openLogoutModal() {
-        const modal =
-            document.getElementById(
-                'logoutModal'
-            );
-
-        if (!modal) {
-            return;
-        }
-
-        modal.classList.add('show');
-
-        document.body.style.overflow =
-            'hidden';
-    }
-
-
-    function closeLogoutModal() {
-        const modal =
-            document.getElementById(
-                'logoutModal'
-            );
-
-        if (!modal) {
-            return;
-        }
-
-        modal.classList.remove('show');
-
-        document.body.style.overflow =
-            '';
-    }
-
-
-    function handleLogoutOverlayClick(
-        event
-    ) {
-        if (
-            event.target.id
-            ===
-            'logoutModal'
-        ) {
-            closeLogoutModal();
-        }
-    }
-
-
     document.addEventListener(
-        'keydown',
-        function (event) {
+        'DOMContentLoaded',
+        function () {
+            const serviceCheckboxes =
+                document.querySelectorAll(
+                    '.service-checkbox'
+                );
 
-            if (
-                event.key
-                ===
-                'Escape'
-            ) {
-                closeLogoutModal();
+            const selectedCount =
+                document.getElementById(
+                    'selected-count'
+                );
+
+            const estimatedTotal =
+                document.getElementById(
+                    'estimated-total'
+                );
+
+            const estimatedDuration =
+                document.getElementById(
+                    'estimated-duration'
+                );
+
+            const appointmentDate =
+                document.getElementById(
+                    'appointment_date'
+                );
+
+            const appointmentTime =
+                document.getElementById(
+                    'appointment_time'
+                );
+
+            const bookingForm =
+                document.getElementById(
+                    'appointment-booking-form'
+                );
+
+            const bookingSubmitButton =
+                document.getElementById(
+                    'booking-submit-button'
+                );
+
+            const serverToday =
+                @json($todayHanoi);
+
+            const serverCurrentTime =
+                @json($currentTimeHanoi);
+
+
+            function updateSummary() {
+                let count = 0;
+                let total = 0;
+                let duration = 0;
+
+                serviceCheckboxes.forEach(
+                    function (checkbox) {
+                        if (!checkbox.checked) {
+                            return;
+                        }
+
+                        count++;
+
+                        total += Number(
+                            checkbox.dataset.price
+                            ?? 0
+                        );
+
+                        duration += Number(
+                            checkbox.dataset.duration
+                            ?? 0
+                        );
+                    }
+                );
+
+                if (selectedCount) {
+                    selectedCount.textContent =
+                        count;
+                }
+
+                if (estimatedTotal) {
+                    estimatedTotal.textContent =
+                        new Intl.NumberFormat(
+                            'vi-VN'
+                        ).format(total)
+                        + ' đ';
+                }
+
+                if (estimatedDuration) {
+                    estimatedDuration.textContent =
+                        duration
+                        + ' phút';
+                }
             }
 
+
+            function updateTimeMinimum() {
+                if (
+                    !appointmentDate
+                    ||
+                    !appointmentTime
+                ) {
+                    return;
+                }
+
+                if (
+                    appointmentDate.value
+                    === serverToday
+                ) {
+                    appointmentTime.min =
+                        serverCurrentTime;
+
+                    return;
+                }
+
+                appointmentTime.removeAttribute(
+                    'min'
+                );
+            }
+
+
+            serviceCheckboxes.forEach(
+                function (checkbox) {
+                    checkbox.addEventListener(
+                        'change',
+                        updateSummary
+                    );
+                }
+            );
+
+
+            if (appointmentDate) {
+                appointmentDate.addEventListener(
+                    'change',
+                    updateTimeMinimum
+                );
+            }
+
+
+            if (
+                bookingForm
+                &&
+                bookingSubmitButton
+            ) {
+                bookingForm.addEventListener(
+                    'submit',
+                    function () {
+                        bookingSubmitButton.disabled =
+                            true;
+
+                        bookingSubmitButton.innerHTML =
+                            `
+                                <span
+                                    class="spinner-border spinner-border-sm"
+                                    aria-hidden="true"
+                                ></span>
+
+                                <span>
+                                    Đang gửi lịch hẹn...
+                                </span>
+                            `;
+                    }
+                );
+            }
+
+
+            updateSummary();
+            updateTimeMinimum();
         }
     );
 </script>
+
+@endpush
