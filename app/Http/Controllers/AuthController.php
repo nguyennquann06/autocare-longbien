@@ -15,10 +15,21 @@ class AuthController extends Controller
 {
     /**
      * Hiển thị form đăng ký.
+     *
+     * User đã đăng nhập không được quay lại
+     * trang đăng ký.
      */
     public function showRegisterForm()
     {
-        return view('auth.register');
+        if (Auth::check()) {
+            return $this->redirectAuthenticatedUser();
+        }
+
+        return response()
+            ->view('auth.register')
+            ->withHeaders(
+                $this->authPageNoCacheHeaders()
+            );
     }
 
 
@@ -27,6 +38,10 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
+        if (Auth::check()) {
+            return $this->redirectAuthenticatedUser();
+        }
+
         /*
         |--------------------------------------------------------------------------
         | NORMALIZE INPUT
@@ -46,7 +61,6 @@ class AuthController extends Controller
                 )
             );
 
-
         $normalizedEmail =
             Str::lower(
                 trim(
@@ -57,7 +71,6 @@ class AuthController extends Controller
                     )
                 )
             );
-
 
         $request->merge([
             'name' =>
@@ -197,7 +210,6 @@ class AuthController extends Controller
                             $validated['password'],
                     ]);
 
-
                 $user
                     ->customer()
                     ->create([
@@ -222,18 +234,38 @@ class AuthController extends Controller
 
     /**
      * Hiển thị form đăng nhập.
+     *
+     * User đã đăng nhập không được render lại
+     * trang login.
      */
     public function showLoginForm()
     {
-        return view('auth.login');
+        if (Auth::check()) {
+            return $this->redirectAuthenticatedUser();
+        }
+
+        return response()
+            ->view('auth.login')
+            ->withHeaders(
+                $this->authPageNoCacheHeaders()
+            );
     }
 
 
     /**
-     * Xử lý đăng nhập email / mật khẩu.
+     * Đăng nhập email / mật khẩu.
      */
     public function login(Request $request)
     {
+        /*
+         * Không cho một session đang đăng nhập
+         * thực hiện đăng nhập lần thứ hai.
+         */
+        if (Auth::check()) {
+            return $this->redirectAuthenticatedUser();
+        }
+
+
         $request->merge([
             'email' =>
                 Str::lower(
@@ -312,26 +344,15 @@ class AuthController extends Controller
 
 
             if (!$user->role) {
-                Auth::logout();
+                $this->logoutCurrentSession(
+                    $request
+                );
 
-
-                $request
-                    ->session()
-                    ->invalidate();
-
-
-                $request
-                    ->session()
-                    ->regenerateToken();
-
-
-                return back()
-                    ->withErrors([
-                        'email' =>
-                            'Tài khoản chưa được phân quyền. Vui lòng liên hệ quản trị viên.',
-                    ])
-                    ->onlyInput(
-                        'email'
+                return redirect()
+                    ->route('login')
+                    ->with(
+                        'error',
+                        'Tài khoản chưa được phân quyền. Vui lòng liên hệ quản trị viên.'
                     );
             }
 
@@ -442,25 +463,17 @@ class AuthController extends Controller
             }
 
 
-            Auth::logout();
-
-
-            $request
-                ->session()
-                ->invalidate();
-
-
-            $request
-                ->session()
-                ->regenerateToken();
+            $this->logoutCurrentSession(
+                $request
+            );
 
 
             return redirect()
                 ->route('login')
-                ->withErrors([
-                    'email' =>
-                        'Vai trò tài khoản không hợp lệ.',
-                ]);
+                ->with(
+                    'error',
+                    'Vai trò tài khoản không hợp lệ.'
+                );
         }
 
 
@@ -480,9 +493,12 @@ class AuthController extends Controller
      */
     public function redirectToGoogle()
     {
+        /*
+         * Session đã đăng nhập thì không cho
+         * khởi tạo một OAuth login mới.
+         */
         if (Auth::check()) {
-            return redirect()
-                ->route('home');
+            return $this->redirectAuthenticatedUser();
         }
 
 
@@ -498,9 +514,12 @@ class AuthController extends Controller
     public function handleGoogleCallback(
         Request $request
     ) {
+        /*
+         * Trường hợp callback bị truy cập lại bằng
+         * Back / Refresh sau khi user đã đăng nhập.
+         */
         if (Auth::check()) {
-            return redirect()
-                ->route('home');
+            return $this->redirectAuthenticatedUser();
         }
 
 
@@ -558,10 +577,6 @@ class AuthController extends Controller
         |--------------------------------------------------------------------------
         | EMAIL VERIFICATION
         |--------------------------------------------------------------------------
-        |
-        | Google thường trả email_verified.
-        | Nếu provider trả rõ false thì không cho liên kết.
-        |
         */
 
         $rawVerified =
@@ -610,7 +625,7 @@ class AuthController extends Controller
                     ) {
                         /*
                         |--------------------------------------------------------------------------
-                        | ĐÃ LIÊN KẾT GOOGLE ID
+                        | GOOGLE ID ĐÃ ĐƯỢC LIÊN KẾT
                         |--------------------------------------------------------------------------
                         */
 
@@ -792,11 +807,8 @@ class AuthController extends Controller
                                     $googleId,
 
                                 /*
-                                 * Google Login không sử dụng
+                                 * Google Login không dùng
                                  * mật khẩu này.
-                                 *
-                                 * User model sẽ tự hash
-                                 * thông qua cast "hashed".
                                  */
                                 'password' =>
                                     Str::random(
@@ -871,6 +883,12 @@ class AuthController extends Controller
         }
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | LOGIN
+        |--------------------------------------------------------------------------
+        */
+
         Auth::login(
             $user
         );
@@ -883,7 +901,7 @@ class AuthController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | GIỮ INTENDED URL CHO ĐẶT LỊCH
+        | INTENDED APPOINTMENT URL
         |--------------------------------------------------------------------------
         */
 
@@ -924,10 +942,119 @@ class AuthController extends Controller
 
 
     /**
-     * Đăng xuất tài khoản.
+     * Đăng xuất.
      */
     public function logout(Request $request)
     {
+        $this->logoutCurrentSession(
+            $request
+        );
+
+
+        return redirect()
+            ->route('home')
+            ->with(
+                'success',
+                'Bạn đã đăng xuất thành công.'
+            );
+    }
+
+
+    /**
+     * Điều hướng một user đã đăng nhập
+     * về đúng khu vực theo role.
+     *
+     * Đây là lớp bảo vệ cho trường hợp:
+     * - bấm Back về /login;
+     * - refresh /login khi session còn hiệu lực;
+     * - truy cập trực tiếp /register;
+     * - truy cập lại Google callback.
+     */
+    private function redirectAuthenticatedUser()
+    {
+        $user =
+            Auth::user();
+
+
+        if (!$user) {
+            return redirect()
+                ->route('login');
+        }
+
+
+        $user->loadMissing(
+            'role'
+        );
+
+
+        $roleCode =
+            $user->role?->code;
+
+
+        if (
+            $roleCode
+            === 'CUSTOMER'
+        ) {
+            return redirect()
+                ->route(
+                    'customer.dashboard'
+                );
+        }
+
+
+        if (
+            $roleCode
+            === 'STAFF'
+            ||
+            $roleCode
+            === 'ADMIN'
+        ) {
+            return redirect()
+                ->route(
+                    'staff.dashboard'
+                );
+        }
+
+
+        if (
+            $roleCode
+            === 'TECHNICIAN'
+        ) {
+            return redirect()
+                ->route(
+                    'technician.service-orders.index'
+                );
+        }
+
+
+        /*
+         * Session không hợp lệ:
+         * không giữ user không có role hợp lệ.
+         */
+        $request =
+            request();
+
+
+        $this->logoutCurrentSession(
+            $request
+        );
+
+
+        return redirect()
+            ->route('login')
+            ->with(
+                'error',
+                'Vai trò tài khoản không hợp lệ.'
+            );
+    }
+
+
+    /**
+     * Logout + hủy session hiện tại.
+     */
+    private function logoutCurrentSession(
+        Request $request
+    ): void {
         Auth::logout();
 
 
@@ -939,14 +1066,25 @@ class AuthController extends Controller
         $request
             ->session()
             ->regenerateToken();
+    }
 
 
-        return redirect()
-            ->route('home')
-            ->with(
-                'success',
-                'Bạn đã đăng xuất thành công.'
-            );
+    /**
+     * Header chống browser cache cho
+     * trang Login / Register.
+     */
+    private function authPageNoCacheHeaders(): array
+    {
+        return [
+            'Cache-Control' =>
+                'no-store, no-cache, must-revalidate, max-age=0',
+
+            'Pragma' =>
+                'no-cache',
+
+            'Expires' =>
+                '0',
+        ];
     }
 
 
@@ -992,7 +1130,7 @@ class AuthController extends Controller
 
 
     /**
-     * Bảo đảm CUSTOMER có hồ sơ customer.
+     * Đảm bảo CUSTOMER có hồ sơ customer.
      */
     private function ensureCustomerProfile(
         User $user,
