@@ -851,6 +851,14 @@
     </script>
 
 
+    {{-- =====================================================
+        AUTHENTICATED BROWSER HISTORY CONTROL
+    ====================================================== --}}
+    @include(
+        'partials.browser-history-guard'
+    )
+
+
     @stack('scripts')
 
 </body>
