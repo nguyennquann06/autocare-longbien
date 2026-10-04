@@ -22,9 +22,11 @@
                 'CUSTOMER' =>
                     'customer.dashboard',
 
-                'STAFF',
-                'ADMIN' =>
+                'STAFF' =>
                     'staff.dashboard',
+
+                'ADMIN' =>
+                    'admin.dashboard',
 
                 'TECHNICIAN' =>
                     'technician.service-orders.index',
@@ -54,28 +56,6 @@
     <script>
         (() => {
             'use strict';
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | AUTOCARE BROWSER HISTORY GUARD
-            |--------------------------------------------------------------------------
-            |
-            | Mục tiêu:
-            |
-            | 1. User đã đăng nhập:
-            |    - Back từ trang chức năng
-            |      => Dashboard.
-            |
-            | 2. Back từ Dashboard:
-            |    - Không quay về snapshot Login/Home cũ.
-            |    - Mở modal xác nhận đăng xuất.
-            |
-            | 3. BFCache:
-            |    - Nếu browser restore một trang cũ từ memory,
-            |      reload lại để Laravel kiểm tra session thật.
-            |
-            */
 
 
             const dashboardUrl =
@@ -108,16 +88,8 @@
 
             /*
             |--------------------------------------------------------------------------
-            | BFCache PROTECTION
+            | BFCACHE PROTECTION
             |--------------------------------------------------------------------------
-            |
-            | Chrome / Edge có thể giữ nguyên HTML cũ
-            | trong Back-Forward Cache.
-            |
-            | Sau logout, nếu người dùng Back/Forward
-            | tới một snapshot cũ, ta buộc reload để
-            | backend kiểm tra session hiện tại.
-            |
             */
 
             window.addEventListener(
@@ -134,13 +106,8 @@
 
             /*
             |--------------------------------------------------------------------------
-            | OPEN EXISTING LOGOUT MODAL
+            | LOGOUT CONFIRMATION
             |--------------------------------------------------------------------------
-            |
-            | Không tạo modal mới.
-            | Dùng đúng modal của nút "Đăng xuất"
-            | trong role-nav.
-            |
             */
 
             function openLogoutConfirmation() {
@@ -181,17 +148,8 @@
 
             /*
             |--------------------------------------------------------------------------
-            | INSTALL HISTORY SENTINEL
+            | INSTALL HISTORY GUARD
             |--------------------------------------------------------------------------
-            |
-            | Tạo một history entry giả ngay phía
-            | trước trang hiện tại.
-            |
-            | Vì vậy khi user nhấn Back:
-            | - Browser không lập tức rời trang.
-            | - popstate chạy trước.
-            | - AutoCare quyết định hành vi.
-            |
             */
 
             function installGuard() {
@@ -243,12 +201,6 @@
             |--------------------------------------------------------------------------
             | RE-ARM
             |--------------------------------------------------------------------------
-            |
-            | Khi Back đã bị bắt lại mà user
-            | vẫn ở Dashboard, phải push sentinel
-            | thêm một lần để lần Back tiếp theo
-            | tiếp tục được kiểm soát.
-            |
             */
 
             function rearmGuard() {
@@ -285,10 +237,9 @@
 
 
                 /*
-                 * DASHBOARD
+                 * Nếu đang ở Dashboard của role hiện tại:
                  *
-                 * Back = hành vi giống nút Đăng xuất:
-                 * mở modal xác nhận.
+                 * Back => mở xác nhận đăng xuất.
                  */
                 if (
                     isDashboard
@@ -299,6 +250,7 @@
                     window.setTimeout(
                         function () {
                             openLogoutConfirmation();
+
 
                             isHandlingBack =
                                 false;
@@ -312,12 +264,19 @@
 
 
                 /*
-                 * TRANG CHỨC NĂNG
+                 * Nếu đang ở trang chức năng:
                  *
-                 * Back = quay thẳng về Dashboard.
+                 * CUSTOMER
+                 *     => Customer Dashboard
                  *
-                 * replace() để không tạo thêm
-                 * một history entry dư.
+                 * STAFF
+                 *     => Staff Dashboard
+                 *
+                 * ADMIN
+                 *     => Admin Dashboard
+                 *
+                 * TECHNICIAN
+                 *     => Công việc kỹ thuật viên
                  */
                 window.location.replace(
                     dashboardUrl

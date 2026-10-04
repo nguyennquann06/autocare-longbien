@@ -39,10 +39,6 @@
 
 
     <style>
-        /* =====================================================
-           AUTOCARE GLOBAL TOAST SYSTEM
-           ===================================================== */
-
         .autocare-toast-stack {
             position: fixed;
 
@@ -161,18 +157,6 @@
                     #3b82f6
                 );
 
-            box-shadow:
-                0 8px 18px
-                color-mix(
-                    in srgb,
-                    var(
-                        --toast-accent,
-                        #3b82f6
-                    )
-                    25%,
-                    transparent
-                );
-
             font-size: 17px;
         }
 
@@ -249,45 +233,29 @@
 
             color: #64748b;
 
-            background:
-                transparent;
+            background: transparent;
 
             cursor: pointer;
-
-            transition:
-                color 0.2s ease,
-                background 0.2s ease;
-        }
-
-
-        .autocare-toast-close:hover {
-            color: #0f172a;
-
-            background: #f1f5f9;
         }
 
 
         .autocare-toast-success {
-            --toast-accent:
-                #10b981;
+            --toast-accent: #10b981;
         }
 
 
         .autocare-toast-error {
-            --toast-accent:
-                #ef4444;
+            --toast-accent: #ef4444;
         }
 
 
         .autocare-toast-warning {
-            --toast-accent:
-                #f59e0b;
+            --toast-accent: #f59e0b;
         }
 
 
         .autocare-toast-info {
-            --toast-accent:
-                #3b82f6;
+            --toast-accent: #3b82f6;
         }
 
 
@@ -337,23 +305,6 @@
 
                 width: auto;
             }
-
-
-            .autocare-toast {
-                padding:
-                    14px 43px 14px 14px;
-            }
-        }
-
-
-        @media (
-            prefers-reduced-motion:
-            reduce
-        ) {
-            .autocare-toast,
-            .autocare-toast.is-hiding {
-                animation: none;
-            }
         }
     </style>
 
@@ -361,18 +312,12 @@
 
 <body>
 
-    {{-- =====================================================
-        TOP ANIMATED ACCENT
-    ====================================================== --}}
     <div
         class="autocare-top-accent"
         aria-hidden="true"
     ></div>
 
 
-    {{-- =====================================================
-        DECORATIVE BACKGROUND
-    ====================================================== --}}
     <div
         class="autocare-background"
         aria-hidden="true"
@@ -407,12 +352,46 @@
     {{-- =====================================================
         ROLE NAVIGATION
     ====================================================== --}}
-    @include('partials.role-nav')
+
+    @php
+        $layoutCurrentUser =
+            Auth::user();
+
+        if (
+            $layoutCurrentUser
+            &&
+            !$layoutCurrentUser
+                ->relationLoaded('role')
+        ) {
+            $layoutCurrentUser
+                ->load('role');
+        }
+
+        $layoutRoleCode =
+            $layoutCurrentUser
+                ?->role
+                ?->code;
+    @endphp
 
 
-    {{-- =====================================================
-        GLOBAL TOASTS
-    ====================================================== --}}
+    @if (
+        $layoutRoleCode
+        === 'ADMIN'
+    )
+
+        @include(
+            'partials.admin-nav'
+        )
+
+    @else
+
+        @include(
+            'partials.role-nav'
+        )
+
+    @endif
+
+
     <div
         id="autocareToastStack"
         class="autocare-toast-stack"
@@ -420,7 +399,6 @@
         aria-atomic="true"
     >
 
-        {{-- SUCCESS --}}
         @if (session('success'))
 
             <div
@@ -455,7 +433,6 @@
                     type="button"
                     class="autocare-toast-close"
                     data-toast-close
-                    aria-label="Đóng thông báo"
                 >
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -465,7 +442,6 @@
         @endif
 
 
-        {{-- ERROR FLASH --}}
         @if (session('error'))
 
             <div
@@ -500,7 +476,6 @@
                     type="button"
                     class="autocare-toast-close"
                     data-toast-close
-                    aria-label="Đóng thông báo"
                 >
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -510,7 +485,6 @@
         @endif
 
 
-        {{-- WARNING --}}
         @if (session('warning'))
 
             <div
@@ -545,7 +519,6 @@
                     type="button"
                     class="autocare-toast-close"
                     data-toast-close
-                    aria-label="Đóng thông báo"
                 >
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -555,7 +528,6 @@
         @endif
 
 
-        {{-- INFO --}}
         @if (session('info'))
 
             <div
@@ -590,7 +562,6 @@
                     type="button"
                     class="autocare-toast-close"
                     data-toast-close
-                    aria-label="Đóng thông báo"
                 >
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -600,7 +571,6 @@
         @endif
 
 
-        {{-- VALIDATION ERRORS --}}
         @if ($errors->any())
 
             @php
@@ -656,7 +626,6 @@
                     type="button"
                     class="autocare-toast-close"
                     data-toast-close
-                    aria-label="Đóng thông báo"
                 >
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -668,9 +637,6 @@
     </div>
 
 
-    {{-- =====================================================
-        PAGE CONTENT
-    ====================================================== --}}
     <main class="autocare-main">
 
         @yield('content')
@@ -678,9 +644,6 @@
     </main>
 
 
-    {{-- =====================================================
-        FOOTER
-    ====================================================== --}}
     <footer
         class="
             autocare-footer
@@ -713,12 +676,7 @@
                         AutoCare Long Biên
                     </div>
 
-                    <div
-                        class="
-                            small
-                            mt-1
-                        "
-                    >
+                    <div class="small mt-1">
                         Hệ thống thông tin quản lý
                         và hỗ trợ bảo dưỡng ô tô
                     </div>
@@ -751,9 +709,6 @@
     </footer>
 
 
-    {{-- =====================================================
-        SCROLL TO TOP
-    ====================================================== --}}
     <button
         id="scrollTopButton"
         type="button"
@@ -764,9 +719,6 @@
     </button>
 
 
-    {{-- =====================================================
-        GLOBAL TOAST SCRIPT
-    ====================================================== --}}
     <script>
         document.addEventListener(
             'DOMContentLoaded',
@@ -851,9 +803,6 @@
     </script>
 
 
-    {{-- =====================================================
-        AUTHENTICATED BROWSER HISTORY CONTROL
-    ====================================================== --}}
     @include(
         'partials.browser-history-guard'
     )

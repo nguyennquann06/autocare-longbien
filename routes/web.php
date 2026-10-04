@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\StaffPartController;
 use App\Http\Controllers\StaffServiceOrderController;
 use App\Http\Controllers\TechnicianServiceOrderController;
 use App\Http\Controllers\VehicleController;
+use App\Http\Middleware\RedirectAdminAfterAuthentication;
 use Illuminate\Support\Facades\Route;
 
 
@@ -65,6 +67,13 @@ Route::get(
 |--------------------------------------------------------------------------
 | AUTHENTICATION
 |--------------------------------------------------------------------------
+|
+| RedirectAdminAfterAuthentication chỉ can thiệp
+| khi session hiện tại thuộc ADMIN.
+|
+| CUSTOMER / STAFF / TECHNICIAN vẫn sử dụng
+| luồng đăng nhập hiện tại.
+|
 */
 
 Route::get(
@@ -73,9 +82,13 @@ Route::get(
         AuthController::class,
         'showRegisterForm',
     ]
-)->name(
-    'register'
-);
+)
+    ->middleware(
+        RedirectAdminAfterAuthentication::class
+    )
+    ->name(
+        'register'
+    );
 
 
 Route::post(
@@ -84,9 +97,13 @@ Route::post(
         AuthController::class,
         'register',
     ]
-)->name(
-    'register.submit'
-);
+)
+    ->middleware(
+        RedirectAdminAfterAuthentication::class
+    )
+    ->name(
+        'register.submit'
+    );
 
 
 Route::get(
@@ -95,9 +112,13 @@ Route::get(
         AuthController::class,
         'showLoginForm',
     ]
-)->name(
-    'login'
-);
+)
+    ->middleware(
+        RedirectAdminAfterAuthentication::class
+    )
+    ->name(
+        'login'
+    );
 
 
 Route::post(
@@ -106,15 +127,23 @@ Route::post(
         AuthController::class,
         'login',
     ]
-)->name(
-    'login.submit'
-);
+)
+    ->middleware(
+        RedirectAdminAfterAuthentication::class
+    )
+    ->name(
+        'login.submit'
+    );
 
 
 /*
 |--------------------------------------------------------------------------
 | GOOGLE OAUTH
 |--------------------------------------------------------------------------
+|
+| Google Login hiện chỉ dành cho CUSTOMER,
+| vì vậy không cần middleware ADMIN tại đây.
+|
 */
 
 Route::get(
@@ -143,10 +172,6 @@ Route::get(
 |--------------------------------------------------------------------------
 | LOGOUT
 |--------------------------------------------------------------------------
-|
-| Logout chỉ yêu cầu user đã đăng nhập.
-| Không giới hạn role.
-|
 */
 
 Route::post(
@@ -166,11 +191,46 @@ Route::post(
 
 /*
 |--------------------------------------------------------------------------
-| CUSTOMER AREA
+| ADMIN / GARAGE OWNER AREA
 |--------------------------------------------------------------------------
 |
-| Chỉ CUSTOMER được truy cập toàn bộ nhóm này.
+| ADMIN là chủ xưởng.
 |
+| /admin chỉ dành riêng cho ADMIN.
+|
+| ADMIN đồng thời vẫn được phép truy cập
+| toàn bộ nghiệp vụ STAFF ở nhóm route
+| STAFF OPERATIONS phía dưới.
+|
+*/
+
+Route::middleware([
+    'auth',
+    'role:ADMIN',
+])->prefix(
+    'admin'
+)->name(
+    'admin.'
+)->group(
+    function () {
+
+        Route::get(
+            '/dashboard',
+            [
+                AdminDashboardController::class,
+                'index',
+            ]
+        )->name(
+            'dashboard'
+        );
+    }
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| CUSTOMER AREA
+|--------------------------------------------------------------------------
 */
 
 Route::middleware([
@@ -320,7 +380,7 @@ Route::middleware([
 
         /*
         |--------------------------------------------------------------------------
-        | CUSTOMER APPOINTMENTS
+        | APPOINTMENTS
         |--------------------------------------------------------------------------
         */
 
@@ -439,18 +499,13 @@ Route::middleware([
 
 /*
 |--------------------------------------------------------------------------
-| STAFF AREA
+| STAFF OPERATIONS
 |--------------------------------------------------------------------------
 |
-| Giai đoạn 1.1A:
+| STAFF thực hiện nghiệp vụ vận hành.
 |
-| ADMIN tạm thời vẫn được phép truy cập
-| nghiệp vụ STAFF để không phá luồng hiện tại.
-|
-| Sang 1.1B:
-| - tạo /admin riêng;
-| - chuyển ADMIN về Admin Dashboard;
-| - tách ADMIN khỏi nghiệp vụ STAFF.
+| ADMIN là chủ xưởng nên có toàn bộ
+| quyền của STAFF.
 |
 */
 
@@ -622,7 +677,7 @@ Route::middleware([
 
         /*
         |--------------------------------------------------------------------------
-        | INVENTORY / PARTS
+        | INVENTORY
         |--------------------------------------------------------------------------
         */
 
@@ -665,6 +720,11 @@ Route::middleware([
 |--------------------------------------------------------------------------
 | TECHNICIAN AREA
 |--------------------------------------------------------------------------
+|
+| Quyền giám sát / can thiệp của ADMIN
+| đối với TECHNICIAN sẽ được xử lý
+| ở bước riêng sau.
+|
 */
 
 Route::middleware([
