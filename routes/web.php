@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
@@ -32,7 +33,9 @@ Route::get(
             'home'
         );
     }
-)->name('home');
+)->name(
+    'home'
+);
 
 
 /*
@@ -67,13 +70,6 @@ Route::get(
 |--------------------------------------------------------------------------
 | AUTHENTICATION
 |--------------------------------------------------------------------------
-|
-| RedirectAdminAfterAuthentication chỉ can thiệp
-| khi session hiện tại thuộc ADMIN.
-|
-| CUSTOMER / STAFF / TECHNICIAN vẫn sử dụng
-| luồng đăng nhập hiện tại.
-|
 */
 
 Route::get(
@@ -140,10 +136,6 @@ Route::post(
 |--------------------------------------------------------------------------
 | GOOGLE OAUTH
 |--------------------------------------------------------------------------
-|
-| Google Login hiện chỉ dành cho CUSTOMER,
-| vì vậy không cần middleware ADMIN tại đây.
-|
 */
 
 Route::get(
@@ -194,37 +186,81 @@ Route::post(
 | ADMIN / GARAGE OWNER AREA
 |--------------------------------------------------------------------------
 |
-| ADMIN là chủ xưởng.
+| ADMIN là Chủ xưởng.
 |
-| /admin chỉ dành riêng cho ADMIN.
-|
-| ADMIN đồng thời vẫn được phép truy cập
-| toàn bộ nghiệp vụ STAFF ở nhóm route
-| STAFF OPERATIONS phía dưới.
+| Chỉ ADMIN được truy cập /admin/*
 |
 */
 
 Route::middleware([
     'auth',
     'role:ADMIN',
-])->prefix(
-    'admin'
-)->name(
-    'admin.'
-)->group(
-    function () {
+])
+    ->prefix(
+        'admin'
+    )
+    ->name(
+        'admin.'
+    )
+    ->group(
+        function () {
 
-        Route::get(
-            '/dashboard',
-            [
-                AdminDashboardController::class,
-                'index',
-            ]
-        )->name(
-            'dashboard'
-        );
-    }
-);
+            /*
+            |--------------------------------------------------------------------------
+            | DASHBOARD
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                '/dashboard',
+                [
+                    AdminDashboardController::class,
+                    'index',
+                ]
+            )->name(
+                'dashboard'
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | USER MANAGEMENT
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                '/users',
+                [
+                    AdminUserController::class,
+                    'index',
+                ]
+            )->name(
+                'users.index'
+            );
+
+
+            Route::get(
+                '/users/{user}',
+                [
+                    AdminUserController::class,
+                    'show',
+                ]
+            )->name(
+                'users.show'
+            );
+
+
+            Route::patch(
+                '/users/{user}/role',
+                [
+                    AdminUserController::class,
+                    'updateRole',
+                ]
+            )->name(
+                'users.role.update'
+            );
+        }
+    );
 
 
 /*
@@ -258,7 +294,7 @@ Route::middleware([
 
         /*
         |--------------------------------------------------------------------------
-        | AI CHATBOT
+        | CHATBOT
         |--------------------------------------------------------------------------
         */
 
@@ -502,218 +538,219 @@ Route::middleware([
 | STAFF OPERATIONS
 |--------------------------------------------------------------------------
 |
-| STAFF thực hiện nghiệp vụ vận hành.
-|
-| ADMIN là chủ xưởng nên có toàn bộ
-| quyền của STAFF.
+| ADMIN là Chủ xưởng nên vẫn có toàn bộ
+| quyền nghiệp vụ của STAFF.
 |
 */
 
 Route::middleware([
     'auth',
     'role:STAFF,ADMIN',
-])->prefix(
-    'staff'
-)->name(
-    'staff.'
-)->group(
-    function () {
+])
+    ->prefix(
+        'staff'
+    )
+    ->name(
+        'staff.'
+    )
+    ->group(
+        function () {
 
-        /*
-        |--------------------------------------------------------------------------
-        | STAFF DASHBOARD
-        |--------------------------------------------------------------------------
-        */
+            /*
+            |--------------------------------------------------------------------------
+            | STAFF DASHBOARD
+            |--------------------------------------------------------------------------
+            */
 
-        Route::get(
-            '/dashboard',
-            [
-                StaffDashboardController::class,
-                'index',
-            ]
-        )->name(
-            'dashboard'
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | APPOINTMENTS
-        |--------------------------------------------------------------------------
-        */
-
-        Route::get(
-            '/appointments',
-            [
-                StaffAppointmentController::class,
-                'index',
-            ]
-        )->name(
-            'appointments.index'
-        );
+            Route::get(
+                '/dashboard',
+                [
+                    StaffDashboardController::class,
+                    'index',
+                ]
+            )->name(
+                'dashboard'
+            );
 
 
-        Route::patch(
-            '/appointments/{appointment}/status',
-            [
-                StaffAppointmentController::class,
-                'updateStatus',
-            ]
-        )->name(
-            'appointments.updateStatus'
-        );
+            /*
+            |--------------------------------------------------------------------------
+            | APPOINTMENTS
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                '/appointments',
+                [
+                    StaffAppointmentController::class,
+                    'index',
+                ]
+            )->name(
+                'appointments.index'
+            );
 
 
-        Route::get(
-            '/appointments/{appointment}',
-            [
-                StaffAppointmentController::class,
-                'show',
-            ]
-        )->name(
-            'appointments.show'
-        );
+            Route::patch(
+                '/appointments/{appointment}/status',
+                [
+                    StaffAppointmentController::class,
+                    'updateStatus',
+                ]
+            )->name(
+                'appointments.updateStatus'
+            );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | SERVICE ORDERS
-        |--------------------------------------------------------------------------
-        */
-
-        Route::get(
-            '/appointments/{appointment}/service-order/create',
-            [
-                StaffServiceOrderController::class,
-                'create',
-            ]
-        )->name(
-            'service-orders.create'
-        );
+            Route::get(
+                '/appointments/{appointment}',
+                [
+                    StaffAppointmentController::class,
+                    'show',
+                ]
+            )->name(
+                'appointments.show'
+            );
 
 
-        Route::post(
-            '/appointments/{appointment}/service-order',
-            [
-                StaffServiceOrderController::class,
-                'store',
-            ]
-        )->name(
-            'service-orders.store'
-        );
+            /*
+            |--------------------------------------------------------------------------
+            | SERVICE ORDERS
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                '/appointments/{appointment}/service-order/create',
+                [
+                    StaffServiceOrderController::class,
+                    'create',
+                ]
+            )->name(
+                'service-orders.create'
+            );
 
 
-        Route::get(
-            '/service-orders/{serviceOrder}',
-            [
-                StaffServiceOrderController::class,
-                'show',
-            ]
-        )->name(
-            'service-orders.show'
-        );
+            Route::post(
+                '/appointments/{appointment}/service-order',
+                [
+                    StaffServiceOrderController::class,
+                    'store',
+                ]
+            )->name(
+                'service-orders.store'
+            );
 
 
-        Route::post(
-            '/service-orders/{serviceOrder}/parts',
-            [
-                StaffServiceOrderController::class,
-                'addPart',
-            ]
-        )->name(
-            'service-orders.parts.store'
-        );
+            Route::get(
+                '/service-orders/{serviceOrder}',
+                [
+                    StaffServiceOrderController::class,
+                    'show',
+                ]
+            )->name(
+                'service-orders.show'
+            );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | INVOICES
-        |--------------------------------------------------------------------------
-        */
-
-        Route::get(
-            '/service-orders/{serviceOrder}/invoice/create',
-            [
-                StaffInvoiceController::class,
-                'create',
-            ]
-        )->name(
-            'invoices.create'
-        );
+            Route::post(
+                '/service-orders/{serviceOrder}/parts',
+                [
+                    StaffServiceOrderController::class,
+                    'addPart',
+                ]
+            )->name(
+                'service-orders.parts.store'
+            );
 
 
-        Route::post(
-            '/service-orders/{serviceOrder}/invoice',
-            [
-                StaffInvoiceController::class,
-                'store',
-            ]
-        )->name(
-            'invoices.store'
-        );
+            /*
+            |--------------------------------------------------------------------------
+            | INVOICES
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                '/service-orders/{serviceOrder}/invoice/create',
+                [
+                    StaffInvoiceController::class,
+                    'create',
+                ]
+            )->name(
+                'invoices.create'
+            );
 
 
-        Route::patch(
-            '/invoices/{invoice}/pay',
-            [
-                StaffInvoiceController::class,
-                'pay',
-            ]
-        )->name(
-            'invoices.pay'
-        );
+            Route::post(
+                '/service-orders/{serviceOrder}/invoice',
+                [
+                    StaffInvoiceController::class,
+                    'store',
+                ]
+            )->name(
+                'invoices.store'
+            );
 
 
-        Route::get(
-            '/invoices/{invoice}',
-            [
-                StaffInvoiceController::class,
-                'show',
-            ]
-        )->name(
-            'invoices.show'
-        );
+            Route::patch(
+                '/invoices/{invoice}/pay',
+                [
+                    StaffInvoiceController::class,
+                    'pay',
+                ]
+            )->name(
+                'invoices.pay'
+            );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | INVENTORY
-        |--------------------------------------------------------------------------
-        */
-
-        Route::get(
-            '/parts',
-            [
-                StaffPartController::class,
-                'index',
-            ]
-        )->name(
-            'parts.index'
-        );
+            Route::get(
+                '/invoices/{invoice}',
+                [
+                    StaffInvoiceController::class,
+                    'show',
+                ]
+            )->name(
+                'invoices.show'
+            );
 
 
-        Route::get(
-            '/parts/{part}/stock-in',
-            [
-                StaffPartController::class,
-                'showStockInForm',
-            ]
-        )->name(
-            'parts.stock-in.form'
-        );
+            /*
+            |--------------------------------------------------------------------------
+            | INVENTORY
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                '/parts',
+                [
+                    StaffPartController::class,
+                    'index',
+                ]
+            )->name(
+                'parts.index'
+            );
 
 
-        Route::post(
-            '/parts/{part}/stock-in',
-            [
-                StaffPartController::class,
-                'stockIn',
-            ]
-        )->name(
-            'parts.stock-in'
-        );
-    }
-);
+            Route::get(
+                '/parts/{part}/stock-in',
+                [
+                    StaffPartController::class,
+                    'showStockInForm',
+                ]
+            )->name(
+                'parts.stock-in.form'
+            );
+
+
+            Route::post(
+                '/parts/{part}/stock-in',
+                [
+                    StaffPartController::class,
+                    'stockIn',
+                ]
+            )->name(
+                'parts.stock-in'
+            );
+        }
+    );
 
 
 /*
@@ -721,74 +758,77 @@ Route::middleware([
 | TECHNICIAN AREA
 |--------------------------------------------------------------------------
 |
-| Quyền giám sát / can thiệp của ADMIN
-| đối với TECHNICIAN sẽ được xử lý
-| ở bước riêng sau.
+| Quyền giám sát/can thiệp của ADMIN
+| đối với TECHNICIAN sẽ được triển khai
+| ở bước riêng.
 |
 */
 
 Route::middleware([
     'auth',
     'role:TECHNICIAN',
-])->prefix(
-    'technician'
-)->name(
-    'technician.'
-)->group(
-    function () {
+])
+    ->prefix(
+        'technician'
+    )
+    ->name(
+        'technician.'
+    )
+    ->group(
+        function () {
 
-        Route::get(
-            '/service-orders',
-            [
-                TechnicianServiceOrderController::class,
-                'index',
-            ]
-        )->name(
-            'service-orders.index'
-        );
-
-
-        Route::get(
-            '/service-orders/{serviceOrder}',
-            [
-                TechnicianServiceOrderController::class,
-                'show',
-            ]
-        )->name(
-            'service-orders.show'
-        );
+            Route::get(
+                '/service-orders',
+                [
+                    TechnicianServiceOrderController::class,
+                    'index',
+                ]
+            )->name(
+                'service-orders.index'
+            );
 
 
-        Route::patch(
-            '/service-orders/{serviceOrder}/start',
-            [
-                TechnicianServiceOrderController::class,
-                'start',
-            ]
-        )->name(
-            'service-orders.start'
-        );
+            Route::get(
+                '/service-orders/{serviceOrder}',
+                [
+                    TechnicianServiceOrderController::class,
+                    'show',
+                ]
+            )->name(
+                'service-orders.show'
+            );
 
 
-        Route::patch(
-            '/service-orders/{serviceOrder}/items/{item}',
-            [
-                TechnicianServiceOrderController::class,
-                'updateItemStatus',
-            ]
-        )->name(
-            'service-orders.items.update'
-        );
+            Route::patch(
+                '/service-orders/{serviceOrder}/start',
+                [
+                    TechnicianServiceOrderController::class,
+                    'start',
+                ]
+            )->name(
+                'service-orders.start'
+            );
 
 
-        Route::patch(
-            '/service-orders/{serviceOrder}/complete',
-            [
-                TechnicianServiceOrderController::class,
-                'complete',
-            ]
-        )->name(
-            'service-orders.complete'
-        );
-    }
-);
+            Route::patch(
+                '/service-orders/{serviceOrder}/items/{item}',
+                [
+                    TechnicianServiceOrderController::class,
+                    'updateItemStatus',
+                ]
+            )->name(
+                'service-orders.items.update'
+            );
+
+
+            Route::patch(
+                '/service-orders/{serviceOrder}/complete',
+                [
+                    TechnicianServiceOrderController::class,
+                    'complete',
+                ]
+            )->name(
+                'service-orders.complete'
+            );
+        }
+    );
