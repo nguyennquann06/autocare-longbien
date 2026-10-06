@@ -14,14 +14,13 @@ use Illuminate\View\View;
 class AdminUserController extends Controller
 {
     /**
-     * Các role mà ADMIN được phép
-     * gán từ giao diện quản trị MVP.
+     * Các vai trò nhân sự có thể
+     * chuyển đổi qua lại.
      *
-     * Không cho tạo thêm ADMIN
-     * trực tiếp từ chức năng này.
+     * CUSTOMER và ADMIN là các
+     * nhóm tài khoản được bảo vệ.
      */
-    private const ASSIGNABLE_ROLES = [
-        'CUSTOMER',
+    private const WORKFORCE_ROLES = [
         'STAFF',
         'TECHNICIAN',
     ];
@@ -309,15 +308,19 @@ class AdminUserController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | ASSIGNABLE ROLES
+        | WORKFORCE ROLES
         |--------------------------------------------------------------------------
+        |
+        | Chỉ STAFF và TECHNICIAN
+        | được chuyển đổi qua lại.
+        |
         */
 
         $assignableRoles =
             Role::query()
                 ->whereIn(
                     'code',
-                    self::ASSIGNABLE_ROLES
+                    self::WORKFORCE_ROLES
                 )
                 ->orderBy(
                     'id'
@@ -362,7 +365,18 @@ class AdminUserController extends Controller
 
     /**
      * ADMIN thay đổi vai trò
-     * của một tài khoản.
+     * của tài khoản nhân sự.
+     *
+     * Chỉ cho phép:
+     *
+     * STAFF <-> TECHNICIAN
+     *
+     * Không cho phép:
+     *
+     * CUSTOMER -> bất kỳ role khác
+     * ADMIN    -> bất kỳ role khác
+     * STAFF    -> CUSTOMER / ADMIN
+     * TECHNICIAN -> CUSTOMER / ADMIN
      */
     public function updateRole(
         Request $request,
@@ -392,6 +406,10 @@ class AdminUserController extends Controller
         |--------------------------------------------------------------------------
         | VALIDATION
         |--------------------------------------------------------------------------
+        |
+        | Ngay từ đầu chỉ chấp nhận
+        | STAFF hoặc TECHNICIAN.
+        |
         */
 
         $validated =
@@ -399,11 +417,13 @@ class AdminUserController extends Controller
                 [
                     'role' => [
                         'bail',
+
                         'required',
+
                         'string',
 
                         Rule::in(
-                            self::ASSIGNABLE_ROLES
+                            self::WORKFORCE_ROLES
                         ),
                     ],
                 ],
@@ -415,35 +435,14 @@ class AdminUserController extends Controller
                         'Vai trò không hợp lệ.',
 
                     'role.in' =>
-                        'Chỉ được phân quyền CUSTOMER, STAFF hoặc TECHNICIAN.',
+                        'Chỉ có thể chuyển đổi giữa STAFF và TECHNICIAN.',
                 ]
             );
 
 
         /*
         |--------------------------------------------------------------------------
-        | PROTECT CURRENT ADMIN
-        |--------------------------------------------------------------------------
-        |
-        | ADMIN đang đăng nhập không được
-        | tự hạ quyền chính mình.
-        |
-        */
-
-        if (
-            auth()->id()
-            === $user->id
-        ) {
-            throw ValidationException::withMessages([
-                'role' =>
-                    'Bạn không thể tự thay đổi vai trò của tài khoản ADMIN đang đăng nhập.',
-            ]);
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE IN TRANSACTION
+        | TRANSACTION
         |--------------------------------------------------------------------------
         */
 
@@ -470,22 +469,22 @@ class AdminUserController extends Controller
 
 
                 $currentRole =
-                    $lockedUser
-                        ->role
-                        ?->code;
+                    strtoupper(
+                        (string)
+                        $lockedUser
+                            ->role
+                            ?->code
+                    );
+
+
+                $newRoleCode =
+                    $validated['role'];
 
 
                 /*
                 |--------------------------------------------------------------------------
-                | PROTECT ALL ADMIN ACCOUNTS
+                | PROTECT ADMIN
                 |--------------------------------------------------------------------------
-                |
-                | Trong MVP:
-                |
-                | - Không hạ quyền ADMIN.
-                | - Không thay role ADMIN.
-                | - Không tạo ADMIN mới qua UI.
-                |
                 */
 
                 if (
@@ -494,13 +493,59 @@ class AdminUserController extends Controller
                 ) {
                     throw ValidationException::withMessages([
                         'role' =>
-                            'Không thể thay đổi vai trò của tài khoản ADMIN từ chức năng này.',
+                            'Tài khoản ADMIN được bảo vệ và không thể thay đổi vai trò từ chức năng này.',
                     ]);
                 }
 
 
-                $newRoleCode =
-                    $validated['role'];
+                /*
+                |--------------------------------------------------------------------------
+                | PROTECT CUSTOMER
+                |--------------------------------------------------------------------------
+                |
+                | CUSTOMER có thể đang gắn với:
+                |
+                | - hồ sơ khách hàng;
+                | - phương tiện;
+                | - lịch hẹn;
+                | - phiếu bảo dưỡng;
+                | - hóa đơn;
+                | - lịch sử bảo dưỡng.
+                |
+                | Vì vậy không biến tài khoản
+                | CUSTOMER thành tài khoản nhân sự.
+                |
+                */
+
+                if (
+                    $currentRole
+                    === 'CUSTOMER'
+                ) {
+                    throw ValidationException::withMessages([
+                        'role' =>
+                            'Tài khoản CUSTOMER được giữ riêng cho khách hàng và không thể chuyển thành STAFF hoặc TECHNICIAN.',
+                    ]);
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | INVALID CURRENT ROLE
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !in_array(
+                        $currentRole,
+                        self::WORKFORCE_ROLES,
+                        true
+                    )
+                ) {
+                    throw ValidationException::withMessages([
+                        'role' =>
+                            'Vai trò hiện tại của tài khoản không hỗ trợ chuyển đổi.',
+                    ]);
+                }
 
 
                 /*
@@ -525,8 +570,11 @@ class AdminUserController extends Controller
                 | TECHNICIAN ACTIVE WORK GUARD
                 |--------------------------------------------------------------------------
                 |
-                | Không được đổi TECHNICIAN sang role khác
-                | nếu còn phiếu RECEIVED / IN_PROGRESS.
+                | TECHNICIAN không được chuyển
+                | sang STAFF nếu còn phiếu:
+                |
+                | RECEIVED
+                | IN_PROGRESS
                 |
                 */
 
@@ -535,7 +583,7 @@ class AdminUserController extends Controller
                     === 'TECHNICIAN'
                     &&
                     $newRoleCode
-                    !== 'TECHNICIAN'
+                    === 'STAFF'
                 ) {
                     $activeOrders =
                         $lockedUser
@@ -559,7 +607,7 @@ class AdminUserController extends Controller
                     ) {
                         throw ValidationException::withMessages([
                             'role' =>
-                                'Kỹ thuật viên đang có phiếu bảo dưỡng chưa hoàn thành. Vui lòng hoàn tất hoặc phân công lại công việc trước khi đổi vai trò.',
+                                'Kỹ thuật viên đang có phiếu bảo dưỡng chưa hoàn thành. Vui lòng hoàn tất hoặc phân công lại công việc trước khi chuyển sang STAFF.',
                         ]);
                     }
                 }
@@ -590,50 +638,13 @@ class AdminUserController extends Controller
 
                 /*
                 |--------------------------------------------------------------------------
-                | CUSTOMER PROFILE
-                |--------------------------------------------------------------------------
-                |
-                | Khi STAFF / TECHNICIAN
-                | chuyển sang CUSTOMER:
-                |
-                | nếu chưa có Customer profile
-                | thì tạo tự động.
-                |
-                | Khi CUSTOMER chuyển sang
-                | STAFF / TECHNICIAN:
-                |
-                | KHÔNG xóa Customer profile.
-                | KHÔNG xóa xe.
-                | KHÔNG xóa lịch hẹn.
-                | KHÔNG xóa lịch sử bảo dưỡng.
-                | KHÔNG xóa hóa đơn.
-                |
-                */
-
-                if (
-                    $newRoleCode
-                    === 'CUSTOMER'
-                    &&
-                    !$lockedUser
-                        ->customer()
-                        ->exists()
-                ) {
-                    $lockedUser
-                        ->customer()
-                        ->create([
-                            'full_name' =>
-                                $lockedUser->name,
-
-                            'email' =>
-                                $lockedUser->email,
-                        ]);
-                }
-
-
-                /*
-                |--------------------------------------------------------------------------
                 | UPDATE ROLE
                 |--------------------------------------------------------------------------
+                |
+                | Không tạo Customer profile.
+                | Không xóa Customer profile.
+                | Không tác động xe/lịch sử/hóa đơn.
+                |
                 */
 
                 $lockedUser->update([
@@ -651,7 +662,7 @@ class AdminUserController extends Controller
             )
             ->with(
                 'success',
-                'Đã cập nhật vai trò tài khoản thành công.'
+                'Đã cập nhật vai trò nhân sự thành công.'
             );
     }
 }

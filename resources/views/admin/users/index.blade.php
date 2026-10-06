@@ -149,12 +149,13 @@
 
         font-weight: 900;
 
-        letter-spacing: -0.05em;
+        letter-spacing:
+            -0.05em;
     }
 
 
     .admin-users-header p {
-        max-width: 760px;
+        max-width: 790px;
 
         margin:
             10px 0 0;
@@ -573,7 +574,8 @@
 
         text-transform: uppercase;
 
-        letter-spacing: 0.05em;
+        letter-spacing:
+            0.05em;
     }
 
 
@@ -903,7 +905,8 @@
     }
 
 
-    .admin-protected-badge {
+    .admin-protected-badge,
+    .admin-customer-fixed-badge {
         display: inline-flex;
 
         align-items: center;
@@ -915,21 +918,35 @@
         padding:
             7px 10px;
 
-        border:
-            1px solid
-            #ddd6fe;
-
         border-radius: 9px;
-
-        color: #6d28d9;
-
-        background: #f5f3ff;
 
         font-size: 8px;
 
         font-weight: 850;
 
         white-space: nowrap;
+    }
+
+
+    .admin-protected-badge {
+        border:
+            1px solid
+            #ddd6fe;
+
+        color: #6d28d9;
+
+        background: #f5f3ff;
+    }
+
+
+    .admin-customer-fixed-badge {
+        border:
+            1px solid
+            #bae6fd;
+
+        color: #0369a1;
+
+        background: #f0f9ff;
     }
 
 
@@ -1060,10 +1077,11 @@
 
 
             <p>
-                Theo dõi tài khoản, kiểm tra vai trò
-                và quản lý quyền truy cập của CUSTOMER,
-                STAFF và TECHNICIAN trong hệ thống
-                AutoCare Long Biên.
+                CUSTOMER được giữ riêng để bảo toàn
+                hồ sơ khách hàng, phương tiện và lịch sử dịch vụ.
+                ADMIN được bảo vệ quyền quản trị.
+                Chỉ STAFF và TECHNICIAN có thể chuyển đổi
+                vai trò nhân sự cho nhau.
             </p>
 
         </div>
@@ -1083,8 +1101,8 @@
                 admin-user-summary-card
                 {{
                     $roleCode === ''
-                    ? 'active'
-                    : ''
+                        ? 'active'
+                        : ''
                 }}
             "
         >
@@ -1221,7 +1239,6 @@
                             >
 
                                 {{ $role->name }}
-
                                 ({{ $role->code }})
 
                             </option>
@@ -1287,6 +1304,7 @@
                     </strong>
 
                     kết quả.
+
 
                     @if ($keyword !== '')
 
@@ -1625,8 +1643,14 @@
 
 
                                     @if (
-                                        $userRoleCode
-                                        !== 'ADMIN'
+                                        in_array(
+                                            $userRoleCode,
+                                            [
+                                                'STAFF',
+                                                'TECHNICIAN',
+                                            ],
+                                            true
+                                        )
                                     )
 
                                         <a
@@ -1648,7 +1672,23 @@
 
                                         </a>
 
-                                    @else
+                                    @elseif (
+                                        $userRoleCode
+                                        === 'CUSTOMER'
+                                    )
+
+                                        <span class="admin-customer-fixed-badge">
+
+                                            <i class="bi bi-person-lock"></i>
+
+                                            Khách hàng
+
+                                        </span>
+
+                                    @elseif (
+                                        $userRoleCode
+                                        === 'ADMIN'
+                                    )
 
                                         <span class="admin-protected-badge">
 

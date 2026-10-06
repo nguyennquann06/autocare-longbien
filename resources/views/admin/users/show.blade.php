@@ -49,7 +49,12 @@
 
         box-shadow:
             0 25px 65px
-            rgba(15, 23, 42, 0.18);
+            rgba(
+                15,
+                23,
+                42,
+                0.18
+            );
     }
 
 
@@ -69,7 +74,12 @@
         background:
             radial-gradient(
                 circle,
-                rgba(103, 232, 249, 0.30),
+                rgba(
+                    103,
+                    232,
+                    249,
+                    0.30
+                ),
                 transparent 68%
             );
     }
@@ -144,7 +154,12 @@
 
         border:
             3px solid
-            rgba(255, 255, 255, 0.25);
+            rgba(
+                255,
+                255,
+                255,
+                0.25
+            );
     }
 
 
@@ -188,7 +203,10 @@
         grid-template-columns:
             repeat(
                 2,
-                minmax(0, 1fr)
+                minmax(
+                    0,
+                    1fr
+                )
             );
 
         gap: 20px;
@@ -202,12 +220,22 @@
 
         border:
             1px solid
-            rgba(255, 255, 255, 0.88);
+            rgba(
+                255,
+                255,
+                255,
+                0.88
+            );
 
         border-radius: 20px;
 
         background:
-            rgba(255, 255, 255, 0.95);
+            rgba(
+                255,
+                255,
+                255,
+                0.95
+            );
 
         box-shadow:
             var(--ac-shadow);
@@ -215,7 +243,8 @@
 
 
     .admin-detail-panel-header {
-        padding: 19px 22px;
+        padding:
+            19px 22px;
 
         border-bottom:
             1px solid
@@ -248,7 +277,8 @@
 
 
     .admin-detail-panel-body {
-        padding: 21px 22px;
+        padding:
+            21px 22px;
     }
 
 
@@ -257,11 +287,15 @@
 
         grid-template-columns:
             150px
-            minmax(0, 1fr);
+            minmax(
+                0,
+                1fr
+            );
 
         gap: 14px;
 
-        padding: 10px 0;
+        padding:
+            10px 0;
 
         border-bottom:
             1px solid
@@ -371,12 +405,22 @@
 
         border:
             1px solid
-            rgba(255, 255, 255, 0.88);
+            rgba(
+                255,
+                255,
+                255,
+                0.88
+            );
 
         border-radius: 20px;
 
         background:
-            rgba(255, 255, 255, 0.95);
+            rgba(
+                255,
+                255,
+                255,
+                0.95
+            );
 
         box-shadow:
             var(--ac-shadow);
@@ -388,8 +432,12 @@
 
         box-shadow:
             0 0 0 3px
-            rgba(99, 102, 241, 0.10),
-
+            rgba(
+                99,
+                102,
+                241,
+                0.10
+            ),
             var(--ac-shadow);
     }
 
@@ -461,7 +509,12 @@
 
         box-shadow:
             0 0 0 3px
-            rgba(99, 102, 241, 0.10);
+            rgba(
+                99,
+                102,
+                241,
+                0.10
+            );
     }
 
 
@@ -470,7 +523,12 @@
 
         box-shadow:
             0 0 0 3px
-            rgba(239, 68, 68, 0.10);
+            rgba(
+                239,
+                68,
+                68,
+                0.10
+            );
     }
 
 
@@ -562,6 +620,15 @@
     }
 
 
+    .admin-role-customer-locked {
+        border-color: #bae6fd;
+
+        color: #075985;
+
+        background: #f0f9ff;
+    }
+
+
     /*
     |--------------------------------------------------------------------------
     | STATISTICS
@@ -574,7 +641,10 @@
         grid-template-columns:
             repeat(
                 4,
-                minmax(0, 1fr)
+                minmax(
+                    0,
+                    1fr
+                )
             );
 
         gap: 12px;
@@ -593,7 +663,12 @@
         border-radius: 16px;
 
         background:
-            rgba(255, 255, 255, 0.95);
+            rgba(
+                255,
+                255,
+                255,
+                0.95
+            );
     }
 
 
@@ -633,7 +708,10 @@
         grid-template-columns:
             repeat(
                 2,
-                minmax(0, 1fr)
+                minmax(
+                    0,
+                    1fr
+                )
             );
 
         gap: 12px;
@@ -759,7 +837,9 @@
 
 <div class="container admin-user-detail">
 
-    {{-- HEADER --}}
+    {{-- =====================================================
+        HEADER
+    ====================================================== --}}
 
     <section class="admin-user-detail-header">
 
@@ -813,7 +893,9 @@
     </section>
 
 
-    {{-- ROLE MANAGEMENT --}}
+    {{-- =====================================================
+        ROLE MANAGEMENT
+    ====================================================== --}}
 
     <section
         id="role-management"
@@ -835,6 +917,8 @@
 
         <div class="admin-role-panel-body">
 
+            {{-- ADMIN --}}
+
             @if (
                 $user->role?->code
                 === 'ADMIN'
@@ -854,7 +938,56 @@
 
                 </div>
 
-            @else
+
+            {{-- CUSTOMER --}}
+
+            @elseif (
+                $user->role?->code
+                === 'CUSTOMER'
+            )
+
+                <div
+                    class="
+                        admin-role-locked
+                        admin-role-customer-locked
+                    "
+                >
+
+                    <strong>
+                        Tài khoản CUSTOMER được giữ cố định.
+                    </strong>
+
+                    <br>
+
+                    Tài khoản khách hàng có thể liên kết
+                    với hồ sơ cá nhân, phương tiện,
+                    lịch hẹn, phiếu bảo dưỡng,
+                    hóa đơn và lịch sử sử dụng dịch vụ.
+
+                    <br><br>
+
+                    Vì vậy hệ thống không chuyển
+                    CUSTOMER thành STAFF hoặc TECHNICIAN.
+
+                    Tài khoản nhân sự sẽ được
+                    ADMIN tạo riêng ở chức năng
+                    quản lý nhân sự.
+
+                </div>
+
+
+            {{-- STAFF / TECHNICIAN --}}
+
+            @elseif (
+                in_array(
+                    $user->role?->code,
+                    [
+                        'STAFF',
+                        'TECHNICIAN',
+                    ],
+                    true
+                )
+            )
 
                 <form
                     method="POST"
@@ -875,7 +1008,7 @@
                     <div class="admin-role-field">
 
                         <label for="role">
-                            Vai trò mới
+                            Vai trò nhân sự
                         </label>
 
 
@@ -923,19 +1056,22 @@
 
                         <div class="admin-role-help">
 
-                            <strong>CUSTOMER:</strong>
-                            khách hàng sử dụng dịch vụ.
+                            Chức năng này chỉ dùng
+                            để chuyển đổi vai trò
+                            trong nhóm nhân sự.
 
-                            <br>
+                            <br><br>
 
                             <strong>STAFF:</strong>
-                            nhân viên vận hành garage.
+                            nhân viên tiếp nhận,
+                            vận hành nghiệp vụ garage.
 
                             <br>
 
                             <strong>TECHNICIAN:</strong>
                             kỹ thuật viên thực hiện
-                            các phiếu bảo dưỡng được phân công.
+                            các phiếu bảo dưỡng
+                            được phân công.
 
                         </div>
 
@@ -960,10 +1096,10 @@
                                 <br>
 
                                 Hệ thống sẽ không cho phép
-                                chuyển sang vai trò khác
-                                cho đến khi các công việc
-                                đang phụ trách được hoàn tất
-                                hoặc phân công lại.
+                                chuyển sang STAFF cho đến khi
+                                các phiếu đang ở trạng thái
+                                RECEIVED hoặc IN_PROGRESS
+                                được hoàn tất hoặc phân công lại.
 
                             </div>
 
@@ -986,6 +1122,24 @@
 
                 </form>
 
+
+            {{-- UNKNOWN --}}
+
+            @else
+
+                <div class="admin-role-locked">
+
+                    <strong>
+                        Vai trò hiện tại không hỗ trợ thay đổi.
+                    </strong>
+
+                    <br>
+
+                    Vui lòng kiểm tra lại dữ liệu
+                    vai trò của tài khoản.
+
+                </div>
+
             @endif
 
         </div>
@@ -993,7 +1147,9 @@
     </section>
 
 
-    {{-- ACCOUNT INFORMATION --}}
+    {{-- =====================================================
+        ACCOUNT INFORMATION
+    ====================================================== --}}
 
     <section class="admin-detail-grid">
 
@@ -1181,6 +1337,10 @@
         </div>
 
 
+        {{-- =====================================================
+            ACTIVITY SUMMARY
+        ====================================================== --}}
+
         <div class="admin-detail-panel">
 
             <div class="admin-detail-panel-header">
@@ -1205,7 +1365,12 @@
                     </div>
 
                     <div class="admin-detail-value">
-                        {{ $user->created_service_orders_count }}
+
+                        {{
+                            $user
+                                ->created_service_orders_count
+                        }}
+
                     </div>
 
                 </div>
@@ -1218,7 +1383,12 @@
                     </div>
 
                     <div class="admin-detail-value">
-                        {{ $user->technician_service_orders_count }}
+
+                        {{
+                            $user
+                                ->technician_service_orders_count
+                        }}
+
                     </div>
 
                 </div>
@@ -1231,7 +1401,12 @@
                     </div>
 
                     <div class="admin-detail-value">
-                        {{ $user->inventory_transactions_count }}
+
+                        {{
+                            $user
+                                ->inventory_transactions_count
+                        }}
+
                     </div>
 
                 </div>
@@ -1244,7 +1419,12 @@
                     </div>
 
                     <div class="admin-detail-value">
-                        {{ $user->created_invoices_count }}
+
+                        {{
+                            $user
+                                ->created_invoices_count
+                        }}
+
                     </div>
 
                 </div>
@@ -1256,7 +1436,9 @@
     </section>
 
 
-    {{-- CUSTOMER DATA --}}
+    {{-- =====================================================
+        CUSTOMER DATA
+    ====================================================== --}}
 
     @if ($customer)
 
@@ -1463,6 +1645,7 @@
                                     <div class="admin-vehicle-meta">
 
                                         Năm:
+
                                         {{
                                             $vehicle->manufacture_year
                                             ?: '—'
@@ -1471,6 +1654,7 @@
                                         <br>
 
                                         Nhiên liệu:
+
                                         {{
                                             $vehicle->fuel_type
                                             ?: '—'
