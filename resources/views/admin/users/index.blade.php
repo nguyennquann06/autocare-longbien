@@ -12,14 +12,11 @@
 <style>
     .admin-users-page {
         width: 100%;
-
         max-width: 1420px;
 
-        margin:
-            0 auto;
+        margin: 0 auto;
 
-        padding-bottom:
-            50px;
+        padding-bottom: 50px;
     }
 
 
@@ -34,14 +31,11 @@
 
         overflow: hidden;
 
-        margin-bottom:
-            22px;
+        margin-bottom: 22px;
 
-        padding:
-            32px;
+        padding: 32px;
 
-        border-radius:
-            25px;
+        border-radius: 25px;
 
         color: white;
 
@@ -105,8 +99,7 @@
 
         gap: 7px;
 
-        margin-bottom:
-            14px;
+        margin-bottom: 14px;
 
         padding:
             7px 11px;
@@ -120,8 +113,7 @@
                 0.16
             );
 
-        border-radius:
-            999px;
+        border-radius: 999px;
 
         color: #dbeafe;
 
@@ -133,17 +125,13 @@
                 0.08
             );
 
-        font-size:
-            9px;
+        font-size: 9px;
 
-        font-weight:
-            900;
+        font-weight: 900;
 
-        text-transform:
-            uppercase;
+        text-transform: uppercase;
 
-        letter-spacing:
-            0.08em;
+        letter-spacing: 0.08em;
     }
 
 
@@ -159,35 +147,29 @@
                 3.2rem
             );
 
-        font-weight:
-            900;
+        font-weight: 900;
 
-        letter-spacing:
-            -0.05em;
+        letter-spacing: -0.05em;
     }
 
 
     .admin-users-header p {
-        max-width:
-            720px;
+        max-width: 760px;
 
         margin:
             10px 0 0;
 
-        color:
-            #cbd5e1;
+        color: #cbd5e1;
 
-        font-size:
-            13px;
+        font-size: 13px;
 
-        line-height:
-            1.75;
+        line-height: 1.75;
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | ROLE SUMMARY
+    | SUMMARY
     |--------------------------------------------------------------------------
     */
 
@@ -205,14 +187,14 @@
 
         gap: 12px;
 
-        margin-bottom:
-            20px;
+        margin-bottom: 20px;
     }
 
 
     .admin-user-summary-card {
-        padding:
-            17px;
+        display: block;
+
+        padding: 17px;
 
         border:
             1px solid
@@ -223,8 +205,9 @@
                 0.88
             );
 
-        border-radius:
-            17px;
+        border-radius: 17px;
+
+        color: inherit;
 
         background:
             rgba(
@@ -242,39 +225,79 @@
                 42,
                 0.07
             );
+
+        text-decoration: none;
+
+        transition:
+            transform 0.2s ease,
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+
+    .admin-user-summary-card:hover {
+        color: inherit;
+
+        transform:
+            translateY(-3px);
+
+        border-color:
+            #a5b4fc;
+
+        box-shadow:
+            0 20px 48px
+            rgba(
+                79,
+                70,
+                229,
+                0.13
+            );
+    }
+
+
+    .admin-user-summary-card.active {
+        border-color:
+            #6366f1;
+
+        background:
+            linear-gradient(
+                135deg,
+                #eef2ff,
+                #ffffff
+            );
+
+        box-shadow:
+            0 0 0 2px
+            rgba(
+                99,
+                102,
+                241,
+                0.09
+            );
     }
 
 
     .admin-user-summary-label {
-        color:
-            #64748b;
+        color: #64748b;
 
-        font-size:
-            9px;
+        font-size: 9px;
 
-        font-weight:
-            900;
+        font-weight: 900;
 
-        text-transform:
-            uppercase;
+        text-transform: uppercase;
 
-        letter-spacing:
-            0.05em;
+        letter-spacing: 0.05em;
     }
 
 
     .admin-user-summary-value {
-        margin-top:
-            4px;
+        margin-top: 4px;
 
-        color:
-            #0f172a;
+        color: #0f172a;
 
-        font-size:
-            23px;
+        font-size: 23px;
 
-        font-weight:
-            900;
+        font-weight: 900;
     }
 
 
@@ -296,8 +319,7 @@
                 0.88
             );
 
-        border-radius:
-            21px;
+        border-radius: 21px;
 
         background:
             rgba(
@@ -322,15 +344,13 @@
     */
 
     .admin-users-filter {
-        padding:
-            20px;
+        padding: 20px;
 
         border-bottom:
             1px solid
             #e2e8f0;
 
-        background:
-            #f8fafc;
+        background: #f8fafc;
     }
 
 
@@ -355,31 +375,24 @@
     .admin-filter-group label {
         display: block;
 
-        margin-bottom:
-            6px;
+        margin-bottom: 6px;
 
-        color:
-            #475569;
+        color: #475569;
 
-        font-size:
-            9px;
+        font-size: 9px;
 
-        font-weight:
-            900;
+        font-weight: 900;
 
-        text-transform:
-            uppercase;
+        text-transform: uppercase;
 
-        letter-spacing:
-            0.05em;
+        letter-spacing: 0.05em;
     }
 
 
     .admin-filter-control {
         width: 100%;
 
-        min-height:
-            43px;
+        min-height: 43px;
 
         padding:
             9px 12px;
@@ -388,25 +401,20 @@
             1px solid
             #cbd5e1;
 
-        border-radius:
-            11px;
+        border-radius: 11px;
 
-        color:
-            #0f172a;
+        color: #0f172a;
 
-        background:
-            white;
+        background: white;
 
-        font-size:
-            12px;
+        font-size: 12px;
 
         outline: none;
     }
 
 
     .admin-filter-control:focus {
-        border-color:
-            #6366f1;
+        border-color: #6366f1;
 
         box-shadow:
             0 0 0 3px
@@ -421,34 +429,26 @@
 
     .admin-filter-button,
     .admin-filter-reset {
-        min-height:
-            43px;
+        min-height: 43px;
 
         padding:
             9px 15px;
 
-        display:
-            inline-flex;
+        display: inline-flex;
 
-        align-items:
-            center;
+        align-items: center;
 
-        justify-content:
-            center;
+        justify-content: center;
 
         gap: 7px;
 
-        border-radius:
-            11px;
+        border-radius: 11px;
 
-        font-size:
-            11px;
+        font-size: 11px;
 
-        font-weight:
-            850;
+        font-weight: 850;
 
-        text-decoration:
-            none;
+        text-decoration: none;
     }
 
 
@@ -463,6 +463,8 @@
                 #2563eb,
                 #4f46e5
             );
+
+        cursor: pointer;
     }
 
 
@@ -471,17 +473,22 @@
             1px solid
             #cbd5e1;
 
-        color:
-            #475569;
+        color: #475569;
 
-        background:
-            white;
+        background: white;
+    }
+
+
+    .admin-filter-reset:hover {
+        color: #0f172a;
+
+        background: #f1f5f9;
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | RESULT HEADER
+    | RESULT
     |--------------------------------------------------------------------------
     */
 
@@ -505,26 +512,20 @@
 
 
     .admin-users-result-title {
-        color:
-            #0f172a;
+        color: #0f172a;
 
-        font-size:
-            14px;
+        font-size: 14px;
 
-        font-weight:
-            900;
+        font-weight: 900;
     }
 
 
     .admin-users-result-meta {
-        margin-top:
-            3px;
+        margin-top: 3px;
 
-        color:
-            #64748b;
+        color: #64748b;
 
-        font-size:
-            10px;
+        font-size: 10px;
     }
 
 
@@ -542,91 +543,107 @@
     .admin-users-table {
         width: 100%;
 
-        border-collapse:
-            collapse;
+        border-collapse: collapse;
     }
 
 
     .admin-users-table th,
     .admin-users-table td {
         padding:
-            14px 18px;
+            14px 16px;
 
         border-bottom:
             1px solid
             #edf2f7;
 
-        text-align:
-            left;
+        text-align: left;
 
-        vertical-align:
-            middle;
+        vertical-align: middle;
     }
 
 
     .admin-users-table th {
-        color:
-            #64748b;
+        color: #64748b;
 
-        background:
-            #f8fafc;
+        background: #f8fafc;
 
-        font-size:
-            9px;
+        font-size: 9px;
 
-        font-weight:
-            900;
+        font-weight: 900;
 
-        text-transform:
-            uppercase;
+        text-transform: uppercase;
 
-        letter-spacing:
-            0.05em;
+        letter-spacing: 0.05em;
     }
 
 
     .admin-users-table td {
-        color:
-            #475569;
+        color: #475569;
 
-        font-size:
-            11px;
+        font-size: 11px;
     }
 
+
+    .admin-users-table tbody tr {
+        transition:
+            background 0.18s ease;
+    }
+
+
+    .admin-users-table tbody tr:hover {
+        background:
+            rgba(
+                248,
+                250,
+                252,
+                0.75
+            );
+    }
+
+
+    .admin-users-table tbody tr.current-user-row {
+        background:
+            rgba(
+                245,
+                243,
+                255,
+                0.70
+            );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACCOUNT
+    |--------------------------------------------------------------------------
+    */
 
     .admin-user-main {
         display: flex;
 
-        align-items:
-            center;
+        align-items: center;
 
         gap: 10px;
 
-        min-width:
-            210px;
+        min-width: 210px;
     }
 
 
     .admin-user-avatar {
-        width: 39px;
-        height: 39px;
+        width: 40px;
+        height: 40px;
 
-        flex:
-            0 0 auto;
+        flex: 0 0 auto;
 
         display: flex;
 
-        align-items:
-            center;
+        align-items: center;
 
-        justify-content:
-            center;
+        justify-content: center;
 
-        border-radius:
-            50%;
+        border-radius: 50%;
 
-        color:
-            #4338ca;
+        color: #4338ca;
 
         background:
             linear-gradient(
@@ -635,181 +652,311 @@
                 #dbeafe
             );
 
-        font-size:
-            12px;
+        font-size: 12px;
 
-        font-weight:
-            900;
+        font-weight: 900;
     }
 
 
     .admin-user-name {
-        color:
-            #0f172a;
+        color: #0f172a;
 
-        font-size:
-            11px;
+        font-size: 11px;
 
-        font-weight:
-            900;
+        font-weight: 900;
     }
 
 
     .admin-user-email {
-        margin-top:
-            3px;
+        margin-top: 3px;
 
-        color:
-            #64748b;
+        color: #64748b;
 
-        font-size:
-            10px;
+        font-size: 10px;
     }
 
 
-    .admin-role-badge {
-        display:
-            inline-flex;
+    .admin-current-badge {
+        display: inline-flex;
 
-        align-items:
-            center;
+        margin-left: 5px;
+
+        padding:
+            3px 6px;
+
+        border-radius: 999px;
+
+        color: #7c3aed;
+
+        background: #f3e8ff;
+
+        font-size: 7px;
+
+        font-weight: 900;
+
+        text-transform: uppercase;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ROLE
+    |--------------------------------------------------------------------------
+    */
+
+    .admin-role-badge {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 5px;
 
         padding:
             5px 9px;
 
-        border-radius:
-            999px;
+        border-radius: 999px;
 
-        font-size:
-            8px;
+        font-size: 8px;
 
-        font-weight:
-            900;
+        font-weight: 900;
+
+        white-space: nowrap;
     }
 
 
     .admin-role-customer {
-        color:
-            #0369a1;
+        color: #0369a1;
 
-        background:
-            #e0f2fe;
+        background: #e0f2fe;
     }
 
 
     .admin-role-staff {
-        color:
-            #047857;
+        color: #047857;
 
-        background:
-            #d1fae5;
+        background: #d1fae5;
     }
 
 
     .admin-role-technician {
-        color:
-            #b45309;
+        color: #b45309;
 
-        background:
-            #fef3c7;
+        background: #fef3c7;
     }
 
 
     .admin-role-admin {
-        color:
-            #6d28d9;
+        color: #6d28d9;
 
-        background:
-            #ede9fe;
+        background: #ede9fe;
     }
 
 
     .admin-role-unknown {
-        color:
-            #475569;
+        color: #475569;
 
-        background:
-            #e2e8f0;
+        background: #e2e8f0;
     }
 
 
-    .admin-google-badge {
-        display:
-            inline-flex;
+    /*
+    |--------------------------------------------------------------------------
+    | STATUS BADGES
+    |--------------------------------------------------------------------------
+    */
 
-        align-items:
-            center;
+    .admin-google-badge,
+    .admin-profile-badge {
+        display: inline-flex;
+
+        align-items: center;
 
         gap: 5px;
 
         padding:
             5px 8px;
 
-        border-radius:
-            999px;
+        border-radius: 999px;
 
-        color:
-            #166534;
+        font-size: 8px;
 
-        background:
-            #dcfce7;
+        font-weight: 850;
 
-        font-size:
-            8px;
+        white-space: nowrap;
+    }
 
-        font-weight:
-            850;
+
+    .admin-google-badge {
+        color: #166534;
+
+        background: #dcfce7;
     }
 
 
     .admin-google-none {
-        color:
-            #64748b;
+        color: #64748b;
 
-        background:
-            #f1f5f9;
+        background: #f1f5f9;
     }
 
 
-    .admin-current-badge {
-        display:
-            inline-flex;
+    .admin-profile-yes {
+        color: #166534;
 
-        margin-left:
-            5px;
+        background: #dcfce7;
+    }
+
+
+    .admin-profile-none {
+        color: #64748b;
+
+        background: #f1f5f9;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACTIONS
+    |--------------------------------------------------------------------------
+    */
+
+    .admin-user-actions {
+        min-width: 185px;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 7px;
+    }
+
+
+    .admin-user-action {
+        min-height: 34px;
 
         padding:
-            3px 6px;
+            7px 10px;
 
-        border-radius:
-            999px;
+        display: inline-flex;
 
-        color:
-            #7c3aed;
+        align-items: center;
 
-        background:
-            #f3e8ff;
+        justify-content: center;
 
-        font-size:
-            7px;
+        gap: 6px;
 
-        font-weight:
-            900;
+        border-radius: 9px;
 
-        text-transform:
-            uppercase;
+        text-decoration: none;
+
+        font-size: 9px;
+
+        font-weight: 850;
+
+        white-space: nowrap;
+
+        transition:
+            transform 0.18s ease,
+            background 0.18s ease;
     }
 
+
+    .admin-user-action:hover {
+        transform:
+            translateY(-1px);
+    }
+
+
+    .admin-user-action-view {
+        border:
+            1px solid
+            #bfdbfe;
+
+        color: #1d4ed8;
+
+        background: #eff6ff;
+    }
+
+
+    .admin-user-action-view:hover {
+        color: #1e40af;
+
+        background: #dbeafe;
+    }
+
+
+    .admin-user-action-role {
+        border:
+            1px solid
+            #ddd6fe;
+
+        color: #6d28d9;
+
+        background: #f5f3ff;
+    }
+
+
+    .admin-user-action-role:hover {
+        color: #5b21b6;
+
+        background: #ede9fe;
+    }
+
+
+    .admin-protected-badge {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 5px;
+
+        min-height: 34px;
+
+        padding:
+            7px 10px;
+
+        border:
+            1px solid
+            #ddd6fe;
+
+        border-radius: 9px;
+
+        color: #6d28d9;
+
+        background: #f5f3ff;
+
+        font-size: 8px;
+
+        font-weight: 850;
+
+        white-space: nowrap;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EMPTY
+    |--------------------------------------------------------------------------
+    */
 
     .admin-users-empty {
         padding:
-            40px 20px;
+            42px 20px !important;
 
         color:
-            #64748b;
+            #64748b !important;
 
         text-align:
-            center;
+            center !important;
+    }
+
+
+    .admin-users-empty-icon {
+        margin-bottom: 10px;
+
+        color: #94a3b8;
+
+        font-size: 26px;
     }
 
 
@@ -825,11 +972,16 @@
     }
 
 
-    .admin-users-pagination
-    nav {
+    .admin-users-pagination nav {
         margin: 0;
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESPONSIVE
+    |--------------------------------------------------------------------------
+    */
 
     @media (max-width: 1199px) {
         .admin-users-summary {
@@ -868,14 +1020,12 @@
 
     @media (max-width: 575px) {
         .admin-users-summary {
-            grid-template-columns:
-                1fr;
+            grid-template-columns: 1fr;
         }
 
 
         .admin-users-header {
-            padding:
-                24px;
+            padding: 24px;
         }
     }
 </style>
@@ -887,13 +1037,20 @@
 
 <div class="container admin-users-page">
 
+    {{-- =====================================================
+        HEADER
+    ====================================================== --}}
+
     <section class="admin-users-header">
 
         <div class="admin-users-header-content">
 
             <div class="admin-users-chip">
+
                 <i class="bi bi-people-fill"></i>
-                Quản trị tài khoản
+
+                Quản trị tài khoản & phân quyền
+
             </div>
 
 
@@ -903,9 +1060,9 @@
 
 
             <p>
-                Theo dõi toàn bộ tài khoản
-                CUSTOMER, STAFF, TECHNICIAN
-                và ADMIN đang sử dụng
+                Theo dõi tài khoản, kiểm tra vai trò
+                và quản lý quyền truy cập của CUSTOMER,
+                STAFF và TECHNICIAN trong hệ thống
                 AutoCare Long Biên.
             </p>
 
@@ -914,9 +1071,23 @@
     </section>
 
 
+    {{-- =====================================================
+        SUMMARY / QUICK FILTER
+    ====================================================== --}}
+
     <section class="admin-users-summary">
 
-        <div class="admin-user-summary-card">
+        <a
+            href="{{ route('admin.users.index') }}"
+            class="
+                admin-user-summary-card
+                {{
+                    $roleCode === ''
+                    ? 'active'
+                    : ''
+                }}
+            "
+        >
 
             <div class="admin-user-summary-label">
                 Tất cả
@@ -926,12 +1097,35 @@
                 {{ $totalUsers }}
             </div>
 
-        </div>
+        </a>
 
 
-        @foreach ($roles as $role)
+        @foreach (
+            $roles
+            as $role
+        )
 
-            <div class="admin-user-summary-card">
+            <a
+                href="{{ route(
+                    'admin.users.index',
+                    [
+                        'role' =>
+                            $role->code,
+                    ]
+                ) }}"
+                class="
+                    admin-user-summary-card
+                    {{
+                        $roleCode
+                        ===
+                        strtoupper(
+                            $role->code
+                        )
+                            ? 'active'
+                            : ''
+                    }}
+                "
+            >
 
                 <div class="admin-user-summary-label">
                     {{ $role->code }}
@@ -948,14 +1142,20 @@
 
                 </div>
 
-            </div>
+            </a>
 
         @endforeach
 
     </section>
 
 
+    {{-- =====================================================
+        USER MANAGEMENT
+    ====================================================== --}}
+
     <section class="admin-users-panel">
+
+        {{-- FILTER --}}
 
         <div class="admin-users-filter">
 
@@ -968,8 +1168,9 @@
                 <div class="admin-filter-group">
 
                     <label for="admin-user-search">
-                        Tìm kiếm
+                        Tìm kiếm tài khoản
                     </label>
+
 
                     <input
                         id="admin-user-search"
@@ -979,6 +1180,7 @@
                         class="admin-filter-control"
                         placeholder="Tên, email hoặc ID..."
                         maxlength="120"
+                        autocomplete="off"
                     >
 
                 </div>
@@ -989,6 +1191,7 @@
                     <label for="admin-role-filter">
                         Vai trò
                     </label>
+
 
                     <select
                         id="admin-role-filter"
@@ -1001,7 +1204,10 @@
                         </option>
 
 
-                        @foreach ($roles as $role)
+                        @foreach (
+                            $roles
+                            as $role
+                        )
 
                             <option
                                 value="{{ $role->code }}"
@@ -1013,8 +1219,11 @@
                                     )
                                 )
                             >
+
                                 {{ $role->name }}
+
                                 ({{ $role->code }})
+
                             </option>
 
                         @endforeach
@@ -1052,6 +1261,8 @@
         </div>
 
 
+        {{-- RESULT --}}
+
         <div class="admin-users-result">
 
             <div>
@@ -1060,13 +1271,43 @@
                     Danh sách tài khoản
                 </div>
 
+
                 <div class="admin-users-result-meta">
 
                     Hiển thị
-                    {{ $users->count() }}
+
+                    <strong>
+                        {{ $users->count() }}
+                    </strong>
+
                     /
-                    {{ $users->total() }}
+
+                    <strong>
+                        {{ $users->total() }}
+                    </strong>
+
                     kết quả.
+
+                    @if ($keyword !== '')
+
+                        Từ khóa:
+
+                        <strong>
+                            "{{ $keyword }}"
+                        </strong>
+
+                    @endif
+
+
+                    @if ($roleCode !== '')
+
+                        · Vai trò:
+
+                        <strong>
+                            {{ $roleCode }}
+                        </strong>
+
+                    @endif
 
                 </div>
 
@@ -1074,6 +1315,8 @@
 
         </div>
 
+
+        {{-- TABLE --}}
 
         <div class="admin-users-table-wrapper">
 
@@ -1083,17 +1326,33 @@
 
                     <tr>
 
-                        <th>ID</th>
+                        <th>
+                            ID
+                        </th>
 
-                        <th>Tài khoản</th>
+                        <th>
+                            Tài khoản
+                        </th>
 
-                        <th>Vai trò</th>
+                        <th>
+                            Vai trò
+                        </th>
 
-                        <th>Google</th>
+                        <th>
+                            Google
+                        </th>
 
-                        <th>Hồ sơ khách</th>
+                        <th>
+                            Hồ sơ khách
+                        </th>
 
-                        <th>Ngày tạo</th>
+                        <th>
+                            Ngày tạo
+                        </th>
+
+                        <th>
+                            Thao tác
+                        </th>
 
                     </tr>
 
@@ -1112,6 +1371,7 @@
                                 $user
                                     ->role
                                     ?->code;
+
 
                             $roleClass =
                                 match (
@@ -1132,15 +1392,52 @@
                                     default =>
                                         'admin-role-unknown',
                                 };
+
+
+                            $roleIcon =
+                                match (
+                                    $userRoleCode
+                                ) {
+                                    'CUSTOMER' =>
+                                        'bi-person-fill',
+
+                                    'STAFF' =>
+                                        'bi-person-workspace',
+
+                                    'TECHNICIAN' =>
+                                        'bi-tools',
+
+                                    'ADMIN' =>
+                                        'bi-shield-lock-fill',
+
+                                    default =>
+                                        'bi-question-circle',
+                                };
+
+
+                            $isCurrentUser =
+                                auth()->id()
+                                ===
+                                $user->id;
                         @endphp
 
 
-                        <tr>
+                        <tr
+                            class="{{
+                                $isCurrentUser
+                                    ? 'current-user-row'
+                                    : ''
+                            }}"
+                        >
+
+                            {{-- ID --}}
 
                             <td>
                                 #{{ $user->id }}
                             </td>
 
+
+                            {{-- ACCOUNT --}}
 
                             <td>
 
@@ -1167,14 +1464,11 @@
 
                                             {{ $user->name }}
 
-                                            @if (
-                                                auth()->id()
-                                                ===
-                                                $user->id
-                                            )
+
+                                            @if ($isCurrentUser)
 
                                                 <span class="admin-current-badge">
-                                                    Bạn
+                                                    Tài khoản của bạn
                                                 </span>
 
                                             @endif
@@ -1193,6 +1487,8 @@
                             </td>
 
 
+                            {{-- ROLE --}}
+
                             <td>
 
                                 <span
@@ -1201,6 +1497,13 @@
                                         {{ $roleClass }}
                                     "
                                 >
+
+                                    <i
+                                        class="
+                                            bi
+                                            {{ $roleIcon }}
+                                        "
+                                    ></i>
 
                                     {{
                                         $userRoleCode
@@ -1211,6 +1514,8 @@
 
                             </td>
 
+
+                            {{-- GOOGLE --}}
 
                             <td>
 
@@ -1232,7 +1537,9 @@
                                             admin-google-none
                                         "
                                     >
+
                                         Chưa liên kết
+
                                     </span>
 
                                 @endif
@@ -1240,20 +1547,44 @@
                             </td>
 
 
+                            {{-- CUSTOMER PROFILE --}}
+
                             <td>
 
                                 @if ($user->customer)
 
-                                    Có
+                                    <span
+                                        class="
+                                            admin-profile-badge
+                                            admin-profile-yes
+                                        "
+                                    >
+
+                                        <i class="bi bi-check-lg"></i>
+
+                                        Có hồ sơ
+
+                                    </span>
 
                                 @else
 
-                                    —
+                                    <span
+                                        class="
+                                            admin-profile-badge
+                                            admin-profile-none
+                                        "
+                                    >
+
+                                        Không có
+
+                                    </span>
 
                                 @endif
 
                             </td>
 
+
+                            {{-- CREATED AT --}}
 
                             <td>
 
@@ -1268,6 +1599,71 @@
 
                             </td>
 
+
+                            {{-- ACTIONS --}}
+
+                            <td>
+
+                                <div class="admin-user-actions">
+
+                                    <a
+                                        href="{{ route(
+                                            'admin.users.show',
+                                            $user->id
+                                        ) }}"
+                                        class="
+                                            admin-user-action
+                                            admin-user-action-view
+                                        "
+                                    >
+
+                                        <i class="bi bi-eye"></i>
+
+                                        Chi tiết
+
+                                    </a>
+
+
+                                    @if (
+                                        $userRoleCode
+                                        !== 'ADMIN'
+                                    )
+
+                                        <a
+                                            href="{{
+                                                route(
+                                                    'admin.users.show',
+                                                    $user->id
+                                                )
+                                            }}#role-management"
+                                            class="
+                                                admin-user-action
+                                                admin-user-action-role
+                                            "
+                                        >
+
+                                            <i class="bi bi-shield-check"></i>
+
+                                            Phân quyền
+
+                                        </a>
+
+                                    @else
+
+                                        <span class="admin-protected-badge">
+
+                                            <i class="bi bi-lock-fill"></i>
+
+                                            Bảo vệ
+
+                                        </span>
+
+                                    @endif
+
+                                </div>
+
+                            </td>
+
                         </tr>
 
                     @empty
@@ -1275,12 +1671,25 @@
                         <tr>
 
                             <td
-                                colspan="6"
+                                colspan="7"
                                 class="admin-users-empty"
                             >
 
-                                Không tìm thấy
-                                tài khoản phù hợp.
+                                <div class="admin-users-empty-icon">
+
+                                    <i class="bi bi-search"></i>
+
+                                </div>
+
+
+                                <strong>
+                                    Không tìm thấy tài khoản phù hợp.
+                                </strong>
+
+                                <br>
+
+                                Hãy thử thay đổi từ khóa
+                                hoặc bộ lọc vai trò.
 
                             </td>
 
@@ -1294,6 +1703,8 @@
 
         </div>
 
+
+        {{-- PAGINATION --}}
 
         @if (
             $users

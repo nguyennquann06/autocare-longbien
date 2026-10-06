@@ -2,6 +2,7 @@
     $adminNavUser =
         Auth::user();
 
+
     if (
         $adminNavUser
         &&
@@ -159,6 +160,12 @@
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | MENU
+    |--------------------------------------------------------------------------
+    */
+
     .admin-owner-menu {
         flex: 1;
 
@@ -198,13 +205,13 @@
         min-height: 39px;
 
         padding:
-            9px 11px;
+            9px 10px;
 
         display: inline-flex;
 
         align-items: center;
 
-        gap: 7px;
+        gap: 6px;
 
         border-radius: 10px;
 
@@ -214,7 +221,7 @@
 
         white-space: nowrap;
 
-        font-size: 11px;
+        font-size: 10px;
 
         font-weight: 750;
 
@@ -260,6 +267,12 @@
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | ACCOUNT
+    |--------------------------------------------------------------------------
+    */
+
     .admin-owner-account {
         display: flex;
 
@@ -267,8 +280,7 @@
 
         gap: 9px;
 
-        padding:
-            5px;
+        padding: 5px;
 
         border:
             1px solid
@@ -380,7 +392,7 @@
 
         cursor: pointer;
 
-        font-size: 11px;
+        font-size: 10px;
 
         font-weight: 800;
     }
@@ -388,16 +400,16 @@
 
     /*
     |--------------------------------------------------------------------------
-    | MOBILE
+    | RESPONSIVE
     |--------------------------------------------------------------------------
     */
 
-    @media (max-width: 1100px) {
+    @media (max-width: 1250px) {
         .admin-owner-navbar-inner {
             flex-wrap: wrap;
 
             padding:
-                11px 0;
+                10px 0;
         }
 
 
@@ -406,12 +418,15 @@
 
             flex-basis: 100%;
 
-            justify-content: space-between;
+            justify-content:
+                space-between;
         }
 
 
         .admin-owner-links {
             overflow-x: auto;
+
+            scrollbar-width: thin;
         }
     }
 
@@ -670,6 +685,8 @@
 
             <div class="admin-owner-links">
 
+                {{-- DASHBOARD --}}
+
                 <a
                     href="{{ route('admin.dashboard') }}"
                     class="
@@ -691,6 +708,31 @@
                 </a>
 
 
+                {{-- USER MANAGEMENT --}}
+
+                <a
+                    href="{{ route('admin.users.index') }}"
+                    class="
+                        admin-owner-link
+                        {{
+                            request()->routeIs(
+                                'admin.users.*'
+                            )
+                                ? 'active'
+                                : ''
+                        }}
+                    "
+                >
+
+                    <i class="bi bi-people-fill"></i>
+
+                    Tài khoản
+
+                </a>
+
+
+                {{-- STAFF OPERATIONS --}}
+
                 <a
                     href="{{ route('staff.dashboard') }}"
                     class="
@@ -711,6 +753,8 @@
 
                 </a>
 
+
+                {{-- MAINTENANCE --}}
 
                 <a
                     href="{{ route('staff.appointments.index') }}"
@@ -735,6 +779,8 @@
                 </a>
 
 
+                {{-- INVENTORY --}}
+
                 <a
                     href="{{ route('staff.parts.index') }}"
                     class="
@@ -755,6 +801,8 @@
 
                 </a>
 
+
+                {{-- SERVICES --}}
 
                 <a
                     href="{{ route('services.index') }}"
@@ -830,6 +878,10 @@
 </header>
 
 
+{{-- =====================================================
+    LOGOUT MODAL
+====================================================== --}}
+
 <div
     id="logoutModal"
     class="admin-logout-modal-overlay"
@@ -846,7 +898,9 @@
         <div class="admin-logout-modal-body">
 
             <div class="admin-logout-modal-icon">
+
                 <i class="bi bi-box-arrow-right"></i>
+
             </div>
 
 
@@ -859,9 +913,13 @@
 
 
             <p class="admin-logout-modal-description">
+
                 Bạn đang đăng nhập với quyền
                 Chủ xưởng / Quản trị viên.
-                Xác nhận kết thúc phiên làm việc hiện tại.
+
+                Xác nhận kết thúc phiên
+                làm việc hiện tại.
+
             </p>
 
 

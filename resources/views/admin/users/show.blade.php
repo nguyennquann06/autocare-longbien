@@ -12,7 +12,6 @@
 <style>
     .admin-user-detail {
         width: 100%;
-
         max-width: 1280px;
 
         margin: 0 auto;
@@ -368,6 +367,8 @@
 
         overflow: hidden;
 
+        scroll-margin-top: 110px;
+
         border:
             1px solid
             rgba(255, 255, 255, 0.88);
@@ -378,6 +379,17 @@
             rgba(255, 255, 255, 0.95);
 
         box-shadow:
+            var(--ac-shadow);
+    }
+
+
+    .admin-role-panel:target {
+        border-color: #818cf8;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(99, 102, 241, 0.10),
+
             var(--ac-shadow);
     }
 
@@ -416,8 +428,7 @@
 
         text-transform: uppercase;
 
-        letter-spacing:
-            0.05em;
+        letter-spacing: 0.05em;
     }
 
 
@@ -553,7 +564,7 @@
 
     /*
     |--------------------------------------------------------------------------
-    | USER STATISTICS
+    | STATISTICS
     |--------------------------------------------------------------------------
     */
 
@@ -748,9 +759,7 @@
 
 <div class="container admin-user-detail">
 
-    {{-- =====================================================
-        HEADER
-    ====================================================== --}}
+    {{-- HEADER --}}
 
     <section class="admin-user-detail-header">
 
@@ -804,11 +813,12 @@
     </section>
 
 
-    {{-- =====================================================
-        ROLE MANAGEMENT
-    ====================================================== --}}
+    {{-- ROLE MANAGEMENT --}}
 
-    <section class="admin-role-panel">
+    <section
+        id="role-management"
+        class="admin-role-panel"
+    >
 
         <div class="admin-detail-panel-header">
 
@@ -880,11 +890,6 @@
                                         : ''
                                 }}
                             "
-                            aria-invalid="{{
-                                $errors->has('role')
-                                    ? 'true'
-                                    : 'false'
-                            }}"
                         >
 
                             @foreach (
@@ -907,7 +912,6 @@
                                 >
 
                                     {{ $role->name }}
-
                                     ({{ $role->code }})
 
                                 </option>
@@ -989,9 +993,7 @@
     </section>
 
 
-    {{-- =====================================================
-        ACCOUNT INFORMATION
-    ====================================================== --}}
+    {{-- ACCOUNT INFORMATION --}}
 
     <section class="admin-detail-grid">
 
@@ -1179,10 +1181,6 @@
         </div>
 
 
-        {{-- =====================================================
-            ACTIVITY SUMMARY
-        ====================================================== --}}
-
         <div class="admin-detail-panel">
 
             <div class="admin-detail-panel-header">
@@ -1207,12 +1205,7 @@
                     </div>
 
                     <div class="admin-detail-value">
-
-                        {{
-                            $user
-                                ->created_service_orders_count
-                        }}
-
+                        {{ $user->created_service_orders_count }}
                     </div>
 
                 </div>
@@ -1225,12 +1218,7 @@
                     </div>
 
                     <div class="admin-detail-value">
-
-                        {{
-                            $user
-                                ->technician_service_orders_count
-                        }}
-
+                        {{ $user->technician_service_orders_count }}
                     </div>
 
                 </div>
@@ -1243,12 +1231,7 @@
                     </div>
 
                     <div class="admin-detail-value">
-
-                        {{
-                            $user
-                                ->inventory_transactions_count
-                        }}
-
+                        {{ $user->inventory_transactions_count }}
                     </div>
 
                 </div>
@@ -1261,12 +1244,7 @@
                     </div>
 
                     <div class="admin-detail-value">
-
-                        {{
-                            $user
-                                ->created_invoices_count
-                        }}
-
+                        {{ $user->created_invoices_count }}
                     </div>
 
                 </div>
@@ -1278,9 +1256,7 @@
     </section>
 
 
-    {{-- =====================================================
-        CUSTOMER DATA
-    ====================================================== --}}
+    {{-- CUSTOMER DATA --}}
 
     @if ($customer)
 
@@ -1487,7 +1463,6 @@
                                     <div class="admin-vehicle-meta">
 
                                         Năm:
-
                                         {{
                                             $vehicle->manufacture_year
                                             ?: '—'
@@ -1496,7 +1471,6 @@
                                         <br>
 
                                         Nhiên liệu:
-
                                         {{
                                             $vehicle->fuel_type
                                             ?: '—'
