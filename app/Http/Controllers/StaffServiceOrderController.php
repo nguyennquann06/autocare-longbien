@@ -8,6 +8,7 @@ use App\Models\Part;
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderPart;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,7 @@ use Illuminate\Validation\ValidationException;
 class StaffServiceOrderController extends Controller
 {
     /**
-     * Giới hạn ODO hợp lý cho hệ thống.
+     * Giới hạn ODO hợp lý.
      */
     private const MAX_MILEAGE = 5000000;
 
@@ -73,16 +74,19 @@ class StaffServiceOrderController extends Controller
 
 
         $technicians =
-            User::whereHas(
-                'role',
-                function ($query) {
-                    $query->where(
-                        'code',
-                        'TECHNICIAN'
-                    );
-                }
-            )
-                ->orderBy('name')
+            User::query()
+                ->whereHas(
+                    'role',
+                    function ($query) {
+                        $query->where(
+                            'code',
+                            'TECHNICIAN'
+                        );
+                    }
+                )
+                ->orderBy(
+                    'name'
+                )
                 ->get();
 
 
@@ -97,7 +101,7 @@ class StaffServiceOrderController extends Controller
 
 
     /**
-     * Lưu phiếu bảo dưỡng.
+     * Tạo phiếu bảo dưỡng.
      */
     public function store(
         Request $request,
@@ -112,12 +116,6 @@ class StaffServiceOrderController extends Controller
             'serviceOrder',
         ]);
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | BUSINESS GUARD
-        |--------------------------------------------------------------------------
-        */
 
         if (
             $appointment->status
@@ -150,12 +148,6 @@ class StaffServiceOrderController extends Controller
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALIZE TEXT INPUT
-        |--------------------------------------------------------------------------
-        */
-
         $request->merge([
             'vehicle_condition' =>
                 $this->normalizeNullableText(
@@ -187,12 +179,6 @@ class StaffServiceOrderController extends Controller
                 ->current_mileage;
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDATION
-        |--------------------------------------------------------------------------
-        */
-
         $validated =
             $request->validate(
                 [
@@ -208,12 +194,14 @@ class StaffServiceOrderController extends Controller
                             function ($query) {
                                 $query->whereIn(
                                     'role_id',
-                                    function (
+                                    function ($subQuery) {
                                         $subQuery
-                                    ) {
-                                        $subQuery
-                                            ->select('id')
-                                            ->from('roles')
+                                            ->select(
+                                                'id'
+                                            )
+                                            ->from(
+                                                'roles'
+                                            )
                                             ->where(
                                                 'code',
                                                 'TECHNICIAN'
@@ -224,15 +212,13 @@ class StaffServiceOrderController extends Controller
                         ),
                     ],
 
-
                     'received_mileage' => [
                         'bail',
                         'required',
                         'integer',
-                        'min:' . $currentMileage,
-                        'max:' . self::MAX_MILEAGE,
+                        'min:'.$currentMileage,
+                        'max:'.self::MAX_MILEAGE,
                     ],
-
 
                     'vehicle_condition' => [
                         'bail',
@@ -241,14 +227,12 @@ class StaffServiceOrderController extends Controller
                         'max:2000',
                     ],
 
-
                     'diagnosis' => [
                         'bail',
                         'nullable',
                         'string',
                         'max:2000',
                     ],
-
 
                     'staff_note' => [
                         'bail',
@@ -258,12 +242,6 @@ class StaffServiceOrderController extends Controller
                     ],
                 ],
                 [
-                    /*
-                    |--------------------------------------------------------------------------
-                    | TECHNICIAN
-                    |--------------------------------------------------------------------------
-                    */
-
                     'technician_id.required' =>
                         'Vui lòng chọn kỹ thuật viên phụ trách.',
 
@@ -273,13 +251,6 @@ class StaffServiceOrderController extends Controller
                     'technician_id.exists' =>
                         'Kỹ thuật viên không tồn tại hoặc tài khoản được chọn không có vai trò kỹ thuật viên.',
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | ODO
-                    |--------------------------------------------------------------------------
-                    */
-
                     'received_mileage.required' =>
                         'Vui lòng nhập ODO khi tiếp nhận xe.',
 
@@ -288,30 +259,23 @@ class StaffServiceOrderController extends Controller
 
                     'received_mileage.min' =>
                         'ODO khi tiếp nhận không được nhỏ hơn ODO hiện tại của xe là '
-                        . number_format(
+                        .number_format(
                             $currentMileage,
                             0,
                             ',',
                             '.'
                         )
-                        . ' km.',
+                        .' km.',
 
                     'received_mileage.max' =>
                         'ODO không được vượt quá '
-                        . number_format(
+                        .number_format(
                             self::MAX_MILEAGE,
                             0,
                             ',',
                             '.'
                         )
-                        . ' km.',
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | VEHICLE CONDITION
-                    |--------------------------------------------------------------------------
-                    */
+                        .' km.',
 
                     'vehicle_condition.string' =>
                         'Tình trạng xe khi tiếp nhận không hợp lệ.',
@@ -319,25 +283,11 @@ class StaffServiceOrderController extends Controller
                     'vehicle_condition.max' =>
                         'Tình trạng xe khi tiếp nhận không được vượt quá 2000 ký tự.',
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | DIAGNOSIS
-                    |--------------------------------------------------------------------------
-                    */
-
                     'diagnosis.string' =>
                         'Chẩn đoán ban đầu không hợp lệ.',
 
                     'diagnosis.max' =>
                         'Chẩn đoán ban đầu không được vượt quá 2000 ký tự.',
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | STAFF NOTE
-                    |--------------------------------------------------------------------------
-                    */
 
                     'staff_note.string' =>
                         'Ghi chú nhân viên không hợp lệ.',
@@ -351,19 +301,6 @@ class StaffServiceOrderController extends Controller
         $user =
             Auth::user();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CREATE SERVICE ORDER
-        |--------------------------------------------------------------------------
-        |
-        | Lock Appointment + Vehicle để:
-        |
-        | - tránh double-submit tạo 2 phiếu;
-        | - tránh ODO bị thay đổi đồng thời;
-        | - kiểm tra lại trạng thái ngay trước khi ghi DB.
-        |
-        */
 
         $serviceOrder =
             DB::transaction(
@@ -387,12 +324,6 @@ class StaffServiceOrderController extends Controller
                     ]);
 
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | RECHECK APPOINTMENT
-                    |--------------------------------------------------------------------------
-                    */
-
                     if (
                         $lockedAppointment->status
                         !== 'CONFIRMED'
@@ -405,8 +336,7 @@ class StaffServiceOrderController extends Controller
 
 
                     if (
-                        $lockedAppointment
-                            ->serviceOrder
+                        $lockedAppointment->serviceOrder
                     ) {
                         throw ValidationException::withMessages([
                             'appointment' =>
@@ -414,12 +344,6 @@ class StaffServiceOrderController extends Controller
                         ]);
                     }
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | LOCK VEHICLE
-                    |--------------------------------------------------------------------------
-                    */
 
                     $lockedVehicle =
                         $lockedAppointment
@@ -436,31 +360,23 @@ class StaffServiceOrderController extends Controller
 
                     if (
                         (int)
-                        $validated[
-                            'received_mileage'
-                        ]
+                        $validated['received_mileage']
                         <
                         $latestMileage
                     ) {
                         throw ValidationException::withMessages([
                             'received_mileage' =>
                                 'ODO khi tiếp nhận không được nhỏ hơn ODO hiện tại của xe là '
-                                . number_format(
+                                .number_format(
                                     $latestMileage,
                                     0,
                                     ',',
                                     '.'
                                 )
-                                . ' km.',
+                                .' km.',
                         ]);
                     }
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | SERVICE SNAPSHOT TOTAL
-                    |--------------------------------------------------------------------------
-                    */
 
                     $serviceTotal =
                         $lockedAppointment
@@ -474,83 +390,71 @@ class StaffServiceOrderController extends Controller
                             );
 
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | CREATE ORDER
-                    |--------------------------------------------------------------------------
-                    */
-
                     $serviceOrder =
-                        ServiceOrder::create([
-                            'order_code' =>
-                                $this
-                                    ->generateOrderCode(),
+                        ServiceOrder::query()
+                            ->create([
+                                'order_code' =>
+                                    $this
+                                        ->generateOrderCode(),
 
-                            'appointment_id' =>
-                                $lockedAppointment
-                                    ->id,
+                                'appointment_id' =>
+                                    $lockedAppointment->id,
 
-                            'customer_id' =>
-                                $lockedAppointment
-                                    ->customer_id,
+                                'customer_id' =>
+                                    $lockedAppointment
+                                        ->customer_id,
 
-                            'vehicle_id' =>
-                                $lockedAppointment
-                                    ->vehicle_id,
+                                'vehicle_id' =>
+                                    $lockedAppointment
+                                        ->vehicle_id,
 
-                            'created_by' =>
-                                $user->id,
+                                'created_by' =>
+                                    $user->id,
 
-                            'technician_id' =>
-                                $validated[
-                                    'technician_id'
-                                ],
+                                'technician_id' =>
+                                    $validated[
+                                        'technician_id'
+                                    ],
 
-                            'received_mileage' =>
-                                $validated[
-                                    'received_mileage'
-                                ],
+                                'received_mileage' =>
+                                    $validated[
+                                        'received_mileage'
+                                    ],
 
-                            'status' =>
-                                'RECEIVED',
+                                'status' =>
+                                    'RECEIVED',
 
-                            'received_at' =>
-                                now(),
+                                'received_at' =>
+                                    now(),
 
-                            'vehicle_condition' =>
-                                $validated[
-                                    'vehicle_condition'
-                                ]
-                                ?? null,
+                                'vehicle_condition' =>
+                                    $validated[
+                                        'vehicle_condition'
+                                    ]
+                                    ?? null,
 
-                            'diagnosis' =>
-                                $validated[
-                                    'diagnosis'
-                                ]
-                                ?? null,
+                                'diagnosis' =>
+                                    $validated[
+                                        'diagnosis'
+                                    ]
+                                    ?? null,
 
-                            'staff_note' =>
-                                $validated[
-                                    'staff_note'
-                                ]
-                                ?? null,
+                                'staff_note' =>
+                                    $validated[
+                                        'staff_note'
+                                    ]
+                                    ?? null,
 
-                            'service_total' =>
-                                $serviceTotal,
+                                'service_total' =>
+                                    $serviceTotal,
 
-                            'parts_total' =>
-                                0,
+                                'parts_total' =>
+                                    0,
 
-                            'total_amount' =>
-                                $serviceTotal,
-                        ]);
+                                'total_amount' =>
+                                    $serviceTotal,
+                            ]);
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | CREATE SERVICE ORDER ITEMS
-                    |--------------------------------------------------------------------------
-                    */
 
                     foreach (
                         $lockedAppointment
@@ -593,18 +497,71 @@ class StaffServiceOrderController extends Controller
                     }
 
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | UPDATE VEHICLE ODO
-                    |--------------------------------------------------------------------------
-                    */
-
                     $lockedVehicle->update([
                         'current_mileage' =>
                             $validated[
                                 'received_mileage'
                             ],
                     ]);
+
+
+                    ActivityLogger::log(
+                        action:
+                            'SERVICE_ORDER_CREATED',
+
+                        description:
+                            'Đã tạo phiếu bảo dưỡng '
+                            .$serviceOrder->order_code
+                            .' từ lịch hẹn #'
+                            .$lockedAppointment->id
+                            .'.',
+
+                        entity:
+                            $serviceOrder,
+
+                        oldValues:
+                            null,
+
+                        newValues: [
+                            'appointment_id' =>
+                                $lockedAppointment->id,
+
+                            'customer_id' =>
+                                $lockedAppointment
+                                    ->customer_id,
+
+                            'vehicle_id' =>
+                                $lockedAppointment
+                                    ->vehicle_id,
+
+                            'technician_id' =>
+                                $serviceOrder
+                                    ->technician_id,
+
+                            'received_mileage' =>
+                                $serviceOrder
+                                    ->received_mileage,
+
+                            'status' =>
+                                $serviceOrder
+                                    ->status,
+
+                            'service_total' =>
+                                (float)
+                                $serviceOrder
+                                    ->service_total,
+
+                            'parts_total' =>
+                                (float)
+                                $serviceOrder
+                                    ->parts_total,
+
+                            'total_amount' =>
+                                (float)
+                                $serviceOrder
+                                    ->total_amount,
+                        ]
+                    );
 
 
                     return $serviceOrder;
@@ -647,12 +604,17 @@ class StaffServiceOrderController extends Controller
 
 
         $availableParts =
-            Part::where(
-                'is_active',
-                true
-            )
-                ->orderBy('category')
-                ->orderBy('name')
+            Part::query()
+                ->where(
+                    'is_active',
+                    true
+                )
+                ->orderBy(
+                    'category'
+                )
+                ->orderBy(
+                    'name'
+                )
                 ->get();
 
 
@@ -667,7 +629,7 @@ class StaffServiceOrderController extends Controller
 
 
     /**
-     * Xuất phụ tùng cho phiếu bảo dưỡng.
+     * Xuất phụ tùng cho phiếu.
      */
     public function addPart(
         Request $request,
@@ -675,12 +637,6 @@ class StaffServiceOrderController extends Controller
     ) {
         $this->authorizeStaff();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | BUSINESS GUARD
-        |--------------------------------------------------------------------------
-        */
 
         if (
             !in_array(
@@ -704,12 +660,6 @@ class StaffServiceOrderController extends Controller
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALIZE INPUT
-        |--------------------------------------------------------------------------
-        */
-
         $request->merge([
             'note' =>
                 $this->normalizeNullableText(
@@ -719,12 +669,6 @@ class StaffServiceOrderController extends Controller
                 ),
         ]);
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDATION
-        |--------------------------------------------------------------------------
-        */
 
         $validated =
             $request->validate(
@@ -747,14 +691,12 @@ class StaffServiceOrderController extends Controller
                         ),
                     ],
 
-
                     'quantity' => [
                         'bail',
                         'required',
                         'integer',
                         'min:1',
                     ],
-
 
                     'note' => [
                         'bail',
@@ -764,12 +706,6 @@ class StaffServiceOrderController extends Controller
                     ],
                 ],
                 [
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PART
-                    |--------------------------------------------------------------------------
-                    */
-
                     'part_id.required' =>
                         'Vui lòng chọn phụ tùng cần xuất.',
 
@@ -779,13 +715,6 @@ class StaffServiceOrderController extends Controller
                     'part_id.exists' =>
                         'Phụ tùng không tồn tại hoặc đã ngừng sử dụng.',
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | QUANTITY
-                    |--------------------------------------------------------------------------
-                    */
-
                     'quantity.required' =>
                         'Vui lòng nhập số lượng phụ tùng cần xuất.',
 
@@ -794,13 +723,6 @@ class StaffServiceOrderController extends Controller
 
                     'quantity.min' =>
                         'Số lượng phụ tùng phải từ 1 trở lên.',
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | NOTE
-                    |--------------------------------------------------------------------------
-                    */
 
                     'note.string' =>
                         'Ghi chú xuất phụ tùng không hợp lệ.',
@@ -815,32 +737,12 @@ class StaffServiceOrderController extends Controller
             Auth::user();
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | STOCK TRANSACTION
-        |--------------------------------------------------------------------------
-        |
-        | Lock cả Service Order và Part để tránh:
-        |
-        | - xuất phụ tùng sau khi phiếu vừa hoàn thành;
-        | - hai nhân viên cùng xuất một tồn kho;
-        | - stock_quantity bị âm;
-        | - dùng phụ tùng vừa bị khóa / ngừng sử dụng.
-        |
-        */
-
         DB::transaction(
             function () use (
                 $serviceOrder,
                 $validated,
                 $user
             ) {
-                /*
-                |--------------------------------------------------------------------------
-                | LOCK SERVICE ORDER
-                |--------------------------------------------------------------------------
-                */
-
                 $lockedOrder =
                     ServiceOrder::query()
                         ->whereKey(
@@ -867,12 +769,6 @@ class StaffServiceOrderController extends Controller
                 }
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | LOCK PART
-                |--------------------------------------------------------------------------
-                */
-
                 $part =
                     Part::query()
                         ->whereKey(
@@ -884,9 +780,7 @@ class StaffServiceOrderController extends Controller
                         ->first();
 
 
-                if (
-                    !$part
-                ) {
+                if (!$part) {
                     throw ValidationException::withMessages([
                         'part_id' =>
                             'Phụ tùng không còn tồn tại trong hệ thống.',
@@ -903,12 +797,6 @@ class StaffServiceOrderController extends Controller
                     ]);
                 }
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | CHECK STOCK
-                |--------------------------------------------------------------------------
-                */
 
                 $quantity =
                     (int)
@@ -929,8 +817,8 @@ class StaffServiceOrderController extends Controller
                     throw ValidationException::withMessages([
                         'quantity' =>
                             'Phụ tùng '
-                            . $part->name
-                            . ' hiện đã hết hàng.',
+                            .$part->name
+                            .' hiện đã hết hàng.',
                     ]);
                 }
 
@@ -943,15 +831,15 @@ class StaffServiceOrderController extends Controller
                     throw ValidationException::withMessages([
                         'quantity' =>
                             'Số lượng yêu cầu vượt quá tồn kho. Hiện chỉ còn '
-                            . number_format(
+                            .number_format(
                                 $quantityBefore,
                                 0,
                                 ',',
                                 '.'
                             )
-                            . ' '
-                            . $part->unit
-                            . '.',
+                            .' '
+                            .$part->unit
+                            .'.',
                     ]);
                 }
 
@@ -962,17 +850,24 @@ class StaffServiceOrderController extends Controller
                     $quantity;
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | SERVICE ORDER PART
-                |--------------------------------------------------------------------------
-                */
+                $oldPartsTotal =
+                    (float)
+                    $lockedOrder
+                        ->parts_total;
+
+
+                $oldTotalAmount =
+                    (float)
+                    $lockedOrder
+                        ->total_amount;
+
 
                 $existingOrderPart =
-                    ServiceOrderPart::where(
-                        'service_order_id',
-                        $lockedOrder->id
-                    )
+                    ServiceOrderPart::query()
+                        ->where(
+                            'service_order_id',
+                            $lockedOrder->id
+                        )
                         ->where(
                             'part_id',
                             $part->id
@@ -1027,47 +922,42 @@ class StaffServiceOrderController extends Controller
                             ->selling_price;
 
 
-                    ServiceOrderPart::create([
-                        'service_order_id' =>
-                            $lockedOrder->id,
+                    ServiceOrderPart::query()
+                        ->create([
+                            'service_order_id' =>
+                                $lockedOrder->id,
 
-                        'part_id' =>
-                            $part->id,
+                            'part_id' =>
+                                $part->id,
 
-                        'part_code' =>
-                            $part->code,
+                            'part_code' =>
+                                $part->code,
 
-                        'part_name' =>
-                            $part->name,
+                            'part_name' =>
+                                $part->name,
 
-                        'unit' =>
-                            $part->unit,
+                            'unit' =>
+                                $part->unit,
 
-                        'unit_price' =>
-                            $unitPrice,
+                            'unit_price' =>
+                                $unitPrice,
 
-                        'quantity' =>
-                            $quantity,
+                            'quantity' =>
+                                $quantity,
 
-                        'line_total' =>
-                            $unitPrice
-                            *
-                            $quantity,
+                            'line_total' =>
+                                $unitPrice
+                                *
+                                $quantity,
 
-                        'note' =>
-                            $validated[
-                                'note'
-                            ]
-                            ?? null,
-                    ]);
+                            'note' =>
+                                $validated[
+                                    'note'
+                                ]
+                                ?? null,
+                        ]);
                 }
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | UPDATE STOCK
-                |--------------------------------------------------------------------------
-                */
 
                 $part->update([
                     'stock_quantity' =>
@@ -1075,71 +965,62 @@ class StaffServiceOrderController extends Controller
                 ]);
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | INVENTORY TRANSACTION
-                |--------------------------------------------------------------------------
-                */
+                $inventoryTransaction =
+                    InventoryTransaction::query()
+                        ->create([
+                            'part_id' =>
+                                $part->id,
 
-                InventoryTransaction::create([
-                    'part_id' =>
-                        $part->id,
+                            'service_order_id' =>
+                                $lockedOrder->id,
 
-                    'service_order_id' =>
-                        $lockedOrder->id,
+                            'performed_by' =>
+                                $user->id,
 
-                    'performed_by' =>
-                        $user->id,
+                            'transaction_type' =>
+                                InventoryTransaction::TYPE_OUT,
 
-                    'transaction_type' =>
-                        InventoryTransaction::TYPE_OUT,
+                            'quantity' =>
+                                $quantity,
 
-                    'quantity' =>
-                        $quantity,
+                            'quantity_before' =>
+                                $quantityBefore,
 
-                    'quantity_before' =>
-                        $quantityBefore,
+                            'quantity_after' =>
+                                $quantityAfter,
 
-                    'quantity_after' =>
-                        $quantityAfter,
+                            'unit_cost' =>
+                                $part->cost_price,
 
-                    'unit_cost' =>
-                        $part->cost_price,
+                            'note' =>
+                                'Xuất cho phiếu '
+                                .$lockedOrder
+                                    ->order_code
+                                .(
+                                    !empty(
+                                        $validated[
+                                            'note'
+                                        ]
+                                        ?? null
+                                    )
+                                        ? ' - '
+                                        .$validated[
+                                            'note'
+                                        ]
+                                        : ''
+                                ),
 
-                    'note' =>
-                        'Xuất cho phiếu '
-                        . $lockedOrder
-                            ->order_code
-                        . (
-                            !empty(
-                                $validated[
-                                    'note'
-                                ]
-                                ?? null
-                            )
-                                ? ' - '
-                                    . $validated[
-                                        'note'
-                                    ]
-                                : ''
-                        ),
+                            'transaction_at' =>
+                                now(),
+                        ]);
 
-                    'transaction_at' =>
-                        now(),
-                ]);
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | RECALCULATE ORDER TOTAL
-                |--------------------------------------------------------------------------
-                */
 
                 $partsTotal =
-                    ServiceOrderPart::where(
-                        'service_order_id',
-                        $lockedOrder->id
-                    )
+                    ServiceOrderPart::query()
+                        ->where(
+                            'service_order_id',
+                            $lockedOrder->id
+                        )
                         ->sum(
                             'line_total'
                         );
@@ -1161,6 +1042,67 @@ class StaffServiceOrderController extends Controller
                     'total_amount' =>
                         $totalAmount,
                 ]);
+
+
+                ActivityLogger::log(
+                    action:
+                        'PART_STOCK_OUT',
+
+                    description:
+                        'Đã xuất '
+                        .$quantity
+                        .' '
+                        .$part->unit
+                        .' '
+                        .$part->name
+                        .' cho phiếu '
+                        .$lockedOrder->order_code
+                        .'.',
+
+                    entity:
+                        $inventoryTransaction,
+
+                    oldValues: [
+                        'part_id' =>
+                            $part->id,
+
+                        'stock_quantity' =>
+                            $quantityBefore,
+
+                        'service_order_id' =>
+                            $lockedOrder->id,
+
+                        'order_parts_total' =>
+                            $oldPartsTotal,
+
+                        'order_total_amount' =>
+                            $oldTotalAmount,
+                    ],
+
+                    newValues: [
+                        'part_id' =>
+                            $part->id,
+
+                        'quantity_out' =>
+                            $quantity,
+
+                        'stock_quantity' =>
+                            $quantityAfter,
+
+                        'service_order_id' =>
+                            $lockedOrder->id,
+
+                        'order_parts_total' =>
+                            (float)
+                            $lockedOrder
+                                ->parts_total,
+
+                        'order_total_amount' =>
+                            (float)
+                            $lockedOrder
+                                ->total_amount,
+                    ]
+                );
             }
         );
 
@@ -1178,7 +1120,7 @@ class StaffServiceOrderController extends Controller
 
 
     /**
-     * Kiểm tra STAFF / ADMIN.
+     * STAFF / ADMIN.
      */
     private function authorizeStaff(): void
     {
@@ -1217,26 +1159,28 @@ class StaffServiceOrderController extends Controller
 
 
     /**
-     * Sinh mã phiếu bảo dưỡng.
+     * Sinh mã phiếu.
      */
     private function generateOrderCode(): string
     {
         do {
             $code =
                 'SO'
-                . now()->format(
+                .now()->format(
                     'Ymd'
                 )
-                . strtoupper(
+                .strtoupper(
                     Str::random(
                         6
                     )
                 );
         } while (
-            ServiceOrder::where(
-                'order_code',
-                $code
-            )->exists()
+            ServiceOrder::query()
+                ->where(
+                    'order_code',
+                    $code
+                )
+                ->exists()
         );
 
 
@@ -1246,9 +1190,6 @@ class StaffServiceOrderController extends Controller
 
     /**
      * Chuẩn hóa text nullable.
-     *
-     * Chỉ trim đầu/cuối để giữ nguyên
-     * xuống dòng trong ghi chú nghiệp vụ.
      */
     private function normalizeNullableText(
         mixed $value

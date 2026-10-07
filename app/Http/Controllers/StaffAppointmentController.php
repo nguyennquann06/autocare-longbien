@@ -3,34 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class StaffAppointmentController extends Controller
 {
     /**
      * Danh sách lịch hẹn.
-     *
-     * Thứ tự ưu tiên:
-     *
-     * 1. PENDING
-     * 2. CONFIRMED
-     * 3. IN_PROGRESS
-     * 4. COMPLETED
-     * 5. CANCELLED
      */
     public function index(
         Request $request
     ) {
         $this->authorizeStaff();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | FILTER STATUS
-        |--------------------------------------------------------------------------
-        */
 
         $allowedStatuses = [
             'ALL',
@@ -66,22 +55,14 @@ class StaffAppointmentController extends Controller
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | STATUS COUNTS
-        |--------------------------------------------------------------------------
-        |
-        | Đếm trên toàn bộ lịch hẹn,
-        | không phụ thuộc bộ lọc hiện tại.
-        |
-        */
-
         $statusCounts =
             Appointment::query()
                 ->selectRaw(
                     'status, COUNT(*) as total'
                 )
-                ->groupBy('status')
+                ->groupBy(
+                    'status'
+                )
                 ->pluck(
                     'total',
                     'status'
@@ -92,12 +73,6 @@ class StaffAppointmentController extends Controller
             (int)
             $statusCounts->sum();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | APPOINTMENT QUERY
-        |--------------------------------------------------------------------------
-        */
 
         $query =
             Appointment::with([
@@ -118,21 +93,6 @@ class StaffAppointmentController extends Controller
             );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | PRIORITY SORTING
-        |--------------------------------------------------------------------------
-        |
-        | Lịch chưa xử lý được đưa lên đầu.
-        |
-        | Với lịch đang cần xử lý:
-        | → lịch có thời điểm sớm hơn được ưu tiên trước.
-        |
-        | Với lịch đã kết thúc:
-        | → lịch mới nhất hiển thị trước.
-        |
-        */
 
         $appointments =
             $query
@@ -184,7 +144,9 @@ class StaffAppointmentController extends Controller
                         THEN appointment_time
                     END DESC
                 ")
-                ->orderByDesc('id')
+                ->orderByDesc(
+                    'id'
+                )
                 ->get();
 
 
@@ -220,7 +182,9 @@ class StaffAppointmentController extends Controller
 
         return view(
             'staff.appointments.show',
-            compact('appointment')
+            compact(
+                'appointment'
+            )
         );
     }
 
@@ -326,10 +290,6 @@ class StaffAppointmentController extends Controller
         }
 
 
-        /**
-         * CONFIRMED -> IN_PROGRESS
-         * bắt buộc phải có Service Order.
-         */
         if (
             $appointment->status
             === 'CONFIRMED'
@@ -348,20 +308,127 @@ class StaffAppointmentController extends Controller
         }
 
 
-        $appointment->update([
-            'status' =>
-                $validated['status'],
+        DB::transaction(
+            function () use (
+                $appointment,
+                $validated
+            ) {
+                $lockedAppointment =
+                    Appointment::query()
+                        ->with(
+                            'serviceOrder'
+                        )
+                        ->whereKey(
+                            $appointment->id
+                        )
+                        ->lockForUpdate()
+                        ->firstOrFail();
 
-            'staff_note' =>
-                !empty(
-                    $validated['staff_note']
-                )
-                    ? trim(
+
+                $allowedTransitions = [
+                    'PENDING' =>
+                        'CONFIRMED',
+
+                    'CONFIRMED' =>
+                        'IN_PROGRESS',
+
+                    'IN_PROGRESS' =>
+                        'COMPLETED',
+                ];
+
+
+                $expectedStatus =
+                    $allowedTransitions[
+                        $lockedAppointment->status
+                    ]
+                    ?? null;
+
+
+                if (
+                    !$expectedStatus
+                    ||
+                    $validated['status']
+                    !==
+                    $expectedStatus
+                ) {
+                    throw ValidationException::withMessages([
+                        'status' =>
+                            'Trạng thái lịch hẹn đã thay đổi. Vui lòng tải lại trang và thử lại.',
+                    ]);
+                }
+
+
+                if (
+                    $lockedAppointment->status
+                    === 'CONFIRMED'
+                    &&
+                    !$lockedAppointment->serviceOrder
+                ) {
+                    throw ValidationException::withMessages([
+                        'status' =>
+                            'Vui lòng tạo phiếu bảo dưỡng trước khi bắt đầu thực hiện.',
+                    ]);
+                }
+
+
+                $oldValues = [
+                    'status' =>
+                        $lockedAppointment->status,
+
+                    'staff_note' =>
+                        $lockedAppointment->staff_note,
+                ];
+
+
+                $newStaffNote =
+                    !empty(
                         $validated['staff_note']
                     )
-                    : $appointment
-                        ->staff_note,
-        ]);
+                        ? trim(
+                            $validated['staff_note']
+                        )
+                        : $lockedAppointment
+                            ->staff_note;
+
+
+                $lockedAppointment->update([
+                    'status' =>
+                        $validated['status'],
+
+                    'staff_note' =>
+                        $newStaffNote,
+                ]);
+
+
+                ActivityLogger::log(
+                    action:
+                        'APPOINTMENT_STATUS_CHANGED',
+
+                    description:
+                        'Đã cập nhật lịch hẹn #'
+                        .$lockedAppointment->id
+                        .' từ '
+                        .$oldValues['status']
+                        .' sang '
+                        .$lockedAppointment->status
+                        .'.',
+
+                    entity:
+                        $lockedAppointment,
+
+                    oldValues:
+                        $oldValues,
+
+                    newValues: [
+                        'status' =>
+                            $lockedAppointment->status,
+
+                        'staff_note' =>
+                            $lockedAppointment->staff_note,
+                    ]
+                );
+            }
+        );
 
 
         return redirect()
@@ -377,7 +444,7 @@ class StaffAppointmentController extends Controller
 
 
     /**
-     * Kiểm tra STAFF / ADMIN.
+     * Kiểm tra quyền STAFF / ADMIN.
      */
     private function authorizeStaff(): void
     {

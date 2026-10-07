@@ -89,6 +89,19 @@
         position: relative;
 
         z-index: 2;
+
+        display: flex;
+
+        align-items: flex-end;
+
+        justify-content: space-between;
+
+        gap: 24px;
+    }
+
+
+    .admin-users-header-copy {
+        min-width: 0;
     }
 
 
@@ -168,6 +181,74 @@
     }
 
 
+    .admin-create-workforce-button {
+        flex: 0 0 auto;
+
+        min-height: 46px;
+
+        padding:
+            11px 16px;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 8px;
+
+        border:
+            1px solid
+            rgba(
+                255,
+                255,
+                255,
+                0.24
+            );
+
+        border-radius: 13px;
+
+        color: white;
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                0.11
+            );
+
+        backdrop-filter:
+            blur(10px);
+
+        text-decoration: none;
+
+        font-size: 11px;
+
+        font-weight: 900;
+
+        transition:
+            transform 0.2s ease,
+            background 0.2s ease;
+    }
+
+
+    .admin-create-workforce-button:hover {
+        color: white;
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                0.18
+            );
+
+        transform:
+            translateY(-2px);
+    }
+
+
     /*
     |--------------------------------------------------------------------------
     | SUMMARY
@@ -244,36 +325,17 @@
 
         border-color:
             #a5b4fc;
-
-        box-shadow:
-            0 20px 48px
-            rgba(
-                79,
-                70,
-                229,
-                0.13
-            );
     }
 
 
     .admin-user-summary-card.active {
-        border-color:
-            #6366f1;
+        border-color: #6366f1;
 
         background:
             linear-gradient(
                 135deg,
                 #eef2ff,
                 #ffffff
-            );
-
-        box-shadow:
-            0 0 0 2px
-            rgba(
-                99,
-                102,
-                241,
-                0.09
             );
     }
 
@@ -332,9 +394,6 @@
 
         box-shadow:
             var(--ac-shadow);
-
-        backdrop-filter:
-            blur(16px);
     }
 
 
@@ -385,8 +444,6 @@
         font-weight: 900;
 
         text-transform: uppercase;
-
-        letter-spacing: 0.05em;
     }
 
 
@@ -480,13 +537,6 @@
     }
 
 
-    .admin-filter-reset:hover {
-        color: #0f172a;
-
-        background: #f1f5f9;
-    }
-
-
     /*
     |--------------------------------------------------------------------------
     | RESULT
@@ -573,9 +623,6 @@
         font-weight: 900;
 
         text-transform: uppercase;
-
-        letter-spacing:
-            0.05em;
     }
 
 
@@ -583,12 +630,6 @@
         color: #475569;
 
         font-size: 11px;
-    }
-
-
-    .admin-users-table tbody tr {
-        transition:
-            background 0.18s ease;
     }
 
 
@@ -616,7 +657,7 @@
 
     /*
     |--------------------------------------------------------------------------
-    | ACCOUNT
+    | USER
     |--------------------------------------------------------------------------
     */
 
@@ -695,8 +736,6 @@
         font-size: 7px;
 
         font-weight: 900;
-
-        text-transform: uppercase;
     }
 
 
@@ -721,8 +760,6 @@
         font-size: 8px;
 
         font-weight: 900;
-
-        white-space: nowrap;
     }
 
 
@@ -763,7 +800,7 @@
 
     /*
     |--------------------------------------------------------------------------
-    | STATUS BADGES
+    | BADGES
     |--------------------------------------------------------------------------
     */
 
@@ -788,20 +825,7 @@
     }
 
 
-    .admin-google-badge {
-        color: #166534;
-
-        background: #dcfce7;
-    }
-
-
-    .admin-google-none {
-        color: #64748b;
-
-        background: #f1f5f9;
-    }
-
-
+    .admin-google-badge,
     .admin-profile-yes {
         color: #166534;
 
@@ -809,6 +833,7 @@
     }
 
 
+    .admin-google-none,
     .admin-profile-none {
         color: #64748b;
 
@@ -856,16 +881,6 @@
         font-weight: 850;
 
         white-space: nowrap;
-
-        transition:
-            transform 0.18s ease,
-            background 0.18s ease;
-    }
-
-
-    .admin-user-action:hover {
-        transform:
-            translateY(-1px);
     }
 
 
@@ -880,13 +895,6 @@
     }
 
 
-    .admin-user-action-view:hover {
-        color: #1e40af;
-
-        background: #dbeafe;
-    }
-
-
     .admin-user-action-role {
         border:
             1px solid
@@ -895,13 +903,6 @@
         color: #6d28d9;
 
         background: #f5f3ff;
-    }
-
-
-    .admin-user-action-role:hover {
-        color: #5b21b6;
-
-        background: #ede9fe;
     }
 
 
@@ -952,7 +953,7 @@
 
     /*
     |--------------------------------------------------------------------------
-    | EMPTY
+    | EMPTY / PAGINATION
     |--------------------------------------------------------------------------
     */
 
@@ -968,29 +969,9 @@
     }
 
 
-    .admin-users-empty-icon {
-        margin-bottom: 10px;
-
-        color: #94a3b8;
-
-        font-size: 26px;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | PAGINATION
-    |--------------------------------------------------------------------------
-    */
-
     .admin-users-pagination {
         padding:
             18px 20px;
-    }
-
-
-    .admin-users-pagination nav {
-        margin: 0;
     }
 
 
@@ -1015,6 +996,13 @@
                 1fr
                 220px;
         }
+
+
+        .admin-users-header-content {
+            align-items: flex-start;
+
+            flex-direction: column;
+        }
     }
 
 
@@ -1029,8 +1017,7 @@
 
 
         .admin-users-filter-form {
-            grid-template-columns:
-                1fr;
+            grid-template-columns: 1fr;
         }
     }
 
@@ -1043,6 +1030,11 @@
 
         .admin-users-header {
             padding: 24px;
+        }
+
+
+        .admin-create-workforce-button {
+            width: 100%;
         }
     }
 </style>
@@ -1062,27 +1054,42 @@
 
         <div class="admin-users-header-content">
 
-            <div class="admin-users-chip">
+            <div class="admin-users-header-copy">
 
-                <i class="bi bi-people-fill"></i>
+                <div class="admin-users-chip">
 
-                Quản trị tài khoản & phân quyền
+                    <i class="bi bi-people-fill"></i>
+
+                    Quản trị tài khoản & phân quyền
+
+                </div>
+
+
+                <h1>
+                    Tài khoản hệ thống
+                </h1>
+
+
+                <p>
+                    CUSTOMER được giữ riêng với dữ liệu
+                    phương tiện và lịch sử dịch vụ.
+                    Tài khoản STAFF và TECHNICIAN
+                    được Chủ xưởng tạo và quản lý riêng.
+                </p>
 
             </div>
 
 
-            <h1>
-                Tài khoản hệ thống
-            </h1>
+            <a
+                href="{{ route('admin.users.create') }}"
+                class="admin-create-workforce-button"
+            >
 
+                <i class="bi bi-person-plus-fill"></i>
 
-            <p>
-                CUSTOMER được giữ riêng để bảo toàn
-                hồ sơ khách hàng, phương tiện và lịch sử dịch vụ.
-                ADMIN được bảo vệ quyền quản trị.
-                Chỉ STAFF và TECHNICIAN có thể chuyển đổi
-                vai trò nhân sự cho nhau.
-            </p>
+                Tạo tài khoản nhân sự
+
+            </a>
 
         </div>
 
@@ -1090,7 +1097,7 @@
 
 
     {{-- =====================================================
-        SUMMARY / QUICK FILTER
+        SUMMARY
     ====================================================== --}}
 
     <section class="admin-users-summary">
@@ -1149,6 +1156,7 @@
                     {{ $role->code }}
                 </div>
 
+
                 <div class="admin-user-summary-value">
 
                     {{
@@ -1168,12 +1176,10 @@
 
 
     {{-- =====================================================
-        USER MANAGEMENT
+        USERS
     ====================================================== --}}
 
     <section class="admin-users-panel">
-
-        {{-- FILTER --}}
 
         <div class="admin-users-filter">
 
@@ -1278,8 +1284,6 @@
         </div>
 
 
-        {{-- RESULT --}}
-
         <div class="admin-users-result">
 
             <div>
@@ -1292,23 +1296,14 @@
                 <div class="admin-users-result-meta">
 
                     Hiển thị
-
-                    <strong>
-                        {{ $users->count() }}
-                    </strong>
-
+                    <strong>{{ $users->count() }}</strong>
                     /
-
-                    <strong>
-                        {{ $users->total() }}
-                    </strong>
-
+                    <strong>{{ $users->total() }}</strong>
                     kết quả.
-
 
                     @if ($keyword !== '')
 
-                        Từ khóa:
+                        · Từ khóa:
 
                         <strong>
                             "{{ $keyword }}"
@@ -1334,8 +1329,6 @@
         </div>
 
 
-        {{-- TABLE --}}
-
         <div class="admin-users-table-wrapper">
 
             <table class="admin-users-table">
@@ -1343,35 +1336,13 @@
                 <thead>
 
                     <tr>
-
-                        <th>
-                            ID
-                        </th>
-
-                        <th>
-                            Tài khoản
-                        </th>
-
-                        <th>
-                            Vai trò
-                        </th>
-
-                        <th>
-                            Google
-                        </th>
-
-                        <th>
-                            Hồ sơ khách
-                        </th>
-
-                        <th>
-                            Ngày tạo
-                        </th>
-
-                        <th>
-                            Thao tác
-                        </th>
-
+                        <th>ID</th>
+                        <th>Tài khoản</th>
+                        <th>Vai trò</th>
+                        <th>Google</th>
+                        <th>Hồ sơ khách</th>
+                        <th>Ngày tạo</th>
+                        <th>Thao tác</th>
                     </tr>
 
                 </thead>
@@ -1448,14 +1419,10 @@
                             }}"
                         >
 
-                            {{-- ID --}}
-
                             <td>
                                 #{{ $user->id }}
                             </td>
 
-
-                            {{-- ACCOUNT --}}
 
                             <td>
 
@@ -1505,8 +1472,6 @@
                             </td>
 
 
-                            {{-- ROLE --}}
-
                             <td>
 
                                 <span
@@ -1533,8 +1498,6 @@
                             </td>
 
 
-                            {{-- GOOGLE --}}
-
                             <td>
 
                                 @if ($user->google_id)
@@ -1555,17 +1518,13 @@
                                             admin-google-none
                                         "
                                     >
-
                                         Chưa liên kết
-
                                     </span>
 
                                 @endif
 
                             </td>
 
-
-                            {{-- CUSTOMER PROFILE --}}
 
                             <td>
 
@@ -1592,17 +1551,13 @@
                                             admin-profile-none
                                         "
                                     >
-
                                         Không có
-
                                     </span>
 
                                 @endif
 
                             </td>
 
-
-                            {{-- CREATED AT --}}
 
                             <td>
 
@@ -1617,8 +1572,6 @@
 
                             </td>
 
-
-                            {{-- ACTIONS --}}
 
                             <td>
 
@@ -1714,23 +1667,7 @@
                                 colspan="7"
                                 class="admin-users-empty"
                             >
-
-                                <div class="admin-users-empty-icon">
-
-                                    <i class="bi bi-search"></i>
-
-                                </div>
-
-
-                                <strong>
-                                    Không tìm thấy tài khoản phù hợp.
-                                </strong>
-
-                                <br>
-
-                                Hãy thử thay đổi từ khóa
-                                hoặc bộ lọc vai trò.
-
+                                Không tìm thấy tài khoản phù hợp.
                             </td>
 
                         </tr>
@@ -1743,8 +1680,6 @@
 
         </div>
 
-
-        {{-- PAGINATION --}}
 
         @if (
             $users

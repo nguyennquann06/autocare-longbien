@@ -49,8 +49,8 @@
 
         width:
             min(
-                1480px,
-                calc(100% - 36px)
+                1540px,
+                calc(100% - 30px)
             );
 
         min-height: 72px;
@@ -61,7 +61,7 @@
 
         align-items: center;
 
-        gap: 18px;
+        gap: 14px;
     }
 
 
@@ -70,7 +70,7 @@
 
         align-items: center;
 
-        gap: 11px;
+        gap: 10px;
 
         color: white;
 
@@ -86,8 +86,8 @@
 
 
     .admin-owner-logo {
-        width: 46px;
-        height: 46px;
+        width: 44px;
+        height: 44px;
 
         flex: 0 0 auto;
 
@@ -97,11 +97,11 @@
 
         justify-content: center;
 
-        border-radius: 14px;
+        border-radius: 13px;
 
         color: white;
 
-        font-size: 15px;
+        font-size: 14px;
 
         font-weight: 900;
 
@@ -118,10 +118,6 @@
         border:
             1px solid
             rgba(255, 255, 255, 0.25);
-
-        box-shadow:
-            0 9px 25px
-            rgba(37, 99, 235, 0.38);
     }
 
 
@@ -135,11 +131,9 @@
 
         color: white;
 
-        font-size: 17px;
+        font-size: 16px;
 
         font-weight: 900;
-
-        letter-spacing: -0.3px;
     }
 
 
@@ -150,13 +144,13 @@
 
         color: #c4b5fd;
 
-        font-size: 8px;
+        font-size: 7px;
 
         font-weight: 800;
 
         text-transform: uppercase;
 
-        letter-spacing: 0.14em;
+        letter-spacing: 0.12em;
     }
 
 
@@ -175,7 +169,7 @@
 
         justify-content: flex-end;
 
-        gap: 9px;
+        gap: 7px;
 
         min-width: 0;
     }
@@ -186,7 +180,7 @@
 
         align-items: center;
 
-        gap: 4px;
+        gap: 3px;
 
         padding: 4px;
 
@@ -202,18 +196,18 @@
 
 
     .admin-owner-link {
-        min-height: 39px;
+        min-height: 37px;
 
         padding:
-            9px 10px;
+            8px 8px;
 
         display: inline-flex;
 
         align-items: center;
 
-        gap: 6px;
+        gap: 5px;
 
-        border-radius: 10px;
+        border-radius: 9px;
 
         color: #ddd6fe;
 
@@ -221,12 +215,9 @@
 
         white-space: nowrap;
 
-        font-size: 10px;
+        font-size: 8px;
 
-        font-weight: 750;
-
-        transition:
-            all 0.2s ease;
+        font-weight: 800;
     }
 
 
@@ -234,10 +225,12 @@
         color: white;
 
         background:
-            rgba(255, 255, 255, 0.10);
-
-        transform:
-            translateY(-1px);
+            rgba(
+                255,
+                255,
+                255,
+                0.10
+            );
     }
 
 
@@ -247,23 +240,26 @@
         background:
             linear-gradient(
                 135deg,
-                rgba(37, 99, 235, 0.60),
-                rgba(124, 58, 237, 0.62)
+                rgba(
+                    37,
+                    99,
+                    235,
+                    0.60
+                ),
+                rgba(
+                    124,
+                    58,
+                    237,
+                    0.62
+                )
             );
-
-        box-shadow:
-            inset 0 0 0 1px
-            rgba(255, 255, 255, 0.12),
-
-            0 7px 20px
-            rgba(37, 99, 235, 0.20);
     }
 
 
     .admin-owner-link i {
         color: #67e8f9;
 
-        font-size: 12px;
+        font-size: 10px;
     }
 
 
@@ -278,18 +274,28 @@
 
         align-items: center;
 
-        gap: 9px;
+        gap: 7px;
 
-        padding: 5px;
+        padding: 4px;
 
         border:
             1px solid
-            rgba(255, 255, 255, 0.10);
+            rgba(
+                255,
+                255,
+                255,
+                0.10
+            );
 
-        border-radius: 14px;
+        border-radius: 13px;
 
         background:
-            rgba(255, 255, 255, 0.055);
+            rgba(
+                255,
+                255,
+                255,
+                0.055
+            );
     }
 
 
@@ -298,15 +304,15 @@
 
         align-items: center;
 
-        gap: 8px;
+        gap: 7px;
 
-        padding-left: 6px;
+        padding-left: 5px;
     }
 
 
     .admin-owner-avatar {
-        width: 37px;
-        height: 37px;
+        width: 35px;
+        height: 35px;
 
         flex: 0 0 auto;
 
@@ -327,20 +333,16 @@
                 #e0e7ff
             );
 
-        font-size: 12px;
+        font-size: 11px;
 
         font-weight: 900;
-
-        border:
-            2px solid
-            rgba(255, 255, 255, 0.25);
     }
 
 
     .admin-owner-user-name {
         display: block;
 
-        max-width: 130px;
+        max-width: 110px;
 
         overflow: hidden;
 
@@ -350,7 +352,7 @@
 
         color: white;
 
-        font-size: 11px;
+        font-size: 10px;
 
         font-weight: 800;
     }
@@ -363,36 +365,44 @@
 
         color: #c4b5fd;
 
-        font-size: 8px;
+        font-size: 7px;
 
         font-weight: 800;
 
         text-transform: uppercase;
-
-        letter-spacing: 0.06em;
     }
 
 
     .admin-owner-logout-button {
-        min-height: 37px;
+        min-height: 35px;
 
         padding:
-            8px 11px;
+            7px 9px;
 
         border:
             1px solid
-            rgba(248, 113, 113, 0.34);
+            rgba(
+                248,
+                113,
+                113,
+                0.34
+            );
 
-        border-radius: 10px;
+        border-radius: 9px;
 
         color: #fee2e2;
 
         background:
-            rgba(239, 68, 68, 0.11);
+            rgba(
+                239,
+                68,
+                68,
+                0.11
+            );
 
         cursor: pointer;
 
-        font-size: 10px;
+        font-size: 9px;
 
         font-weight: 800;
     }
@@ -404,12 +414,12 @@
     |--------------------------------------------------------------------------
     */
 
-    @media (max-width: 1250px) {
+    @media (max-width: 1450px) {
         .admin-owner-navbar-inner {
             flex-wrap: wrap;
 
             padding:
-                10px 0;
+                9px 0;
         }
 
 
@@ -425,8 +435,6 @@
 
         .admin-owner-links {
             overflow-x: auto;
-
-            scrollbar-width: thin;
         }
     }
 
@@ -444,11 +452,6 @@
         .admin-owner-user-name,
         .admin-owner-user-role {
             display: none;
-        }
-
-
-        .admin-owner-account {
-            flex-shrink: 0;
         }
     }
 
@@ -475,7 +478,12 @@
         padding: 20px;
 
         background:
-            rgba(2, 6, 23, 0.74);
+            rgba(
+                2,
+                6,
+                23,
+                0.74
+            );
 
         backdrop-filter:
             blur(8px);
@@ -492,12 +500,6 @@
 
         max-width: 450px;
 
-        overflow: hidden;
-
-        border:
-            1px solid
-            rgba(255, 255, 255, 0.14);
-
         border-radius: 23px;
 
         color: white;
@@ -511,7 +513,12 @@
 
         box-shadow:
             0 30px 100px
-            rgba(0, 0, 0, 0.50);
+            rgba(
+                0,
+                0,
+                0,
+                0.50
+            );
     }
 
 
@@ -537,7 +544,12 @@
         color: #fca5a5;
 
         background:
-            rgba(239, 68, 68, 0.14);
+            rgba(
+                239,
+                68,
+                68,
+                0.14
+            );
 
         font-size: 21px;
     }
@@ -579,12 +591,22 @@
 
         border:
             1px solid
-            rgba(255, 255, 255, 0.09);
+            rgba(
+                255,
+                255,
+                255,
+                0.09
+            );
 
         border-radius: 14px;
 
         background:
-            rgba(255, 255, 255, 0.05);
+            rgba(
+                255,
+                255,
+                255,
+                0.05
+            );
     }
 
 
@@ -617,12 +639,22 @@
     .admin-logout-cancel {
         border:
             1px solid
-            rgba(255, 255, 255, 0.15);
+            rgba(
+                255,
+                255,
+                255,
+                0.15
+            );
 
         color: white;
 
         background:
-            rgba(255, 255, 255, 0.07);
+            rgba(
+                255,
+                255,
+                255,
+                0.07
+            );
     }
 
 
@@ -631,7 +663,12 @@
 
         border:
             1px solid
-            rgba(248, 113, 113, 0.35);
+            rgba(
+                248,
+                113,
+                113,
+                0.35
+            );
 
         color: white;
 
@@ -685,8 +722,6 @@
 
             <div class="admin-owner-links">
 
-                {{-- DASHBOARD --}}
-
                 <a
                     href="{{ route('admin.dashboard') }}"
                     class="
@@ -707,8 +742,6 @@
 
                 </a>
 
-
-                {{-- USER MANAGEMENT --}}
 
                 <a
                     href="{{ route('admin.users.index') }}"
@@ -731,7 +764,68 @@
                 </a>
 
 
-                {{-- STAFF OPERATIONS --}}
+                <a
+                    href="{{ route('admin.workforce.index') }}"
+                    class="
+                        admin-owner-link
+                        {{
+                            request()->routeIs(
+                                'admin.workforce.*'
+                            )
+                                ? 'active'
+                                : ''
+                        }}
+                    "
+                >
+
+                    <i class="bi bi-person-badge-fill"></i>
+
+                    Nhân sự
+
+                </a>
+
+
+                <a
+                    href="{{ route('admin.service-orders.index') }}"
+                    class="
+                        admin-owner-link
+                        {{
+                            request()->routeIs(
+                                'admin.service-orders.*'
+                            )
+                                ? 'active'
+                                : ''
+                        }}
+                    "
+                >
+
+                    <i class="bi bi-diagram-3-fill"></i>
+
+                    Phân công
+
+                </a>
+
+
+                <a
+                    href="{{ route('admin.activity-logs.index') }}"
+                    class="
+                        admin-owner-link
+                        {{
+                            request()->routeIs(
+                                'admin.activity-logs.*'
+                            )
+                                ? 'active'
+                                : ''
+                        }}
+                    "
+                >
+
+                    <i class="bi bi-clock-history"></i>
+
+                    Nhật ký
+
+                </a>
+
 
                 <a
                     href="{{ route('staff.dashboard') }}"
@@ -753,8 +847,6 @@
 
                 </a>
 
-
-                {{-- MAINTENANCE --}}
 
                 <a
                     href="{{ route('staff.appointments.index') }}"
@@ -779,8 +871,6 @@
                 </a>
 
 
-                {{-- INVENTORY --}}
-
                 <a
                     href="{{ route('staff.parts.index') }}"
                     class="
@@ -797,12 +887,10 @@
 
                     <i class="bi bi-box-seam"></i>
 
-                    Kho phụ tùng
+                    Kho
 
                 </a>
 
-
-                {{-- SERVICES --}}
 
                 <a
                     href="{{ route('services.index') }}"
@@ -878,10 +966,6 @@
 </header>
 
 
-{{-- =====================================================
-    LOGOUT MODAL
-====================================================== --}}
-
 <div
     id="logoutModal"
     class="admin-logout-modal-overlay"
@@ -898,9 +982,7 @@
         <div class="admin-logout-modal-body">
 
             <div class="admin-logout-modal-icon">
-
                 <i class="bi bi-box-arrow-right"></i>
-
             </div>
 
 
@@ -917,8 +999,7 @@
                 Bạn đang đăng nhập với quyền
                 Chủ xưởng / Quản trị viên.
 
-                Xác nhận kết thúc phiên
-                làm việc hiện tại.
+                Xác nhận kết thúc phiên làm việc hiện tại.
 
             </p>
 

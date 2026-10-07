@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ServiceOrder;
 use App\Models\ServiceOrderItem;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -72,7 +73,9 @@ class TechnicianServiceOrderController extends Controller
                 ->selectRaw(
                     'status, COUNT(*) as total'
                 )
-                ->groupBy('status')
+                ->groupBy(
+                    'status'
+                )
                 ->pluck(
                     'total',
                     'status'
@@ -190,13 +193,16 @@ class TechnicianServiceOrderController extends Controller
 
         return view(
             'technician.service-orders.show',
-            compact('serviceOrder')
+            compact(
+                'serviceOrder'
+            )
         );
     }
 
 
     /**
-     * Kỹ thuật viên bắt đầu thực hiện phiếu.
+     * Kỹ thuật viên bắt đầu
+     * thực hiện phiếu bảo dưỡng.
      */
     public function start(
         ServiceOrder $serviceOrder
@@ -216,6 +222,12 @@ class TechnicianServiceOrderController extends Controller
                 $serviceOrder,
                 $user
             ) {
+                /*
+                |--------------------------------------------------------------------------
+                | LOCK SERVICE ORDER
+                |--------------------------------------------------------------------------
+                */
+
                 $lockedOrder =
                     ServiceOrder::query()
                         ->whereKey(
@@ -225,11 +237,23 @@ class TechnicianServiceOrderController extends Controller
                         ->firstOrFail();
 
 
+                /*
+                |--------------------------------------------------------------------------
+                | RECHECK ASSIGNMENT
+                |--------------------------------------------------------------------------
+                */
+
                 $this->authorizeAssignedTechnician(
                     $lockedOrder,
                     $user->id
                 );
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | STATUS GUARD
+                |--------------------------------------------------------------------------
+                */
 
                 if (
                     $lockedOrder->status
@@ -245,6 +269,30 @@ class TechnicianServiceOrderController extends Controller
                 }
 
 
+                /*
+                |--------------------------------------------------------------------------
+                | OLD VALUES
+                |--------------------------------------------------------------------------
+                */
+
+                $oldValues = [
+                    'status' =>
+                        $lockedOrder->status,
+
+                    'started_at' =>
+                        $lockedOrder->started_at
+                            ? (string)
+                            $lockedOrder->started_at
+                            : null,
+                ];
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | START SERVICE ORDER
+                |--------------------------------------------------------------------------
+                */
+
                 $lockedOrder->update([
                     'status' =>
                         'IN_PROGRESS',
@@ -253,6 +301,12 @@ class TechnicianServiceOrderController extends Controller
                         now(),
                 ]);
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | SYNCHRONIZE APPOINTMENT
+                |--------------------------------------------------------------------------
+                */
 
                 $appointment =
                     $lockedOrder
@@ -272,6 +326,45 @@ class TechnicianServiceOrderController extends Controller
                             'IN_PROGRESS',
                     ]);
                 }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | ACTIVITY LOG
+                |--------------------------------------------------------------------------
+                */
+
+                ActivityLogger::log(
+                    action:
+                        'SERVICE_ORDER_STARTED',
+
+                    description:
+                        'Kỹ thuật viên '
+                        .$user->name
+                        .' đã bắt đầu thực hiện phiếu '
+                        .$lockedOrder->order_code
+                        .'.',
+
+                    entity:
+                        $lockedOrder,
+
+                    oldValues:
+                        $oldValues,
+
+                    newValues: [
+                        'status' =>
+                            $lockedOrder->status,
+
+                        'started_at' =>
+                            $lockedOrder->started_at
+                                ? (string)
+                                $lockedOrder->started_at
+                                : null,
+
+                        'technician_id' =>
+                            $user->id,
+                    ]
+                );
             }
         );
 
@@ -300,6 +393,12 @@ class TechnicianServiceOrderController extends Controller
             $this->authorizeTechnician();
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | INITIAL AUTHORIZATION
+        |--------------------------------------------------------------------------
+        */
+
         $this->authorizeAssignedTechnician(
             $serviceOrder,
             $user->id
@@ -320,6 +419,12 @@ class TechnicianServiceOrderController extends Controller
         }
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE NOTE
+        |--------------------------------------------------------------------------
+        */
+
         $request->merge([
             'technician_note' =>
                 $this->normalizeNullableText(
@@ -329,6 +434,12 @@ class TechnicianServiceOrderController extends Controller
                 ),
         ]);
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION
+        |--------------------------------------------------------------------------
+        */
 
         $validated =
             $request->validate(
@@ -370,6 +481,12 @@ class TechnicianServiceOrderController extends Controller
             );
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE TRANSACTION
+        |--------------------------------------------------------------------------
+        */
+
         DB::transaction(
             function () use (
                 $serviceOrder,
@@ -377,6 +494,12 @@ class TechnicianServiceOrderController extends Controller
                 $validated,
                 $user
             ) {
+                /*
+                |--------------------------------------------------------------------------
+                | LOCK SERVICE ORDER
+                |--------------------------------------------------------------------------
+                */
+
                 $lockedOrder =
                     ServiceOrder::query()
                         ->whereKey(
@@ -386,11 +509,23 @@ class TechnicianServiceOrderController extends Controller
                         ->firstOrFail();
 
 
+                /*
+                |--------------------------------------------------------------------------
+                | RECHECK ASSIGNMENT
+                |--------------------------------------------------------------------------
+                */
+
                 $this->authorizeAssignedTechnician(
                     $lockedOrder,
                     $user->id
                 );
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | ORDER STATUS GUARD
+                |--------------------------------------------------------------------------
+                */
 
                 if (
                     $lockedOrder->status
@@ -402,6 +537,12 @@ class TechnicianServiceOrderController extends Controller
                     ]);
                 }
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | LOCK ITEM
+                |--------------------------------------------------------------------------
+                */
 
                 $lockedItem =
                     ServiceOrderItem::query()
@@ -426,6 +567,12 @@ class TechnicianServiceOrderController extends Controller
                 }
 
 
+                /*
+                |--------------------------------------------------------------------------
+                | CURRENT / NEXT STATUS
+                |--------------------------------------------------------------------------
+                */
+
                 $currentStatus =
                     $lockedItem->status;
 
@@ -435,6 +582,12 @@ class TechnicianServiceOrderController extends Controller
                         'status'
                     ];
 
+
+                /*
+                |--------------------------------------------------------------------------
+                | BUSINESS RULES
+                |--------------------------------------------------------------------------
+                */
 
                 if (
                     $currentStatus
@@ -503,6 +656,28 @@ class TechnicianServiceOrderController extends Controller
                 }
 
 
+                /*
+                |--------------------------------------------------------------------------
+                | OLD VALUES
+                |--------------------------------------------------------------------------
+                */
+
+                $oldValues = [
+                    'status' =>
+                        $lockedItem->status,
+
+                    'technician_note' =>
+                        $lockedItem
+                            ->technician_note,
+                ];
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | UPDATE ITEM
+                |--------------------------------------------------------------------------
+                */
+
                 $lockedItem->update([
                     'status' =>
                         $nextStatus,
@@ -513,6 +688,80 @@ class TechnicianServiceOrderController extends Controller
                         ]
                         ?? null,
                 ]);
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | HUMAN FRIENDLY DESCRIPTION
+                |--------------------------------------------------------------------------
+                */
+
+                $itemName =
+                    $lockedItem
+                        ->service_name
+                    ?: 'Hạng mục #'
+                        .$lockedItem->id;
+
+
+                if (
+                    $nextStatus
+                    === 'IN_PROGRESS'
+                ) {
+                    $description =
+                        'Kỹ thuật viên '
+                        .$user->name
+                        .' đã bắt đầu hạng mục "'
+                        .$itemName
+                        .'" của phiếu '
+                        .$lockedOrder->order_code
+                        .'.';
+                } else {
+                    $description =
+                        'Kỹ thuật viên '
+                        .$user->name
+                        .' đã hoàn thành hạng mục "'
+                        .$itemName
+                        .'" của phiếu '
+                        .$lockedOrder->order_code
+                        .'.';
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | ACTIVITY LOG
+                |--------------------------------------------------------------------------
+                */
+
+                ActivityLogger::log(
+                    action:
+                        'SERVICE_ITEM_STATUS_CHANGED',
+
+                    description:
+                        $description,
+
+                    entity:
+                        $lockedItem,
+
+                    oldValues:
+                        $oldValues,
+
+                    newValues: [
+                        'status' =>
+                            $lockedItem->status,
+
+                        'technician_note' =>
+                            $lockedItem
+                                ->technician_note,
+
+                        'service_order_id' =>
+                            $lockedOrder->id,
+
+                        'service_order_code' =>
+                            $lockedOrder
+                                ->order_code,
+                    ]
+                );
             }
         );
 
@@ -601,16 +850,6 @@ class TechnicianServiceOrderController extends Controller
         |--------------------------------------------------------------------------
         | COMPLETE TRANSACTION
         |--------------------------------------------------------------------------
-        |
-        | Khóa Service Order + toàn bộ Item trước khi hoàn thành.
-        |
-        | Điều này tránh trường hợp:
-        |
-        | - hai request cùng đóng phiếu;
-        | - item thay đổi trong lúc đang kiểm tra;
-        | - phiếu bị phân công lại;
-        | - trạng thái phiếu thay đổi đồng thời.
-        |
         */
 
         DB::transaction(
@@ -648,7 +887,7 @@ class TechnicianServiceOrderController extends Controller
 
                 /*
                 |--------------------------------------------------------------------------
-                | RECHECK ORDER STATUS
+                | RECHECK STATUS
                 |--------------------------------------------------------------------------
                 */
 
@@ -682,7 +921,9 @@ class TechnicianServiceOrderController extends Controller
                             'service_order_id',
                             $lockedOrder->id
                         )
-                        ->orderBy('id')
+                        ->orderBy(
+                            'id'
+                        )
                         ->lockForUpdate()
                         ->get();
 
@@ -710,21 +951,23 @@ class TechnicianServiceOrderController extends Controller
                 */
 
                 $unfinishedItems =
-                    $lockedItems->filter(
-                        fn ($item) =>
-                            $item->status
-                            !== 'COMPLETED'
-                    );
+                    $lockedItems
+                        ->filter(
+                            fn ($item) =>
+                                $item->status
+                                !== 'COMPLETED'
+                        );
 
 
                 if (
-                    $unfinishedItems->isNotEmpty()
+                    $unfinishedItems
+                        ->isNotEmpty()
                 ) {
                     throw ValidationException::withMessages([
                         'service_order' =>
                             'Vẫn còn '
-                            . $unfinishedItems->count()
-                            . ' hạng mục chưa hoàn thành. Vui lòng hoàn thành toàn bộ hạng mục trước khi đóng phiếu.',
+                            .$unfinishedItems->count()
+                            .' hạng mục chưa hoàn thành. Vui lòng hoàn thành toàn bộ hạng mục trước khi đóng phiếu.',
                     ]);
                 }
 
@@ -744,7 +987,7 @@ class TechnicianServiceOrderController extends Controller
 
                 /*
                 |--------------------------------------------------------------------------
-                | PROTECT CANCELLED APPOINTMENT
+                | CANCELLED APPOINTMENT GUARD
                 |--------------------------------------------------------------------------
                 */
 
@@ -759,6 +1002,28 @@ class TechnicianServiceOrderController extends Controller
                             'Lịch hẹn liên quan đã bị hủy nên không thể hoàn thành phiếu bảo dưỡng.',
                     ]);
                 }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | OLD VALUES
+                |--------------------------------------------------------------------------
+                */
+
+                $oldValues = [
+                    'status' =>
+                        $lockedOrder->status,
+
+                    'completed_at' =>
+                        $lockedOrder->completed_at
+                            ? (string)
+                            $lockedOrder->completed_at
+                            : null,
+
+                    'technician_note' =>
+                        $lockedOrder
+                            ->technician_note,
+                ];
 
 
                 /*
@@ -799,6 +1064,53 @@ class TechnicianServiceOrderController extends Controller
                             'COMPLETED',
                     ]);
                 }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | ACTIVITY LOG
+                |--------------------------------------------------------------------------
+                */
+
+                ActivityLogger::log(
+                    action:
+                        'SERVICE_ORDER_COMPLETED',
+
+                    description:
+                        'Kỹ thuật viên '
+                        .$user->name
+                        .' đã hoàn thành phiếu bảo dưỡng '
+                        .$lockedOrder->order_code
+                        .'.',
+
+                    entity:
+                        $lockedOrder,
+
+                    oldValues:
+                        $oldValues,
+
+                    newValues: [
+                        'status' =>
+                            $lockedOrder->status,
+
+                        'completed_at' =>
+                            $lockedOrder->completed_at
+                                ? (string)
+                                $lockedOrder->completed_at
+                                : null,
+
+                        'technician_note' =>
+                            $lockedOrder
+                                ->technician_note,
+
+                        'technician_id' =>
+                            $user->id,
+
+                        'completed_items' =>
+                            $lockedItems
+                                ->count(),
+                    ]
+                );
             }
         );
 
@@ -875,9 +1187,6 @@ class TechnicianServiceOrderController extends Controller
 
     /**
      * Chuẩn hóa ghi chú nullable.
-     *
-     * Chỉ trim đầu/cuối, vẫn giữ
-     * xuống dòng trong nội dung kỹ thuật.
      */
     private function normalizeNullableText(
         mixed $value

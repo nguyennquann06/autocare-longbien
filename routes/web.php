@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\AdminActivityLogController;
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminServiceOrderController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminWorkforceController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
@@ -183,13 +186,8 @@ Route::post(
 
 /*
 |--------------------------------------------------------------------------
-| ADMIN / GARAGE OWNER AREA
+| ADMIN / GARAGE OWNER
 |--------------------------------------------------------------------------
-|
-| ADMIN là Chủ xưởng.
-|
-| Chỉ ADMIN được truy cập /admin/*
-|
 */
 
 Route::middleware([
@@ -240,6 +238,28 @@ Route::middleware([
 
 
             Route::get(
+                '/users/create',
+                [
+                    AdminUserController::class,
+                    'create',
+                ]
+            )->name(
+                'users.create'
+            );
+
+
+            Route::post(
+                '/users',
+                [
+                    AdminUserController::class,
+                    'store',
+                ]
+            )->name(
+                'users.store'
+            );
+
+
+            Route::get(
                 '/users/{user}',
                 [
                     AdminUserController::class,
@@ -259,6 +279,79 @@ Route::middleware([
             )->name(
                 'users.role.update'
             );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | WORKFORCE MONITORING
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                '/workforce',
+                [
+                    AdminWorkforceController::class,
+                    'index',
+                ]
+            )->name(
+                'workforce.index'
+            );
+
+
+            Route::get(
+                '/workforce/{user}',
+                [
+                    AdminWorkforceController::class,
+                    'show',
+                ]
+            )->name(
+                'workforce.show'
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SERVICE ORDER ASSIGNMENT
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                '/service-orders',
+                [
+                    AdminServiceOrderController::class,
+                    'index',
+                ]
+            )->name(
+                'service-orders.index'
+            );
+
+
+            Route::patch(
+                '/service-orders/{serviceOrder}/technician',
+                [
+                    AdminServiceOrderController::class,
+                    'updateTechnician',
+                ]
+            )->name(
+                'service-orders.technician.update'
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ACTIVITY LOGS
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                '/activity-logs',
+                [
+                    AdminActivityLogController::class,
+                    'index',
+                ]
+            )->name(
+                'activity-logs.index'
+            );
         }
     );
 
@@ -275,12 +368,6 @@ Route::middleware([
 ])->group(
     function () {
 
-        /*
-        |--------------------------------------------------------------------------
-        | CUSTOMER DASHBOARD
-        |--------------------------------------------------------------------------
-        */
-
         Route::get(
             '/customer/dashboard',
             [
@@ -291,12 +378,6 @@ Route::middleware([
             'customer.dashboard'
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CHATBOT
-        |--------------------------------------------------------------------------
-        */
 
         Route::get(
             '/chat',
@@ -319,12 +400,6 @@ Route::middleware([
             'chat.messages.store'
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | VEHICLES
-        |--------------------------------------------------------------------------
-        */
 
         Route::get(
             '/vehicles',
@@ -414,12 +489,6 @@ Route::middleware([
         );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | APPOINTMENTS
-        |--------------------------------------------------------------------------
-        */
-
         Route::get(
             '/appointments',
             [
@@ -475,12 +544,6 @@ Route::middleware([
         );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | MAINTENANCE HISTORY
-        |--------------------------------------------------------------------------
-        */
-
         Route::get(
             '/maintenance-history',
             [
@@ -502,12 +565,6 @@ Route::middleware([
             'maintenance-history.show'
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CUSTOMER INVOICES
-        |--------------------------------------------------------------------------
-        */
 
         Route::get(
             '/my-invoices',
@@ -537,10 +594,6 @@ Route::middleware([
 |--------------------------------------------------------------------------
 | STAFF OPERATIONS
 |--------------------------------------------------------------------------
-|
-| ADMIN là Chủ xưởng nên vẫn có toàn bộ
-| quyền nghiệp vụ của STAFF.
-|
 */
 
 Route::middleware([
@@ -556,12 +609,6 @@ Route::middleware([
     ->group(
         function () {
 
-            /*
-            |--------------------------------------------------------------------------
-            | STAFF DASHBOARD
-            |--------------------------------------------------------------------------
-            */
-
             Route::get(
                 '/dashboard',
                 [
@@ -572,12 +619,6 @@ Route::middleware([
                 'dashboard'
             );
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | APPOINTMENTS
-            |--------------------------------------------------------------------------
-            */
 
             Route::get(
                 '/appointments',
@@ -611,12 +652,6 @@ Route::middleware([
                 'appointments.show'
             );
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | SERVICE ORDERS
-            |--------------------------------------------------------------------------
-            */
 
             Route::get(
                 '/appointments/{appointment}/service-order/create',
@@ -662,12 +697,6 @@ Route::middleware([
             );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | INVOICES
-            |--------------------------------------------------------------------------
-            */
-
             Route::get(
                 '/service-orders/{serviceOrder}/invoice/create',
                 [
@@ -712,12 +741,6 @@ Route::middleware([
             );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | INVENTORY
-            |--------------------------------------------------------------------------
-            */
-
             Route::get(
                 '/parts',
                 [
@@ -757,11 +780,6 @@ Route::middleware([
 |--------------------------------------------------------------------------
 | TECHNICIAN AREA
 |--------------------------------------------------------------------------
-|
-| Quyền giám sát/can thiệp của ADMIN
-| đối với TECHNICIAN sẽ được triển khai
-| ở bước riêng.
-|
 */
 
 Route::middleware([

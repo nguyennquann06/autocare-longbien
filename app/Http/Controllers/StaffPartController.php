@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\InventoryTransaction;
 use App\Models\Part;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 class StaffPartController extends Controller
 {
     /**
-     * Danh sách phụ tùng trong kho.
+     * Danh sách phụ tùng.
      */
     public function index()
     {
@@ -21,31 +22,25 @@ class StaffPartController extends Controller
 
         $parts =
             Part::query()
-                ->orderBy('category')
-                ->orderBy('name')
+                ->orderBy(
+                    'category'
+                )
+                ->orderBy(
+                    'name'
+                )
                 ->get();
 
 
-        /**
-         * Tổng số loại phụ tùng.
-         */
         $totalParts =
             $parts->count();
 
 
-        /**
-         * Tổng số lượng phụ tùng đang tồn.
-         */
         $totalStockQuantity =
             $parts->sum(
                 'stock_quantity'
             );
 
 
-        /**
-         * Số loại phụ tùng đang hoạt động
-         * cần chú ý vì tồn kho <= tồn tối thiểu.
-         */
         $lowStockCount =
             $parts
                 ->filter(
@@ -63,10 +58,6 @@ class StaffPartController extends Controller
                 ->count();
 
 
-        /**
-         * Giá trị tồn kho hiện tại
-         * tính theo giá nhập gần nhất.
-         */
         $inventoryCostValue =
             $parts->sum(
                 function ($part) {
@@ -94,7 +85,7 @@ class StaffPartController extends Controller
 
 
     /**
-     * Form nhập kho cho một phụ tùng.
+     * Form nhập kho.
      */
     public function showStockInForm(
         Part $part
@@ -102,10 +93,6 @@ class StaffPartController extends Controller
         $this->authorizeStaff();
 
 
-        /**
-         * Phụ tùng ngừng sử dụng
-         * không cho nhập kho.
-         */
         if (
             !$part->is_active
         ) {
@@ -122,13 +109,15 @@ class StaffPartController extends Controller
 
         return view(
             'staff.parts.stock-in',
-            compact('part')
+            compact(
+                'part'
+            )
         );
     }
 
 
     /**
-     * Xử lý nhập kho.
+     * Nhập kho.
      */
     public function stockIn(
         Request $request,
@@ -136,12 +125,6 @@ class StaffPartController extends Controller
     ) {
         $this->authorizeStaff();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | BUSINESS GUARD
-        |--------------------------------------------------------------------------
-        */
 
         if (
             !$part->is_active
@@ -157,12 +140,6 @@ class StaffPartController extends Controller
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALIZE INPUT
-        |--------------------------------------------------------------------------
-        */
-
         $request->merge([
             'note' =>
                 $this->normalizeNullableText(
@@ -172,12 +149,6 @@ class StaffPartController extends Controller
                 ),
         ]);
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDATION
-        |--------------------------------------------------------------------------
-        */
 
         $validated =
             $request->validate(
@@ -204,12 +175,6 @@ class StaffPartController extends Controller
                     ],
                 ],
                 [
-                    /*
-                    |--------------------------------------------------------------------------
-                    | QUANTITY
-                    |--------------------------------------------------------------------------
-                    */
-
                     'quantity.required' =>
                         'Vui lòng nhập số lượng phụ tùng cần nhập.',
 
@@ -219,13 +184,6 @@ class StaffPartController extends Controller
                     'quantity.min' =>
                         'Số lượng nhập kho phải từ 1 trở lên.',
 
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | UNIT COST
-                    |--------------------------------------------------------------------------
-                    */
-
                     'unit_cost.required' =>
                         'Vui lòng nhập giá nhập trên mỗi đơn vị.',
 
@@ -234,13 +192,6 @@ class StaffPartController extends Controller
 
                     'unit_cost.min' =>
                         'Giá nhập phải lớn hơn 0.',
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | NOTE
-                    |--------------------------------------------------------------------------
-                    */
 
                     'note.string' =>
                         'Ghi chú nhập kho không hợp lệ.',
@@ -254,17 +205,6 @@ class StaffPartController extends Controller
         $user =
             Auth::user();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | STOCK TRANSACTION
-        |--------------------------------------------------------------------------
-        |
-        | Lock bản ghi Part để tránh hai nhân viên
-        | cùng đọc một stock_quantity cũ và cập nhật
-        | sai tồn kho.
-        |
-        */
 
         DB::transaction(
             function () use (
@@ -281,26 +221,13 @@ class StaffPartController extends Controller
                         ->first();
 
 
-                if (
-                    !$lockedPart
-                ) {
+                if (!$lockedPart) {
                     throw ValidationException::withMessages([
                         'part' =>
                             'Phụ tùng không còn tồn tại trong hệ thống.',
                     ]);
                 }
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | RECHECK ACTIVE STATUS
-                |--------------------------------------------------------------------------
-                |
-                | Phải kiểm tra lại sau khi lock,
-                | vì trạng thái có thể đã thay đổi
-                | sau thời điểm form được mở.
-                |
-                */
 
                 if (
                     !$lockedPart->is_active
@@ -316,6 +243,12 @@ class StaffPartController extends Controller
                     (int)
                     $lockedPart
                         ->stock_quantity;
+
+
+                $oldCostPrice =
+                    (float)
+                    $lockedPart
+                        ->cost_price;
 
 
                 $quantityAdded =
@@ -338,16 +271,6 @@ class StaffPartController extends Controller
                     ];
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | UPDATE STOCK
-                |--------------------------------------------------------------------------
-                |
-                | cost_price được sử dụng như
-                | giá nhập gần nhất.
-                |
-                */
-
                 $lockedPart->update([
                     'stock_quantity' =>
                         $quantityAfter,
@@ -357,46 +280,85 @@ class StaffPartController extends Controller
                 ]);
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | INVENTORY TRANSACTION
-                |--------------------------------------------------------------------------
-                */
+                $inventoryTransaction =
+                    InventoryTransaction::query()
+                        ->create([
+                            'part_id' =>
+                                $lockedPart->id,
 
-                InventoryTransaction::create([
-                    'part_id' =>
-                        $lockedPart->id,
+                            'service_order_id' =>
+                                null,
 
-                    'service_order_id' =>
-                        null,
+                            'performed_by' =>
+                                $user->id,
 
-                    'performed_by' =>
-                        $user->id,
+                            'transaction_type' =>
+                                InventoryTransaction::TYPE_IN,
 
-                    'transaction_type' =>
-                        InventoryTransaction::TYPE_IN,
+                            'quantity' =>
+                                $quantityAdded,
 
-                    'quantity' =>
-                        $quantityAdded,
+                            'quantity_before' =>
+                                $quantityBefore,
 
-                    'quantity_before' =>
-                        $quantityBefore,
+                            'quantity_after' =>
+                                $quantityAfter,
 
-                    'quantity_after' =>
-                        $quantityAfter,
+                            'unit_cost' =>
+                                $unitCost,
 
-                    'unit_cost' =>
-                        $unitCost,
+                            'note' =>
+                                $validated[
+                                    'note'
+                                ]
+                                ?? null,
 
-                    'note' =>
-                        $validated[
-                            'note'
-                        ]
-                        ?? null,
+                            'transaction_at' =>
+                                now(),
+                        ]);
 
-                    'transaction_at' =>
-                        now(),
-                ]);
+
+                ActivityLogger::log(
+                    action:
+                        'PART_STOCK_IN',
+
+                    description:
+                        'Đã nhập '
+                        .$quantityAdded
+                        .' '
+                        .$lockedPart->unit
+                        .' '
+                        .$lockedPart->name
+                        .' vào kho.',
+
+                    entity:
+                        $inventoryTransaction,
+
+                    oldValues: [
+                        'part_id' =>
+                            $lockedPart->id,
+
+                        'stock_quantity' =>
+                            $quantityBefore,
+
+                        'cost_price' =>
+                            $oldCostPrice,
+                    ],
+
+                    newValues: [
+                        'part_id' =>
+                            $lockedPart->id,
+
+                        'quantity_in' =>
+                            $quantityAdded,
+
+                        'stock_quantity' =>
+                            $quantityAfter,
+
+                        'cost_price' =>
+                            $unitCost,
+                    ]
+                );
             }
         );
 
@@ -413,8 +375,7 @@ class StaffPartController extends Controller
 
 
     /**
-     * Chỉ STAFF và ADMIN được
-     * truy cập chức năng quản lý kho.
+     * STAFF / ADMIN.
      */
     private function authorizeStaff(): void
     {
@@ -454,9 +415,6 @@ class StaffPartController extends Controller
 
     /**
      * Chuẩn hóa text nullable.
-     *
-     * Giữ nguyên xuống dòng,
-     * chỉ loại khoảng trắng đầu/cuối.
      */
     private function normalizeNullableText(
         mixed $value
