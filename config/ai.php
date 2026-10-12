@@ -30,39 +30,20 @@ return [
     |--------------------------------------------------------------------------
     | Conversation Memory
     |--------------------------------------------------------------------------
-    |
-    | Chỉ giữ một lượng lịch sử ngắn
-    | trong prompt để tránh tăng token
-    | vô hạn khi conversation dài.
-    |
     */
 
     'conversation' => [
 
-        /*
-         * Số message gần nhất
-         * đưa trực tiếp vào LLM.
-         *
-         * 8 messages ~ khoảng 4 lượt hỏi đáp.
-         */
         'history_message_limit' => (int) env(
             'AI_HISTORY_MESSAGE_LIMIT',
             8
         ),
 
-        /*
-         * Số message gần nhất dùng
-         * hỗ trợ intent / pronoun resolution.
-         */
         'routing_history_message_limit' => (int) env(
             'AI_ROUTING_HISTORY_MESSAGE_LIMIT',
             4
         ),
 
-        /*
-         * Giới hạn ký tự cho từng message
-         * trước khi đưa vào prompt.
-         */
         'max_message_chars' => (int) env(
             'AI_HISTORY_MAX_MESSAGE_CHARS',
             1800
@@ -75,6 +56,12 @@ return [
     |--------------------------------------------------------------------------
     | RAG Settings
     |--------------------------------------------------------------------------
+    |
+    | Retrieval không chỉ lấy tài liệu có điểm cao nhất.
+    |
+    | Một tài liệu chỉ được đưa vào prompt nếu vượt qua
+    | Relevance Gate.
+    |
     */
 
     'rag' => [
@@ -86,24 +73,69 @@ return [
 
         'active_only' => true,
 
+
+        /*
+         * Trọng số Hybrid Search.
+         */
         'semantic_weight' => (float) env(
             'AI_RAG_SEMANTIC_WEIGHT',
-            0.75
+            0.80
         ),
 
         'lexical_weight' => (float) env(
             'AI_RAG_LEXICAL_WEIGHT',
-            0.25
+            0.20
         ),
 
+
+        /*
+         * Semantic tối thiểu khi document
+         * đồng thời có bằng chứng lexical.
+         */
         'semantic_min_score' => (float) env(
             'AI_RAG_SEMANTIC_MIN_SCORE',
-            0.35
+            0.55
         ),
 
+
+        /*
+         * Semantic cực mạnh.
+         *
+         * Vẫn yêu cầu có ít nhất một tín hiệu
+         * lexical để hạn chế false positive.
+         */
+        'semantic_strong_score' => (float) env(
+            'AI_RAG_SEMANTIC_STRONG_SCORE',
+            0.78
+        ),
+
+
+        /*
+         * Lexical score tối thiểu.
+         */
+        'lexical_min_score' => (int) env(
+            'AI_RAG_LEXICAL_MIN_SCORE',
+            8
+        ),
+
+
+        /*
+         * Nếu lexical rất mạnh thì có thể
+         * chấp nhận document ngay cả khi
+         * semantic embedding không thật cao.
+         */
+        'lexical_strong_score' => (int) env(
+            'AI_RAG_LEXICAL_STRONG_SCORE',
+            16
+        ),
+
+
+        /*
+         * Hybrid score tối thiểu.
+         */
         'hybrid_min_score' => (float) env(
             'AI_RAG_HYBRID_MIN_SCORE',
-            0.20
+            0.50
         ),
 
     ],

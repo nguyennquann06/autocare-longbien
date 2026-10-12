@@ -440,6 +440,59 @@
         box-shadow:
             0 6px 20px
             rgba(15, 23, 42, 0.05);
+        white-space: normal;
+    }
+
+    .chat-message.assistant
+    .chat-bubble p {
+        margin:
+            0
+            0
+            10px;
+    }
+
+    .chat-message.assistant
+    .chat-bubble p:last-child {
+        margin-bottom: 0;
+    }
+
+    .chat-message.assistant
+    .chat-bubble ul,
+    .chat-message.assistant
+    .chat-bubble ol {
+        margin:
+            8px
+            0
+            10px;
+        padding-left: 20px;
+    }
+
+    .chat-message.assistant
+    .chat-bubble ul:last-child,
+    .chat-message.assistant
+    .chat-bubble ol:last-child {
+        margin-bottom: 0;
+    }
+
+    .chat-message.assistant
+    .chat-bubble li {
+        padding-left: 2px;
+    }
+
+    .chat-message.assistant
+    .chat-bubble li + li {
+        margin-top: 5px;
+    }
+
+    .chat-message.assistant
+    .chat-bubble strong {
+        color: #1e293b;
+        font-weight: 850;
+    }
+
+    .chat-message.assistant
+    .chat-bubble em {
+        color: #475569;
     }
 
     .chat-message.user
@@ -1026,7 +1079,12 @@
                                 </div>
 
 
-                                <div class="chat-bubble">{{ $message->content }}</div>
+                                <div
+                                    class="chat-bubble"
+                                    @if (!$isUser)
+                                        data-markdown="true"
+                                    @endif
+                                >{{ $message->content }}</div>
 
 
                                 @if (
@@ -1208,6 +1266,221 @@
             }
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | SAFE MARKDOWN RENDERING
+            |--------------------------------------------------------------------------
+            |
+            | Chỉ hỗ trợ Markdown đơn giản:
+            |
+            | **bold**
+            | *italic*
+            | - bullet
+            | * bullet
+            | 1. ordered item
+            |
+            | HTML từ AI luôn được escape trước
+            | nên không cho AI chèn HTML trực tiếp.
+            |
+            */
+
+            function escapeHtml(
+                value
+            ) {
+                const element =
+                    document.createElement(
+                        'div'
+                    );
+
+                element.textContent =
+                    value ?? '';
+
+                return element.innerHTML;
+            }
+
+
+            function formatInlineMarkdown(
+                value
+            ) {
+                let html =
+                    escapeHtml(
+                        value
+                    );
+
+
+                html =
+                    html.replace(
+                        /\*\*(.+?)\*\*/g,
+                        '<strong>$1</strong>'
+                    );
+
+
+                html =
+                    html.replace(
+                        /(^|[\s(])\*([^*]+?)\*(?=$|[\s).,;:!?])/g,
+                        '$1<em>$2</em>'
+                    );
+
+
+                return html;
+            }
+
+
+            function renderAssistantMarkdown(
+                bubble,
+                content
+            ) {
+                const text =
+                    String(
+                        content ?? ''
+                    )
+                        .replace(
+                            /\r\n/g,
+                            '\n'
+                        );
+
+
+                const lines =
+                    text.split(
+                        '\n'
+                    );
+
+
+                let html =
+                    '';
+
+
+                let listType =
+                    null;
+
+
+                function closeList() {
+                    if (!listType) {
+                        return;
+                    }
+
+
+                    html +=
+                        `</${listType}>`;
+
+
+                    listType =
+                        null;
+                }
+
+
+                lines.forEach(
+                    function (rawLine) {
+                        const line =
+                            rawLine.trim();
+
+
+                        if (line === '') {
+                            closeList();
+
+                            return;
+                        }
+
+
+                        const bulletMatch =
+                            line.match(
+                                /^[-*]\s+(.+)$/
+                            );
+
+
+                        if (bulletMatch) {
+                            if (
+                                listType
+                                !== 'ul'
+                            ) {
+                                closeList();
+
+                                html +=
+                                    '<ul>';
+
+                                listType =
+                                    'ul';
+                            }
+
+
+                            html +=
+                                '<li>'
+                                +
+                                formatInlineMarkdown(
+                                    bulletMatch[1]
+                                )
+                                +
+                                '</li>';
+
+
+                            return;
+                        }
+
+
+                        const orderedMatch =
+                            line.match(
+                                /^\d+[.)]\s+(.+)$/
+                            );
+
+
+                        if (orderedMatch) {
+                            if (
+                                listType
+                                !== 'ol'
+                            ) {
+                                closeList();
+
+                                html +=
+                                    '<ol>';
+
+                                listType =
+                                    'ol';
+                            }
+
+
+                            html +=
+                                '<li>'
+                                +
+                                formatInlineMarkdown(
+                                    orderedMatch[1]
+                                )
+                                +
+                                '</li>';
+
+
+                            return;
+                        }
+
+
+                        closeList();
+
+
+                        html +=
+                            '<p>'
+                            +
+                            formatInlineMarkdown(
+                                line
+                            )
+                            +
+                            '</p>';
+                    }
+                );
+
+
+                closeList();
+
+
+                bubble.innerHTML =
+                    html;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ACTION BUTTONS
+            |--------------------------------------------------------------------------
+            */
+
             function appendActions(
                 contentWrapper,
                 actions
@@ -1308,6 +1581,12 @@
             }
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | CREATE MESSAGE
+            |--------------------------------------------------------------------------
+            */
+
             function createMessage(
                 role,
                 content,
@@ -1379,8 +1658,18 @@
                 bubble.className =
                     'chat-bubble';
 
-                bubble.textContent =
-                    content;
+
+                if (
+                    role === 'assistant'
+                ) {
+                    renderAssistantMarkdown(
+                        bubble,
+                        content
+                    );
+                } else {
+                    bubble.textContent =
+                        content;
+                }
 
 
                 const timeElement =
@@ -1439,6 +1728,12 @@
                 return wrapper;
             }
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | THINKING MESSAGE
+            |--------------------------------------------------------------------------
+            */
 
             function createThinkingMessage() {
                 const wrapper =
@@ -1550,14 +1845,36 @@
             }
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | CURRENT VIETNAM TIME
+            |--------------------------------------------------------------------------
+            |
+            | Phần này chỉ phục vụ hiển thị tức thời
+            | ở browser.
+            |
+            | Timezone chính của toàn hệ thống đã
+            | được cấu hình trong config/app.php
+            | và config/database.php.
+            |
+            */
+
             function currentTime() {
                 return new Intl
                     .DateTimeFormat(
                         'vi-VN',
                         {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false,
+                            hour:
+                                '2-digit',
+
+                            minute:
+                                '2-digit',
+
+                            hour12:
+                                false,
+
+                            timeZone:
+                                'Asia/Ho_Chi_Minh',
                         }
                     )
                     .format(
@@ -1566,10 +1883,17 @@
             }
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | SEND MESSAGE
+            |--------------------------------------------------------------------------
+            */
+
             async function sendMessage(
                 message
             ) {
                 removeEmptyState();
+
 
                 createMessage(
                     'user',
@@ -1578,10 +1902,13 @@
                 );
 
 
-                chatInput.value = '';
+                chatInput.value =
+                    '';
+
 
                 chatInput.style.height =
                     'auto';
+
 
                 sendButton.disabled =
                     true;
@@ -1599,7 +1926,8 @@
                                 )
                             ),
                             {
-                                method: 'POST',
+                                method:
+                                    'POST',
 
                                 headers: {
                                     'Content-Type':
@@ -1641,9 +1969,7 @@
                         data
                             .assistant_message
                             .content,
-                        data
-                            .assistant_message
-                            .created_at,
+                        currentTime(),
                         data
                             .assistant_message
                             .actions
@@ -1653,11 +1979,13 @@
                 catch (error) {
                     removeThinkingMessage();
 
+
                     createMessage(
                         'assistant',
                         'Đã xảy ra lỗi khi gửi câu hỏi. Vui lòng thử lại.',
                         currentTime()
                     );
+
 
                     console.error(
                         error
@@ -1667,20 +1995,29 @@
                     sendButton.disabled =
                         false;
 
+
                     chatInput.focus();
                 }
             }
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | FORM EVENTS
+            |--------------------------------------------------------------------------
+            */
 
             chatForm.addEventListener(
                 'submit',
                 function (event) {
                     event.preventDefault();
 
+
                     const message =
                         chatInput
                             .value
                             .trim();
+
 
                     if (
                         !message
@@ -1708,6 +2045,7 @@
                     ) {
                         event.preventDefault();
 
+
                         chatForm.requestSubmit();
                     }
                 }
@@ -1719,6 +2057,7 @@
                 function () {
                     this.style.height =
                         'auto';
+
 
                     this.style.height =
                         Math.min(
@@ -1742,6 +2081,7 @@
                                 chatInput.value =
                                     this.dataset.question;
 
+
                                 chatForm
                                     .requestSubmit();
                             }
@@ -1750,7 +2090,28 @@
                 );
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | RENDER SAVED ASSISTANT MESSAGES
+            |--------------------------------------------------------------------------
+            */
+
+            document
+                .querySelectorAll(
+                    '.chat-message.assistant .chat-bubble[data-markdown="true"]'
+                )
+                .forEach(
+                    function (bubble) {
+                        renderAssistantMarkdown(
+                            bubble,
+                            bubble.textContent
+                        );
+                    }
+                );
+
+
             scrollToBottom();
+
 
             chatInput.focus();
         }
