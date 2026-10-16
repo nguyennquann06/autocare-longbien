@@ -510,6 +510,107 @@
             rgba(37, 99, 235, 0.18);
     }
 
+    /* =====================================================
+       SOURCES
+       ===================================================== */
+
+    .chat-sources {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border: 1px solid #dbeafe;
+        border-radius: 13px;
+        background:
+            linear-gradient(
+                180deg,
+                #f8fbff,
+                #f1f7ff
+            );
+    }
+
+    .chat-sources-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+        color: #475569;
+        font-size: 9px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .chat-sources-title i {
+        color: #2563eb;
+        font-size: 11px;
+    }
+
+    .chat-source-list {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .chat-source-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px 9px;
+        border-radius: 10px;
+        background: white;
+    }
+
+    .chat-source-icon {
+        width: 25px;
+        height: 25px;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        color: #2563eb;
+        background: #eff6ff;
+        font-size: 11px;
+    }
+
+    .chat-source-content {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .chat-source-name {
+        color: #1e293b;
+        font-size: 9px;
+        font-weight: 900;
+        line-height: 1.45;
+    }
+
+    .chat-source-title {
+        margin-top: 2px;
+        color: #64748b;
+        font-size: 8px;
+        line-height: 1.5;
+    }
+
+    .chat-source-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 4px;
+        color: #2563eb;
+        text-decoration: none;
+        font-size: 8px;
+        font-weight: 850;
+    }
+
+    .chat-source-link:hover {
+        color: #1d4ed8;
+        text-decoration: underline;
+    }
+
+    /* =====================================================
+       ACTIONS
+       ===================================================== */
+
     .chat-message-actions {
         display: flex;
         flex-wrap: wrap;
@@ -949,12 +1050,10 @@
 
 
                         <p>
-
                             Mình là AutoCare AI.
                             Hãy hỏi về dịch vụ,
                             chi phí, chu kỳ bảo dưỡng
                             hoặc cách sử dụng hệ thống.
-
                         </p>
 
 
@@ -1036,6 +1135,82 @@
                                         ?? []
                                     )
                                     : [];
+
+                            $messageSources =
+                                !$isUser
+                                    ? (
+                                        $messageMetadata[
+                                            'sources'
+                                        ]
+                                        ?? []
+                                    )
+                                    : [];
+
+                            /*
+                             * Chỉ giữ source hợp lệ
+                             * và bỏ nguồn bị trùng URL.
+                             */
+                            $visibleSources =
+                                collect(
+                                    is_array(
+                                        $messageSources
+                                    )
+                                        ? $messageSources
+                                        : []
+                                )
+                                    ->filter(
+                                        function (
+                                            $source
+                                        ) {
+                                            return
+                                                is_array(
+                                                    $source
+                                                )
+                                                &&
+                                                (
+                                                    !empty(
+                                                        $source[
+                                                            'source_name'
+                                                        ]
+                                                        ?? null
+                                                    )
+                                                    ||
+                                                    !empty(
+                                                        $source[
+                                                            'source_title'
+                                                        ]
+                                                        ?? null
+                                                    )
+                                                );
+                                        }
+                                    )
+                                    ->unique(
+                                        function (
+                                            $source
+                                        ) {
+                                            return
+                                                $source[
+                                                    'source_url'
+                                                ]
+                                                ?? (
+                                                    (
+                                                        $source[
+                                                            'source_name'
+                                                        ]
+                                                        ?? ''
+                                                    )
+                                                    . '|'
+                                                    . (
+                                                        $source[
+                                                            'source_title'
+                                                        ]
+                                                        ?? ''
+                                                    )
+                                                );
+                                        }
+                                    )
+                                    ->take(3)
+                                    ->values();
                         @endphp
 
 
@@ -1085,6 +1260,136 @@
                                         data-markdown="true"
                                     @endif
                                 >{{ $message->content }}</div>
+
+
+                                @if (
+                                    !$isUser
+                                    &&
+                                    $visibleSources->isNotEmpty()
+                                )
+
+                                    <div class="chat-sources">
+
+                                        <div class="chat-sources-title">
+
+                                            <i class="bi bi-journal-check"></i>
+
+                                            Nguồn tham khảo
+
+                                        </div>
+
+
+                                        <div class="chat-source-list">
+
+                                            @foreach (
+                                                $visibleSources
+                                                as $source
+                                            )
+
+                                                @php
+                                                    $sourceUrl =
+                                                        $source[
+                                                            'source_url'
+                                                        ]
+                                                        ?? null;
+
+                                                    $validSourceUrl =
+                                                        is_string(
+                                                            $sourceUrl
+                                                        )
+                                                        &&
+                                                        filter_var(
+                                                            $sourceUrl,
+                                                            FILTER_VALIDATE_URL
+                                                        )
+                                                        &&
+                                                        in_array(
+                                                            parse_url(
+                                                                $sourceUrl,
+                                                                PHP_URL_SCHEME
+                                                            ),
+                                                            [
+                                                                'http',
+                                                                'https',
+                                                            ],
+                                                            true
+                                                        );
+                                                @endphp
+
+
+                                                <div class="chat-source-item">
+
+                                                    <div class="chat-source-icon">
+
+                                                        <i class="bi bi-link-45deg"></i>
+
+                                                    </div>
+
+
+                                                    <div class="chat-source-content">
+
+                                                        <div class="chat-source-name">
+
+                                                            {{
+                                                                $source[
+                                                                    'source_name'
+                                                                ]
+                                                                ?? 'Nguồn tham khảo'
+                                                            }}
+
+                                                        </div>
+
+
+                                                        @if (
+                                                            !empty(
+                                                                $source[
+                                                                    'source_title'
+                                                                ]
+                                                                ?? null
+                                                            )
+                                                        )
+
+                                                            <div class="chat-source-title">
+
+                                                                {{
+                                                                    $source[
+                                                                        'source_title'
+                                                                    ]
+                                                                }}
+
+                                                            </div>
+
+                                                        @endif
+
+
+                                                        @if ($validSourceUrl)
+
+                                                            <a
+                                                                href="{{ $sourceUrl }}"
+                                                                class="chat-source-link"
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                            >
+
+                                                                Xem nguồn
+
+                                                                <i class="bi bi-box-arrow-up-right"></i>
+
+                                                            </a>
+
+                                                        @endif
+
+                                                    </div>
+
+                                                </div>
+
+                                            @endforeach
+
+                                        </div>
+
+                                    </div>
+
+                                @endif
 
 
                                 @if (
@@ -1195,7 +1500,7 @@
 
                 <div class="chat-disclaimer">
 
-                    AutoCare AI sử dụng dữ liệu nội bộ
+                    AutoCare AI sử dụng dữ liệu có nguồn
                     và AI để hỗ trợ người dùng.
                     Các tư vấn kỹ thuật chỉ mang tính hỗ trợ.
 
@@ -1266,23 +1571,9 @@
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | SAFE MARKDOWN RENDERING
-            |--------------------------------------------------------------------------
-            |
-            | Chỉ hỗ trợ Markdown đơn giản:
-            |
-            | **bold**
-            | *italic*
-            | - bullet
-            | * bullet
-            | 1. ordered item
-            |
-            | HTML từ AI luôn được escape trước
-            | nên không cho AI chèn HTML trực tiếp.
-            |
-            */
+            /* =====================================================
+               SAFE MARKDOWN
+               ===================================================== */
 
             function escapeHtml(
                 value
@@ -1349,7 +1640,6 @@
                 let html =
                     '';
 
-
                 let listType =
                     null;
 
@@ -1362,7 +1652,6 @@
 
                     html +=
                         `</${listType}>`;
-
 
                     listType =
                         null;
@@ -1384,7 +1673,7 @@
 
                         const bulletMatch =
                             line.match(
-                                /^[-*]\s+(.+)$/
+                                /^[-*•]\s+(.+)$/
                             );
 
 
@@ -1475,11 +1764,389 @@
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | ACTION BUTTONS
-            |--------------------------------------------------------------------------
-            */
+            /* =====================================================
+               SOURCES
+               ===================================================== */
+
+            function normalizeSourceUrl(
+                value
+            ) {
+                if (
+                    typeof value !== 'string'
+                    ||
+                    value.trim() === ''
+                ) {
+                    return null;
+                }
+
+
+                try {
+                    const url =
+                        new URL(
+                            value,
+                            window.location.origin
+                        );
+
+
+                    if (
+                        ![
+                            'http:',
+                            'https:',
+                        ].includes(
+                            url.protocol
+                        )
+                    ) {
+                        return null;
+                    }
+
+
+                    return url.href;
+                } catch (error) {
+                    return null;
+                }
+            }
+
+
+            function appendSources(
+                contentWrapper,
+                sources
+            ) {
+                if (
+                    !Array.isArray(
+                        sources
+                    )
+                    ||
+                    sources.length === 0
+                ) {
+                    return;
+                }
+
+
+                const uniqueSources =
+                    [];
+
+                const seen =
+                    new Set();
+
+
+                sources.forEach(
+                    function (source) {
+                        if (
+                            !source
+                            ||
+                            typeof source
+                            !== 'object'
+                        ) {
+                            return;
+                        }
+
+
+                        const sourceName =
+                            String(
+                                source.source_name
+                                || ''
+                            )
+                                .trim();
+
+
+                        const sourceTitle =
+                            String(
+                                source.source_title
+                                || ''
+                            )
+                                .trim();
+
+
+                        const sourceUrl =
+                            normalizeSourceUrl(
+                                source.source_url
+                            );
+
+
+                        if (
+                            !sourceName
+                            &&
+                            !sourceTitle
+                        ) {
+                            return;
+                        }
+
+
+                        const key =
+                            sourceUrl
+                            || (
+                                sourceName
+                                +
+                                '|'
+                                +
+                                sourceTitle
+                            );
+
+
+                        if (
+                            seen.has(
+                                key
+                            )
+                        ) {
+                            return;
+                        }
+
+
+                        seen.add(
+                            key
+                        );
+
+
+                        uniqueSources.push({
+                            sourceName:
+                                sourceName,
+
+                            sourceTitle:
+                                sourceTitle,
+
+                            sourceUrl:
+                                sourceUrl,
+                        });
+                    }
+                );
+
+
+                if (
+                    uniqueSources.length === 0
+                ) {
+                    return;
+                }
+
+
+                const wrapper =
+                    document.createElement(
+                        'div'
+                    );
+
+                wrapper.className =
+                    'chat-sources';
+
+
+                const title =
+                    document.createElement(
+                        'div'
+                    );
+
+                title.className =
+                    'chat-sources-title';
+
+
+                const titleIcon =
+                    document.createElement(
+                        'i'
+                    );
+
+                titleIcon.className =
+                    'bi bi-journal-check';
+
+
+                const titleText =
+                    document.createElement(
+                        'span'
+                    );
+
+                titleText.textContent =
+                    'Nguồn tham khảo';
+
+
+                title.appendChild(
+                    titleIcon
+                );
+
+                title.appendChild(
+                    titleText
+                );
+
+
+                const list =
+                    document.createElement(
+                        'div'
+                    );
+
+                list.className =
+                    'chat-source-list';
+
+
+                uniqueSources
+                    .slice(
+                        0,
+                        3
+                    )
+                    .forEach(
+                        function (source) {
+                            const item =
+                                document.createElement(
+                                    'div'
+                                );
+
+                            item.className =
+                                'chat-source-item';
+
+
+                            const iconWrapper =
+                                document.createElement(
+                                    'div'
+                                );
+
+                            iconWrapper.className =
+                                'chat-source-icon';
+
+
+                            const icon =
+                                document.createElement(
+                                    'i'
+                                );
+
+                            icon.className =
+                                'bi bi-link-45deg';
+
+
+                            iconWrapper.appendChild(
+                                icon
+                            );
+
+
+                            const body =
+                                document.createElement(
+                                    'div'
+                                );
+
+                            body.className =
+                                'chat-source-content';
+
+
+                            const name =
+                                document.createElement(
+                                    'div'
+                                );
+
+                            name.className =
+                                'chat-source-name';
+
+                            name.textContent =
+                                source.sourceName
+                                || 'Nguồn tham khảo';
+
+
+                            body.appendChild(
+                                name
+                            );
+
+
+                            if (
+                                source.sourceTitle
+                            ) {
+                                const sourceTitleElement =
+                                    document.createElement(
+                                        'div'
+                                    );
+
+                                sourceTitleElement.className =
+                                    'chat-source-title';
+
+                                sourceTitleElement.textContent =
+                                    source.sourceTitle;
+
+
+                                body.appendChild(
+                                    sourceTitleElement
+                                );
+                            }
+
+
+                            if (
+                                source.sourceUrl
+                            ) {
+                                const link =
+                                    document.createElement(
+                                        'a'
+                                    );
+
+                                link.className =
+                                    'chat-source-link';
+
+                                link.href =
+                                    source.sourceUrl;
+
+                                link.target =
+                                    '_blank';
+
+                                link.rel =
+                                    'noopener noreferrer';
+
+
+                                const label =
+                                    document.createElement(
+                                        'span'
+                                    );
+
+                                label.textContent =
+                                    'Xem nguồn';
+
+
+                                const externalIcon =
+                                    document.createElement(
+                                        'i'
+                                    );
+
+                                externalIcon.className =
+                                    'bi bi-box-arrow-up-right';
+
+
+                                link.appendChild(
+                                    label
+                                );
+
+                                link.appendChild(
+                                    externalIcon
+                                );
+
+
+                                body.appendChild(
+                                    link
+                                );
+                            }
+
+
+                            item.appendChild(
+                                iconWrapper
+                            );
+
+                            item.appendChild(
+                                body
+                            );
+
+
+                            list.appendChild(
+                                item
+                            );
+                        }
+                    );
+
+
+                wrapper.appendChild(
+                    title
+                );
+
+                wrapper.appendChild(
+                    list
+                );
+
+
+                contentWrapper.appendChild(
+                    wrapper
+                );
+            }
+
+
+            /* =====================================================
+               ACTIONS
+               ===================================================== */
 
             function appendActions(
                 contentWrapper,
@@ -1581,17 +2248,16 @@
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | CREATE MESSAGE
-            |--------------------------------------------------------------------------
-            */
+            /* =====================================================
+               CREATE MESSAGE
+               ===================================================== */
 
             function createMessage(
                 role,
                 content,
                 time = '',
-                actions = []
+                actions = [],
+                sources = []
             ) {
                 const wrapper =
                     document.createElement(
@@ -1696,6 +2362,12 @@
                 if (
                     role === 'assistant'
                 ) {
+                    appendSources(
+                        contentWrapper,
+                        sources
+                    );
+
+
                     appendActions(
                         contentWrapper,
                         actions
@@ -1729,11 +2401,9 @@
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | THINKING MESSAGE
-            |--------------------------------------------------------------------------
-            */
+            /* =====================================================
+               THINKING
+               ===================================================== */
 
             function createThinkingMessage() {
                 const wrapper =
@@ -1845,19 +2515,9 @@
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | CURRENT VIETNAM TIME
-            |--------------------------------------------------------------------------
-            |
-            | Phần này chỉ phục vụ hiển thị tức thời
-            | ở browser.
-            |
-            | Timezone chính của toàn hệ thống đã
-            | được cấu hình trong config/app.php
-            | và config/database.php.
-            |
-            */
+            /* =====================================================
+               TIME
+               ===================================================== */
 
             function currentTime() {
                 return new Intl
@@ -1883,11 +2543,9 @@
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | SEND MESSAGE
-            |--------------------------------------------------------------------------
-            */
+            /* =====================================================
+               SEND MESSAGE
+               ===================================================== */
 
             async function sendMessage(
                 message
@@ -1905,10 +2563,8 @@
                 chatInput.value =
                     '';
 
-
                 chatInput.style.height =
                     'auto';
-
 
                 sendButton.disabled =
                     true;
@@ -1973,6 +2629,10 @@
                         data
                             .assistant_message
                             .actions
+                        || [],
+                        data
+                            .assistant_message
+                            .sources
                         || []
                     );
                 }
@@ -1995,17 +2655,14 @@
                     sendButton.disabled =
                         false;
 
-
                     chatInput.focus();
                 }
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | FORM EVENTS
-            |--------------------------------------------------------------------------
-            */
+            /* =====================================================
+               EVENTS
+               ===================================================== */
 
             chatForm.addEventListener(
                 'submit',
@@ -2090,11 +2747,9 @@
                 );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | RENDER SAVED ASSISTANT MESSAGES
-            |--------------------------------------------------------------------------
-            */
+            /* =====================================================
+               RENDER SAVED MARKDOWN
+               ===================================================== */
 
             document
                 .querySelectorAll(
@@ -2111,7 +2766,6 @@
 
 
             scrollToBottom();
-
 
             chatInput.focus();
         }
