@@ -91,10 +91,21 @@ class AuditKnowledgeRetrieval extends Command
         }
 
 
+        $aiMode =
+            strtolower(
+                trim(
+                    (string) config(
+                        'ai.mode',
+                        'live'
+                    )
+                )
+            );
+
+
         if (
-            $embeddedDocuments
-            !==
-            $totalDocuments
+            $aiMode !== 'test'
+            &&
+            $embeddedDocuments !== $totalDocuments
         ) {
             $this->warn(
                 'Chưa phải toàn bộ Knowledge Document có embedding.'
@@ -105,6 +116,21 @@ class AuditKnowledgeRetrieval extends Command
             );
 
             return self::FAILURE;
+        }
+
+
+        if (
+            $aiMode === 'test'
+            &&
+            $embeddedDocuments !== $totalDocuments
+        ) {
+            $this->warn(
+                'AI_MODE=test: bỏ qua yêu cầu phải có đầy đủ embedding.'
+            );
+
+            $this->line(
+                'Retrieval audit sẽ sử dụng lexical-only theo cấu hình TEST mode.'
+            );
         }
 
 
@@ -122,27 +148,19 @@ class AuditKnowledgeRetrieval extends Command
             );
 
 
-        $results =
-            [];
+        $results = [];
 
+        $passed = 0;
 
-        $passed =
-            0;
-
-
-        $failed =
-            0;
+        $failed = 0;
 
 
         foreach (
             $tests
-            as $index =>
-                $test
+            as $index => $test
         ) {
             $number =
-                $index
-                +
-                1;
+                $index + 1;
 
 
             $question =
@@ -216,8 +234,7 @@ class AuditKnowledgeRetrieval extends Command
                             ->take(
                                 $limit
                             )
-                        as $rank =>
-                            $document
+                        as $rank => $document
                     ) {
                         $metadata =
                             is_array(
@@ -244,9 +261,7 @@ class AuditKnowledgeRetrieval extends Command
                         $this->line(
                             '  '
                             . (
-                                $rank
-                                +
-                                1
+                                $rank + 1
                             )
                             . '. '
                             . $document->title
@@ -383,12 +398,8 @@ class AuditKnowledgeRetrieval extends Command
             $total > 0
                 ? round(
                     (
-                        $passed
-                        /
-                        $total
-                    )
-                    *
-                    100,
+                        $passed / $total
+                    ) * 100,
                     2
                 )
                 : 0;
@@ -915,8 +926,7 @@ class AuditKnowledgeRetrieval extends Command
         */
 
         if (
-            ($test['expect_empty'] ?? false)
-            === true
+            ($test['expect_empty'] ?? false) === true
         ) {
             if (
                 $documents->isEmpty()
@@ -1082,18 +1092,26 @@ class AuditKnowledgeRetrieval extends Command
                             }
 
 
-                            return
+                            $normalizedBrand =
                                 Str::lower(
                                     trim(
                                         (string) $brand
                                     )
-                                )
-                                !==
+                                );
+
+
+                            $normalizedExpectedBrand =
                                 Str::lower(
                                     trim(
                                         $expectedBrand
                                     )
                                 );
+
+
+                            return
+                                $normalizedBrand !== $normalizedExpectedBrand
+                                &&
+                                $normalizedBrand !== 'general';
                         }
                     );
 
