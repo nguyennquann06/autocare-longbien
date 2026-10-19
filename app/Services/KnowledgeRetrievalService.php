@@ -378,6 +378,37 @@ class KnowledgeRetrievalService
         |--------------------------------------------------------------------------
         */
 
+        $aiMode =
+            strtolower(
+                trim(
+                    (string) config(
+                        'ai.mode',
+                        'live'
+                    )
+                )
+            );
+
+
+        /*
+         * TEST mode tuyệt đối không gọi
+         * Gemini Embedding API thật.
+         *
+         * Toàn bộ retrieval sẽ dùng
+         * lexical ranking tại local.
+         */
+        if ($aiMode === 'test') {
+            logger()->info(
+                'Knowledge retrieval is using lexical-only mode because AI_MODE=test.'
+            );
+
+            return $this
+                ->rankLexically(
+                    $documents,
+                    $limit
+                );
+        }
+
+
         $hasEmbeddings =
             $documents->contains(
                 fn (

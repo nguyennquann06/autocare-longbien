@@ -107,6 +107,26 @@ class GeminiEmbeddingService
     private function embedText(
         string $text
     ): array {
+        $aiMode =
+            strtolower(
+                trim(
+                    (string) config(
+                        'ai.mode',
+                        'live'
+                    )
+                )
+            );
+
+        if ($aiMode === 'test') {
+            logger()->info(
+                'Gemini embedding skipped because AI_MODE=test.'
+            );
+
+            throw new RuntimeException(
+                'AI_MODE=test: không gọi Gemini Embedding API thật.'
+            );
+        }
+
         if (!$this->isConfigured()) {
             throw new RuntimeException(
                 'Gemini Embedding chưa được cấu hình. '
