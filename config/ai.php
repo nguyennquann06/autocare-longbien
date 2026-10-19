@@ -16,6 +16,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | AI Runtime Mode
+    |--------------------------------------------------------------------------
+    |
+    | live           = Retrieval + Gemini
+    | test           = Không gọi API Gemini thật
+    | retrieval_only = Chỉ trả lời bằng nội dung truy xuất
+    |
+    */
+
+    'mode' => env(
+        'AI_MODE',
+        'live'
+    ),
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Generation Settings
     |--------------------------------------------------------------------------
     */
@@ -210,6 +227,16 @@ return [
             'connect_timeout' => (int) env(
                 'GEMINI_CONNECT_TIMEOUT',
                 10
+            ),
+
+            'retry_times' => (int) env(
+                'GEMINI_RETRY_TIMES',
+                2
+            ),
+
+            'daily_request_limit' => (int) env(
+                'GEMINI_DAILY_REQUEST_LIMIT',
+                100
             ),
 
         ],

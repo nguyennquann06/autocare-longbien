@@ -368,9 +368,44 @@ class ChatService
                     ),
             ];
         } catch (Throwable $exception) {
-            report(
-                $exception
-            );
+            $exceptionMessage =
+                $exception->getMessage();
+
+            $isIntentionalFallback =
+                str_starts_with(
+                    $exceptionMessage,
+                    'AI_MODE=test:'
+                )
+                ||
+                str_starts_with(
+                    $exceptionMessage,
+                    'AI_MODE=retrieval_only:'
+                )
+                ||
+                str_starts_with(
+                    $exceptionMessage,
+                    'Đã đạt giới hạn nội bộ số lượt gọi Gemini trong ngày.'
+                );
+
+            if ($isIntentionalFallback) {
+                logger()->warning(
+                    'Chatbot switched to fallback.',
+                    [
+                        'mode' =>
+                            config(
+                                'ai.mode',
+                                'live'
+                            ),
+
+                        'reason' =>
+                            $exceptionMessage,
+                    ]
+                );
+            } else {
+                report(
+                    $exception
+                );
+            }
 
             return $this
                 ->knowledgeFallback(
@@ -506,9 +541,44 @@ class ChatService
                     ),
             ];
         } catch (Throwable $exception) {
-            report(
-                $exception
-            );
+            $exceptionMessage =
+                $exception->getMessage();
+
+            $isIntentionalFallback =
+                str_starts_with(
+                    $exceptionMessage,
+                    'AI_MODE=test:'
+                )
+                ||
+                str_starts_with(
+                    $exceptionMessage,
+                    'AI_MODE=retrieval_only:'
+                )
+                ||
+                str_starts_with(
+                    $exceptionMessage,
+                    'Đã đạt giới hạn nội bộ số lượt gọi Gemini trong ngày.'
+                );
+
+            if ($isIntentionalFallback) {
+                logger()->warning(
+                    'Chatbot switched to customer-data fallback.',
+                    [
+                        'mode' =>
+                            config(
+                                'ai.mode',
+                                'live'
+                            ),
+
+                        'reason' =>
+                            $exceptionMessage,
+                    ]
+                );
+            } else {
+                report(
+                    $exception
+                );
+            }
 
             $customerAnswer['mode'] =
                 (
@@ -739,6 +809,7 @@ class ChatService
          * là câu hỏi kiến thức hãng,
          * không phải hỏi bảng giá AutoCare.
          */
+
         $asksAutoCareService =
             $this
                 ->containsAnyNormalized(
@@ -787,6 +858,7 @@ class ChatService
          * nguồn OEM / nguồn kỹ thuật chung
          * là nguồn chính.
          */
+
         $technicalDocuments =
             $documents
                 ->filter(
@@ -828,6 +900,7 @@ class ChatService
          *
          * vẫn giữ retrieval ban đầu.
          */
+
         return $documents
             ->values();
     }

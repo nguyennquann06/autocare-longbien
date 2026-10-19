@@ -6,7 +6,9 @@ use App\Contracts\LlmProvider;
 use App\Data\LlmResponse;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Throwable;
 
@@ -17,27 +19,74 @@ class GeminiProvider implements LlmProvider
         return 'gemini';
     }
 
-
     public function isConfigured(): bool
     {
         return filled(
-            config(
-                'ai.providers.gemini.api_key'
-            )
+            config('ai.providers.gemini.api_key')
         )
             &&
             filled(
-                config(
-                    'ai.providers.gemini.model'
-                )
+                config('ai.providers.gemini.model')
             );
     }
-
 
     public function chat(
         array $messages,
         array $options = []
     ): LlmResponse {
+        /*
+        |--------------------------------------------------------------------------
+        | AI runtime mode
+        |--------------------------------------------------------------------------
+        |
+        | live
+        |     Cho phép gọi Gemini bình thường.
+        |
+        | test
+        |     Tuyệt đối không gọi Gemini thật.
+        |     ChatService sẽ xử lý fallback ở tầng phía trên.
+        |
+        | retrieval_only
+        |     Không sinh câu trả lời bằng LLM.
+        |     ChatService sẽ xử lý retrieval/fallback ở tầng phía trên.
+        |
+        */
+
+        $mode = strtolower(
+            trim(
+                (string) config(
+                    'ai.mode',
+                    'live'
+                )
+            )
+        );
+
+        if ($mode !== 'live') {
+            Log::info(
+                'Gemini generation skipped because AI runtime mode is not live.',
+                [
+                    'provider' => $this->name(),
+                    'mode' => $mode,
+                ]
+            );
+
+            if ($mode === 'test') {
+                throw new RuntimeException(
+                    'AI_MODE=test: không gọi Gemini API thật.'
+                );
+            }
+
+            if ($mode === 'retrieval_only') {
+                throw new RuntimeException(
+                    'AI_MODE=retrieval_only: bỏ qua bước sinh câu trả lời bằng Gemini.'
+                );
+            }
+
+            throw new RuntimeException(
+                "AI_MODE không hợp lệ: {$mode}."
+            );
+        }
+
         if (!$this->isConfigured()) {
             throw new RuntimeException(
                 'Gemini API chưa được cấu hình. '
@@ -46,12 +95,10 @@ class GeminiProvider implements LlmProvider
             );
         }
 
-
         $apiKey =
             (string) config(
                 'ai.providers.gemini.api_key'
             );
-
 
         $model =
             $this->normalizeModelName(
@@ -59,7 +106,6 @@ class GeminiProvider implements LlmProvider
                     'ai.providers.gemini.model'
                 )
             );
-
 
         $baseUrl =
             rtrim(
@@ -69,13 +115,11 @@ class GeminiProvider implements LlmProvider
                 '/'
             );
 
-
         $timeout =
             (int) config(
                 'ai.providers.gemini.timeout',
                 45
             );
-
 
         $connectTimeout =
             (int) config(
@@ -83,27 +127,27 @@ class GeminiProvider implements LlmProvider
                 10
             );
 
-
         /*
-         * Không cần sửa config/ai.php.
+         * Số lần thử tối đa.
          *
-         * Nếu chưa khai báo các key này,
-         * hệ thống sử dụng default:
+         * Đồng bộ với:
          *
-         * max_attempts = 2
-         * base delay = 800 ms
-         * max acceptable Retry-After = 3 giây
+         * GEMINI_RETRY_TIMES
          */
         $maxAttempts =
             max(
                 1,
                 (int) config(
-                    'ai.providers.gemini.max_attempts',
+                    'ai.providers.gemini.retry_times',
                     2
                 )
             );
 
-
+        /*
+         * Base delay cho retry.
+         *
+         * Có thể chưa cần khai báo trong .env.
+         */
         $retryBaseDelayMs =
             max(
                 100,
@@ -113,7 +157,10 @@ class GeminiProvider implements LlmProvider
                 )
             );
 
-
+        /*
+         * Nếu Google yêu cầu chờ quá số giây này
+         * thì không giữ request Web treo lâu.
+         */
         $maxRetryDelaySeconds =
             max(
                 0,
@@ -123,6 +170,23 @@ class GeminiProvider implements LlmProvider
                 )
             );
 
+        /*
+         * Giới hạn nội bộ số request Gemini/ngày.
+         *
+         * Đây là giới hạn do hệ thống AutoCare đặt
+         * để kiểm soát demo, không phải quota chính thức
+         * của Google.
+         *
+         * Giá trị <= 0 nghĩa là không áp dụng giới hạn nội bộ.
+         */
+        $dailyRequestLimit =
+            max(
+                0,
+                (int) config(
+                    'ai.providers.gemini.daily_request_limit',
+                    100
+                )
+            );
 
         $endpoint =
             $baseUrl
@@ -130,22 +194,29 @@ class GeminiProvider implements LlmProvider
             . $model
             . ':generateContent';
 
-
         $payload =
             $this->buildPayload(
                 $messages,
                 $options
             );
 
-
         $response = null;
 
         $attempt = 0;
 
-
         while ($attempt < $maxAttempts) {
             $attempt++;
 
+            /*
+             * Mỗi HTTP request thật tới Gemini,
+             * kể cả retry, đều được tính là một lượt gọi.
+             *
+             * Hàm này chạy TRƯỚC Http::post(),
+             * nên khi hết giới hạn sẽ không gửi request ra ngoài.
+             */
+            $this->reserveDailyRequestSlot(
+                $dailyRequestLimit
+            );
 
             try {
                 $response =
@@ -175,8 +246,7 @@ class GeminiProvider implements LlmProvider
                 if ($attempt < $maxAttempts) {
                     $this->sleepMilliseconds(
                         min(
-                            (int)
-                            (
+                            (int) (
                                 $retryBaseDelayMs
                                 * $attempt
                             ),
@@ -186,7 +256,6 @@ class GeminiProvider implements LlmProvider
 
                     continue;
                 }
-
 
                 throw new RuntimeException(
                     'Không thể kết nối tới Gemini API.',
@@ -199,7 +268,6 @@ class GeminiProvider implements LlmProvider
                 );
             }
 
-
             /*
              * Thành công:
              * thoát retry loop.
@@ -207,7 +275,6 @@ class GeminiProvider implements LlmProvider
             if ($response->successful()) {
                 break;
             }
-
 
             /*
              * Chỉ retry với lỗi tạm thời:
@@ -217,7 +284,7 @@ class GeminiProvider implements LlmProvider
              *
              * Nhưng 429 yêu cầu chờ quá lâu
              * thì fallback ngay thay vì giữ
-             * request web treo hàng chục giây.
+             * request Web treo hàng chục giây.
              */
             if (
                 $this->shouldRetry(
@@ -236,15 +303,12 @@ class GeminiProvider implements LlmProvider
                             $maxRetryDelaySeconds
                         );
 
-
                 $this->sleepMilliseconds(
                     $delayMs
                 );
 
-
                 continue;
             }
-
 
             /*
              * Không nên retry hoặc đã hết lượt.
@@ -253,7 +317,6 @@ class GeminiProvider implements LlmProvider
                 $response
             );
         }
-
 
         if (
             !$response
@@ -266,22 +329,18 @@ class GeminiProvider implements LlmProvider
                 );
             }
 
-
             throw new RuntimeException(
                 'Gemini API không trả về phản hồi hợp lệ.'
             );
         }
 
-
         $data =
             $response->json();
-
 
         $content =
             $this->extractText(
                 $data
             );
-
 
         if ($content === '') {
             $blockReason =
@@ -290,13 +349,11 @@ class GeminiProvider implements LlmProvider
                     'promptFeedback.blockReason'
                 );
 
-
             $finishReason =
                 data_get(
                     $data,
                     'candidates.0.finishReason'
                 );
-
 
             $details =
                 collect([
@@ -311,7 +368,6 @@ class GeminiProvider implements LlmProvider
                     ->filter()
                     ->implode(', ');
 
-
             throw new RuntimeException(
                 'Gemini không trả về nội dung văn bản.'
                 . (
@@ -322,20 +378,17 @@ class GeminiProvider implements LlmProvider
             );
         }
 
-
         $inputTokens =
             data_get(
                 $data,
                 'usageMetadata.promptTokenCount'
             );
 
-
         $outputTokens =
             data_get(
                 $data,
                 'usageMetadata.candidatesTokenCount'
             );
-
 
         return new LlmResponse(
             content: $content,
@@ -375,10 +428,18 @@ class GeminiProvider implements LlmProvider
 
                 'attempts' =>
                     $attempt,
+
+                'ai_mode' =>
+                    $mode,
+
+                'daily_request_limit' =>
+                    $dailyRequestLimit,
+
+                'daily_request_count' =>
+                    $this->currentDailyRequestCount(),
             ],
         );
     }
-
 
     /**
      * Chuyển format chung của AutoCare
@@ -392,34 +453,28 @@ class GeminiProvider implements LlmProvider
 
         $contents = [];
 
-
         foreach ($messages as $message) {
             $role =
                 strtolower(
                     trim(
-                        (string)
-                        (
+                        (string) (
                             $message['role']
                             ?? 'user'
                         )
                     )
                 );
 
-
             $content =
                 trim(
-                    (string)
-                    (
+                    (string) (
                         $message['content']
                         ?? ''
                     )
                 );
 
-
             if ($content === '') {
                 continue;
             }
-
 
             if ($role === 'system') {
                 $systemParts[] =
@@ -427,7 +482,6 @@ class GeminiProvider implements LlmProvider
 
                 continue;
             }
-
 
             $geminiRole =
                 in_array(
@@ -440,7 +494,6 @@ class GeminiProvider implements LlmProvider
                 )
                     ? 'model'
                     : 'user';
-
 
             $contents[] = [
                 'role' =>
@@ -455,13 +508,11 @@ class GeminiProvider implements LlmProvider
             ];
         }
 
-
         if (empty($contents)) {
             throw new RuntimeException(
                 'Không có nội dung hợp lệ để gửi tới Gemini.'
             );
         }
-
 
         $payload = [
             'contents' =>
@@ -469,8 +520,7 @@ class GeminiProvider implements LlmProvider
 
             'generationConfig' => [
                 'maxOutputTokens' =>
-                    (int)
-                    (
+                    (int) (
                         $options[
                             'max_output_tokens'
                         ]
@@ -482,7 +532,6 @@ class GeminiProvider implements LlmProvider
                     ),
             ],
         ];
-
 
         if (!empty($systemParts)) {
             $payload[
@@ -500,7 +549,6 @@ class GeminiProvider implements LlmProvider
             ];
         }
 
-
         if (
             array_key_exists(
                 'temperature',
@@ -512,16 +560,103 @@ class GeminiProvider implements LlmProvider
             ][
                 'temperature'
             ] =
-                (float)
-                $options[
+                (float) $options[
                     'temperature'
                 ];
         }
 
-
         return $payload;
     }
 
+    /**
+     * Giữ một lượt gọi Gemini trong quota nội bộ.
+     *
+     * Hàm này được gọi ngay trước mỗi HTTP request thật.
+     */
+    private function reserveDailyRequestSlot(
+        int $dailyRequestLimit
+    ): void {
+        /*
+         * <= 0 nghĩa là không giới hạn nội bộ.
+         */
+        if ($dailyRequestLimit <= 0) {
+            return;
+        }
+
+        $key =
+            $this->dailyRequestCacheKey();
+
+        /*
+         * Cache::increment() cần key tồn tại
+         * với một số cache driver.
+         */
+        if (!Cache::has($key)) {
+            Cache::put(
+                $key,
+                0,
+                now()->endOfDay()
+            );
+        }
+
+        $current =
+            (int) Cache::get(
+                $key,
+                0
+            );
+
+        if ($current >= $dailyRequestLimit) {
+            Log::warning(
+                'Gemini daily request limit reached.',
+                [
+                    'provider' => $this->name(),
+                    'count' => $current,
+                    'limit' => $dailyRequestLimit,
+                    'date' => now()->toDateString(),
+                ]
+            );
+
+            throw new RuntimeException(
+                'Đã đạt giới hạn nội bộ số lượt gọi Gemini trong ngày. '
+                . 'Hệ thống sẽ sử dụng phương án fallback.'
+            );
+        }
+
+        $newCount =
+            Cache::increment(
+                $key
+            );
+
+        Log::info(
+            'Gemini API request reserved.',
+            [
+                'provider' => $this->name(),
+                'count' => $newCount,
+                'limit' => $dailyRequestLimit,
+                'date' => now()->toDateString(),
+            ]
+        );
+    }
+
+    /**
+     * Số request Gemini đã dùng trong ngày.
+     */
+    private function currentDailyRequestCount(): int
+    {
+        return (int) Cache::get(
+            $this->dailyRequestCacheKey(),
+            0
+        );
+    }
+
+    /**
+     * Cache key đếm request theo từng ngày.
+     */
+    private function dailyRequestCacheKey(): string
+    {
+        return
+            'ai:gemini:daily_requests:'
+            . now()->format('Y-m-d');
+    }
 
     /**
      * Có nên retry response này không?
@@ -536,10 +671,8 @@ class GeminiProvider implements LlmProvider
             return false;
         }
 
-
         $status =
             $response->status();
-
 
         if (
             $status !== 429
@@ -548,7 +681,6 @@ class GeminiProvider implements LlmProvider
         ) {
             return false;
         }
-
 
         /*
          * Với 429, nếu Google nói:
@@ -565,7 +697,6 @@ class GeminiProvider implements LlmProvider
                         $response
                     );
 
-
             if (
                 $suggestedDelay !== null
                 &&
@@ -577,10 +708,8 @@ class GeminiProvider implements LlmProvider
             }
         }
 
-
         return true;
     }
-
 
     /**
      * Tính thời gian retry.
@@ -597,7 +726,6 @@ class GeminiProvider implements LlmProvider
                     $response
                 );
 
-
         if (
             $suggestedDelay !== null
             &&
@@ -609,14 +737,12 @@ class GeminiProvider implements LlmProvider
         ) {
             return max(
                 100,
-                (int)
-                round(
+                (int) round(
                     $suggestedDelay
                     * 1000
                 )
             );
         }
-
 
         /*
          * Exponential-ish backoff:
@@ -632,24 +758,20 @@ class GeminiProvider implements LlmProvider
                 $attempt
             );
 
-
         $maxDelayMs =
             max(
                 500,
-                (int)
-                round(
+                (int) round(
                     $maxRetryDelaySeconds
                     * 1000
                 )
             );
-
 
         return min(
             $delay,
             $maxDelayMs
         );
     }
-
 
     /**
      * Đọc Retry-After từ:
@@ -666,7 +788,6 @@ class GeminiProvider implements LlmProvider
                 'Retry-After'
             );
 
-
         if (
             is_string($retryAfter)
             &&
@@ -676,15 +797,14 @@ class GeminiProvider implements LlmProvider
         ) {
             return max(
                 0,
-                (float)
-                trim($retryAfter)
+                (float) trim(
+                    $retryAfter
+                )
             );
         }
 
-
         $data =
             $response->json();
-
 
         $details =
             data_get(
@@ -693,20 +813,17 @@ class GeminiProvider implements LlmProvider
                 []
             );
 
-
         if (is_array($details)) {
             foreach ($details as $detail) {
                 if (!is_array($detail)) {
                     continue;
                 }
 
-
                 $retryDelay =
                     $detail[
                         'retryDelay'
                     ]
                     ?? null;
-
 
                 if (
                     is_string($retryDelay)
@@ -718,21 +835,17 @@ class GeminiProvider implements LlmProvider
                     )
                 ) {
                     return
-                        (float)
-                        $matches[1];
+                        (float) $matches[1];
                 }
             }
         }
 
-
         $apiMessage =
-            (string)
-            data_get(
+            (string) data_get(
                 $data,
                 'error.message',
                 ''
             );
-
 
         if (
             preg_match(
@@ -742,14 +855,11 @@ class GeminiProvider implements LlmProvider
             )
         ) {
             return
-                (float)
-                $matches[1];
+                (float) $matches[1];
         }
-
 
         return null;
     }
-
 
     /**
      * Sleep bằng millisecond.
@@ -761,13 +871,11 @@ class GeminiProvider implements LlmProvider
             return;
         }
 
-
         usleep(
             $milliseconds
             * 1000
         );
     }
-
 
     /**
      * Kiểm tra HTTP error.
@@ -779,17 +887,14 @@ class GeminiProvider implements LlmProvider
             return;
         }
 
-
         $status =
             $response->status();
-
 
         $apiMessage =
             data_get(
                 $response->json(),
                 'error.message'
             );
-
 
         if ($status === 429) {
             throw new RuntimeException(
@@ -802,7 +907,6 @@ class GeminiProvider implements LlmProvider
                 )
             );
         }
-
 
         if (
             $status === 401
@@ -820,7 +924,6 @@ class GeminiProvider implements LlmProvider
             );
         }
 
-
         if ($status === 404) {
             throw new RuntimeException(
                 'Không tìm thấy Gemini model đã cấu hình. '
@@ -833,7 +936,6 @@ class GeminiProvider implements LlmProvider
             );
         }
 
-
         if ($status >= 500) {
             throw new RuntimeException(
                 'Gemini API đang gặp sự cố phía máy chủ.'
@@ -845,7 +947,6 @@ class GeminiProvider implements LlmProvider
             );
         }
 
-
         throw new RuntimeException(
             "Gemini API trả về HTTP {$status}."
             . (
@@ -855,7 +956,6 @@ class GeminiProvider implements LlmProvider
             )
         );
     }
-
 
     /**
      * Ghép tất cả text Part
@@ -871,11 +971,9 @@ class GeminiProvider implements LlmProvider
                 []
             );
 
-
         if (!is_array($parts)) {
             return '';
         }
-
 
         return trim(
             collect($parts)
@@ -890,13 +988,11 @@ class GeminiProvider implements LlmProvider
         );
     }
 
-
     private function normalizeModelName(
         string $model
     ): string {
         $model =
             trim($model);
-
 
         if (
             str_starts_with(
@@ -910,7 +1006,6 @@ class GeminiProvider implements LlmProvider
                     strlen('models/')
                 );
         }
-
 
         return $model;
     }
