@@ -1065,7 +1065,12 @@ class CustomerContextService
                             )
                         : 'Không xác định xe';
 
-                $lines[] =
+                $paymentMethodText =
+                    $this->paymentMethodText(
+                        $invoice->payment_method
+                    );
+
+                $line =
                     '• '
                     . $invoice
                         ->invoice_code
@@ -1091,6 +1096,15 @@ class CustomerContextService
                                     )
                             : ''
                     );
+
+                if ($paymentMethodText !== null) {
+                    $line .=
+                        ' · '
+                        . $paymentMethodText;
+                }
+
+                $lines[] =
+                    $line;
 
                 $sources[] = [
                     'type' =>
@@ -1207,7 +1221,12 @@ class CustomerContextService
                         )
                     : 'Không xác định xe';
 
-            $lines[] =
+            $paymentMethodText =
+                $this->paymentMethodText(
+                    $invoice->payment_method
+                );
+
+            $line =
                 '• '
                 . $invoice
                     ->invoice_code
@@ -1224,6 +1243,15 @@ class CustomerContextService
                 )
                 . ' đ · '
                 . $statusText;
+
+            if ($paymentMethodText !== null) {
+                $line .=
+                    ' · '
+                    . $paymentMethodText;
+            }
+
+            $lines[] =
+                $line;
 
             $sources[] = [
                 'type' =>
@@ -1251,6 +1279,29 @@ class CustomerContextService
             'mode' =>
                 'customer_data',
         ];
+    }
+
+
+    private function paymentMethodText(
+        ?string $paymentMethod
+    ): ?string {
+        return match ($paymentMethod) {
+            Invoice::METHOD_CASH =>
+                'Tiền mặt',
+
+            Invoice::METHOD_BANK_TRANSFER =>
+                'Chuyển khoản',
+
+            Invoice::METHOD_CARD =>
+                'Thẻ',
+
+            null,
+            '' =>
+                null,
+
+            default =>
+                $paymentMethod,
+        };
     }
 
 

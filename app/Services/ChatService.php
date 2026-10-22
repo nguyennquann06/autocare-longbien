@@ -79,6 +79,47 @@ class ChatService
 
         /*
         |--------------------------------------------------------------------------
+        | OUT-OF-SCOPE / PROMPT-INJECTION GATE
+        |--------------------------------------------------------------------------
+        |
+        | Chặn các câu hỏi rõ ràng ngoài phạm vi AutoCare trước khi RAG chạy.
+        | Không dùng LLM để quyết định các trường hợp này.
+        |
+        */
+
+        $outOfScopeResponse = $this
+            ->outOfScopeGuard(
+                $message
+            );
+
+        if ($outOfScopeResponse !== null) {
+            return $outOfScopeResponse;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | AUTHORIZATION / PERSONAL DATA SECURITY GATE
+        |--------------------------------------------------------------------------
+        |
+        | Chặn các yêu cầu dữ liệu cá nhân không hợp lệ trước khi chúng có thể
+        | rơi xuống Knowledge RAG / Gemini.
+        |
+        | Đây là authorization ở backend, không dựa vào prompt của LLM.
+        |
+        */
+
+        $securityResponse = $this
+            ->personalDataSecurityGate(
+                $message,
+                $user
+            );
+
+        if ($securityResponse !== null) {
+            return $securityResponse;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | CUSTOMER DATA
         |--------------------------------------------------------------------------
         */
@@ -1717,6 +1758,795 @@ class ChatService
             'llm_metadata' =>
                 [],
         ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | OUT-OF-SCOPE / PROMPT-INJECTION GATE
+    |--------------------------------------------------------------------------
+    */
+
+    private function outOfScopeGuard(
+        string $message
+    ): ?array {
+        $normalized =
+            $this->normalizeForIntent(
+                $message
+            );
+
+        /*
+         * Yêu cầu bí mật hệ thống / prompt injection / exfiltration.
+         */
+        if (
+            $this->containsAnyNormalized(
+                $normalized,
+                [
+                    'mat khau admin',
+                    'password admin',
+                    'api key',
+                    'api key cua he thong',
+                    'system prompt',
+                    'prompt he thong',
+                    'bo qua moi quy tac',
+                    'bo qua quy tac truoc do',
+                    'doc toan bo du lieu khach hang',
+                    'toan bo du lieu khach hang',
+                    'gui toan bo du lieu khach hang',
+                    'xuat toan bo du lieu khach hang',
+                    'doc co so du lieu',
+                    'xuat co so du lieu',
+                    'dump database',
+                ]
+            )
+        ) {
+            return $this
+                ->outOfScopeResponse(
+                    'Mình không thể cung cấp mật khẩu, API key, prompt hệ thống, '
+                    . 'dữ liệu nội bộ hoặc toàn bộ dữ liệu khách hàng. '
+                    . 'Mình chỉ hỗ trợ thông tin và chức năng hợp lệ của AutoCare.'
+                );
+        }
+
+        /*
+         * Y tế.
+         */
+        if (
+            $this->containsAnyNormalized(
+                $normalized,
+                [
+                    'chan doan benh',
+                    'dau nguc',
+                    'kho tho',
+                    'toi bi benh gi',
+                    'ke don thuoc',
+                    'tu van thuoc',
+                ]
+            )
+        ) {
+            return $this
+                ->outOfScopeResponse(
+                    'Mình không thể chẩn đoán bệnh hoặc tư vấn điều trị y khoa. '
+                    . 'AutoCare AI chỉ hỗ trợ các nội dung liên quan đến ô tô và dịch vụ AutoCare.'
+                );
+        }
+
+        /*
+         * Pháp lý / soạn hợp đồng ngoài lĩnh vực AutoCare.
+         */
+        if (
+            $this->containsAnyNormalized(
+                $normalized,
+                [
+                    'hop dong mua ban nha dat',
+                    'hop dong nha dat',
+                    'soan hop dong mua ban',
+                    'tu van phap ly',
+                    'kien tung',
+                ]
+            )
+        ) {
+            return $this
+                ->outOfScopeResponse();
+        }
+
+        /*
+         * Toán học / bài tập học thuật không liên quan ô tô.
+         */
+        if (
+            $this->containsAnyNormalized(
+                $normalized,
+                [
+                    'giai phuong trinh',
+                    'phuong trinh',
+                    'dao ham',
+                    'tich phan',
+                    'giai bai toan',
+                ]
+            )
+        ) {
+            return $this
+                ->outOfScopeResponse();
+        }
+
+        /*
+         * Thông tin tài chính / thị trường thời gian thực.
+         */
+        if (
+            $this->containsAnyNormalized(
+                $normalized,
+                [
+                    'gia vang hom nay',
+                    'gia vang bao nhieu',
+                    'gia bitcoin',
+                    'gia chung khoan',
+                    'ty gia hom nay',
+                ]
+            )
+        ) {
+            return $this
+                ->outOfScopeResponse();
+        }
+
+        /*
+         * Thời tiết chung không liên quan tới xe.
+         */
+        if (
+            $this->containsAnyNormalized(
+                $normalized,
+                [
+                    'ha noi co mua',
+                    'thoi tiet ngay mai',
+                    'du bao thoi tiet',
+                    'hom nay co mua',
+                    'ngay mai co mua',
+                ]
+            )
+            &&
+            !$this->containsAnyNormalized(
+                $normalized,
+                [
+                    'xe',
+                    'o to',
+                    'lop',
+                    'phanh',
+                    'dong co',
+                    'bao duong',
+                ]
+            )
+        ) {
+            return $this
+                ->outOfScopeResponse();
+        }
+
+        return null;
+    }
+
+
+    private function outOfScopeResponse(
+        ?string $content = null
+    ): array {
+        return [
+            'content' =>
+                $content
+                ?? (
+                    'Nội dung này nằm ngoài phạm vi hỗ trợ của AutoCare AI. '
+                    . 'Mình chỉ hỗ trợ các câu hỏi liên quan đến ô tô, bảo dưỡng, '
+                    . 'dịch vụ AutoCare và dữ liệu tài khoản hợp lệ.'
+                ),
+
+            'sources' =>
+                [],
+
+            'actions' =>
+                [],
+
+            'mode' =>
+                'local_out_of_scope_refusal',
+
+            'provider' =>
+                null,
+
+            'model' =>
+                null,
+
+            'token_count' =>
+                null,
+
+            'llm_metadata' => [
+                'local_intent' =>
+                    'out_of_scope_refusal',
+
+                'llm_used' =>
+                    false,
+            ],
+        ];
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PERSONAL DATA SECURITY GATE
+    |--------------------------------------------------------------------------
+    |
+    | Mục tiêu:
+    |
+    | 1. Khách chưa đăng nhập nhưng hỏi dữ liệu cá nhân:
+    |    yêu cầu đăng nhập ngay tại backend.
+    |
+    | 2. CUSTOMER yêu cầu dữ liệu của xe / lịch hẹn / hóa đơn / phiếu
+    |    bảo dưỡng không thuộc tài khoản:
+    |    từ chối trước RAG / Gemini.
+    |
+    | 3. Chặn các yêu cầu cố tình bỏ qua authorization hoặc lấy dữ liệu
+    |    hàng loạt của khách hàng khác.
+    |
+    */
+
+    private function personalDataSecurityGate(
+        string $message,
+        ?User $user
+    ): ?array {
+        $normalized = $this
+            ->normalizeForIntent(
+                $message
+            );
+
+        /*
+         * Người dùng chưa đăng nhập nhưng đang hỏi dữ liệu của chính mình.
+         */
+        if ($user === null) {
+            if (
+                $this->looksLikePersonalAccountQuery(
+                    $normalized
+                )
+            ) {
+                return $this
+                    ->authenticationRequiredResponse();
+            }
+
+            return null;
+        }
+
+        /*
+         * Các pattern cố tình yêu cầu backend bỏ qua tài khoản hiện tại.
+         */
+        if (
+            $this->containsAnyNormalized(
+                $normalized,
+                [
+                    'bo qua tai khoan',
+                    'bo qua tai khoan dang dang nhap',
+                    'bo qua nguoi dung dang nhap',
+                    'bo qua user dang nhap',
+                    'lay du lieu customer id',
+                    'lay du lieu customer_id',
+                    'doi customer id',
+                    'doi customer_id',
+                    'truy cap customer id',
+                    'truy cap customer_id',
+                ]
+            )
+            ||
+            (
+                Str::contains(
+                    $normalized,
+                    'customer id'
+                )
+                &&
+                $this->containsAnyNormalized(
+                    $normalized,
+                    [
+                        'bo qua',
+                        'lay du lieu',
+                        'truy cap',
+                        'customer khac',
+                    ]
+                )
+            )
+        ) {
+            return $this
+                ->authorizationRefusalResponse();
+        }
+
+        /*
+         * Không cung cấp danh sách dữ liệu cá nhân của nhiều khách hàng.
+         */
+        if (
+            $this->containsAnyNormalized(
+                $normalized,
+                [
+                    'tat ca khach hang',
+                    'danh sach tat ca khach hang',
+                    'danh sach khach hang',
+                    'toan bo khach hang',
+                    'du lieu khach hang khac',
+                    'cac khach hang khac',
+                ]
+            )
+            &&
+            $this->hasSensitiveCustomerDataContext(
+                $normalized
+            )
+        ) {
+            return $this
+                ->authorizationRefusalResponse();
+        }
+
+        $user->loadMissing([
+            'role',
+            'customer',
+        ]);
+
+        /*
+         * Chỉ CUSTOMER có customer profile để thực hiện kiểm tra ownership.
+         *
+         * Các role khác sẽ tiếp tục đi qua luồng hiện có của
+         * CustomerContextService.
+         */
+        if (
+            !$user->role
+            ||
+            $user->role->code !== 'CUSTOMER'
+            ||
+            !$user->customer
+        ) {
+            return null;
+        }
+
+        $customer =
+            $user->customer;
+
+        /*
+         * Nếu câu hỏi nhắc trực tiếp "khách hàng X" và X không phải
+         * chính customer hiện tại, coi đây là cross-account request.
+         */
+        if (
+            $this->referencesAnotherCustomer(
+                $normalized,
+                (string) $customer->full_name
+            )
+            &&
+            $this->hasSensitiveCustomerDataContext(
+                $normalized
+            )
+        ) {
+            return $this
+                ->authorizationRefusalResponse();
+        }
+
+        /*
+         * Kiểm tra biển số xe được nhắc tới.
+         */
+        $plates =
+            $this->extractLicensePlates(
+                $message
+            );
+
+        if (!empty($plates)) {
+            $ownedPlates =
+                $customer
+                    ->vehicles()
+                    ->pluck(
+                        'license_plate'
+                    )
+                    ->map(
+                        fn ($plate) =>
+                            $this
+                                ->normalizeIdentifier(
+                                    (string) $plate
+                                )
+                    )
+                    ->filter()
+                    ->values()
+                    ->all();
+
+            foreach ($plates as $plate) {
+                if (
+                    !in_array(
+                        $this
+                            ->normalizeIdentifier(
+                                $plate
+                            ),
+                        $ownedPlates,
+                        true
+                    )
+                    &&
+                    $this
+                        ->hasSensitiveCustomerDataContext(
+                            $normalized
+                        )
+                ) {
+                    return $this
+                        ->authorizationRefusalResponse(
+                            'Mình không tìm thấy phương tiện này trong tài khoản của bạn. '
+                            . 'Mình không thể cung cấp dữ liệu thuộc tài khoản khách hàng khác.'
+                        );
+                }
+            }
+        }
+
+        /*
+         * Kiểm tra mã lịch hẹn cụ thể.
+         */
+        $appointmentCodes =
+            $this->extractCodes(
+                $message,
+                'BK'
+            );
+
+        if (!empty($appointmentCodes)) {
+            $ownedCodes =
+                $customer
+                    ->appointments()
+                    ->pluck(
+                        'appointment_code'
+                    )
+                    ->map(
+                        fn ($code) =>
+                            Str::upper(
+                                trim(
+                                    (string) $code
+                                )
+                            )
+                    )
+                    ->all();
+
+            foreach (
+                $appointmentCodes
+                as $code
+            ) {
+                if (
+                    !in_array(
+                        Str::upper($code),
+                        $ownedCodes,
+                        true
+                    )
+                ) {
+                    return $this
+                        ->authorizationRefusalResponse();
+                }
+            }
+        }
+
+        /*
+         * Kiểm tra mã hóa đơn cụ thể.
+         */
+        $invoiceCodes =
+            $this->extractCodes(
+                $message,
+                'INV'
+            );
+
+        if (!empty($invoiceCodes)) {
+            $ownedCodes =
+                $customer
+                    ->invoices()
+                    ->pluck(
+                        'invoice_code'
+                    )
+                    ->map(
+                        fn ($code) =>
+                            Str::upper(
+                                trim(
+                                    (string) $code
+                                )
+                            )
+                    )
+                    ->all();
+
+            foreach (
+                $invoiceCodes
+                as $code
+            ) {
+                if (
+                    !in_array(
+                        Str::upper($code),
+                        $ownedCodes,
+                        true
+                    )
+                ) {
+                    return $this
+                        ->authorizationRefusalResponse();
+                }
+            }
+        }
+
+        /*
+         * Kiểm tra mã phiếu bảo dưỡng cụ thể.
+         */
+        $serviceOrderCodes =
+            $this->extractCodes(
+                $message,
+                'SO'
+            );
+
+        if (!empty($serviceOrderCodes)) {
+            $ownedCodes =
+                $customer
+                    ->serviceOrders()
+                    ->pluck(
+                        'order_code'
+                    )
+                    ->map(
+                        fn ($code) =>
+                            Str::upper(
+                                trim(
+                                    (string) $code
+                                )
+                            )
+                    )
+                    ->all();
+
+            foreach (
+                $serviceOrderCodes
+                as $code
+            ) {
+                if (
+                    !in_array(
+                        Str::upper($code),
+                        $ownedCodes,
+                        true
+                    )
+                ) {
+                    return $this
+                        ->authorizationRefusalResponse();
+                }
+            }
+        }
+
+        return null;
+    }
+
+
+    private function authenticationRequiredResponse(): array
+    {
+        return [
+            'content' =>
+                'Bạn cần đăng nhập để AutoCare xác thực tài khoản trước khi tra cứu xe, '
+                . 'lịch hẹn, lịch sử bảo dưỡng hoặc hóa đơn cá nhân.',
+
+            'sources' =>
+                [],
+
+            'actions' =>
+                [],
+
+            'mode' =>
+                'local_authentication_required',
+
+            'provider' =>
+                null,
+
+            'model' =>
+                null,
+
+            'token_count' =>
+                null,
+
+            'llm_metadata' => [
+                'security_gate' =>
+                    'authentication_required',
+
+                'llm_used' =>
+                    false,
+            ],
+        ];
+    }
+
+
+    private function authorizationRefusalResponse(
+        ?string $content = null
+    ): array {
+        return [
+            'content' =>
+                $content
+                ?? (
+                    'Mình chỉ có thể tra cứu dữ liệu thuộc tài khoản khách hàng đang đăng nhập. '
+                    . 'Mình không thể cung cấp xe, lịch hẹn, lịch sử bảo dưỡng hoặc hóa đơn '
+                    . 'của khách hàng khác.'
+                ),
+
+            'sources' =>
+                [],
+
+            'actions' =>
+                [],
+
+            'mode' =>
+                'local_authorization_refusal',
+
+            'provider' =>
+                null,
+
+            'model' =>
+                null,
+
+            'token_count' =>
+                null,
+
+            'llm_metadata' => [
+                'security_gate' =>
+                    'cross_account_refusal',
+
+                'llm_used' =>
+                    false,
+            ],
+        ];
+    }
+
+
+    private function looksLikePersonalAccountQuery(
+        string $normalized
+    ): bool {
+        $hasOwnershipReference =
+            $this->containsAnyNormalized(
+                $normalized,
+                [
+                    'cua toi',
+                    'xe toi',
+                    'xe cua toi',
+                    'tai khoan cua toi',
+                    'lich hen cua toi',
+                    'hoa don cua toi',
+                    'bao duong cua toi',
+                    'lich su bao duong cua toi',
+                    'odo cua toi',
+                    'odo xe toi',
+                    'bien so xe toi',
+                ]
+            );
+
+        return
+            $hasOwnershipReference
+            &&
+            $this
+                ->hasSensitiveCustomerDataContext(
+                    $normalized
+                );
+    }
+
+
+    private function hasSensitiveCustomerDataContext(
+        string $normalized
+    ): bool {
+        return $this
+            ->containsAnyNormalized(
+                $normalized,
+                [
+                    'xe',
+                    'phuong tien',
+                    'bien so',
+                    'vin',
+                    'odo',
+                    'so km',
+                    'lich hen',
+                    'dat lich',
+                    'bao duong',
+                    'lich su',
+                    'hoa don',
+                    'thanh toan',
+                    'so tien',
+                    'customer id',
+                    'customer_id',
+                ]
+            );
+    }
+
+
+    private function referencesAnotherCustomer(
+        string $normalized,
+        string $currentCustomerName
+    ): bool {
+        $current =
+            $this
+                ->normalizeForIntent(
+                    $currentCustomerName
+                );
+
+        if (
+            !preg_match_all(
+                '/\bkhach hang\s+[a-z0-9]+\b/u',
+                $normalized,
+                $matches
+            )
+        ) {
+            return false;
+        }
+
+        foreach (
+            $matches[0]
+            as $reference
+        ) {
+            $reference =
+                trim(
+                    $reference
+                );
+
+            if (
+                $reference !== ''
+                &&
+                $reference !== $current
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    private function extractLicensePlates(
+        string $message
+    ): array {
+        if (
+            !preg_match_all(
+                '/\b\d{2}[A-Z]{1,2}[\s\-.]?\d{3}[\s\-.]?\d{2}\b/ui',
+                $message,
+                $matches
+            )
+        ) {
+            return [];
+        }
+
+        return array_values(
+            array_unique(
+                $matches[0]
+                ?? []
+            )
+        );
+    }
+
+
+    private function extractCodes(
+        string $message,
+        string $prefix
+    ): array {
+        $prefix =
+            preg_quote(
+                Str::upper($prefix),
+                '/'
+            );
+
+        if (
+            !preg_match_all(
+                '/\b'
+                . $prefix
+                . '-[A-Z0-9-]+\b/ui',
+                $message,
+                $matches
+            )
+        ) {
+            return [];
+        }
+
+        return array_values(
+            array_unique(
+                array_map(
+                    fn ($code) =>
+                        Str::upper(
+                            trim(
+                                (string) $code
+                            )
+                        ),
+                    $matches[0]
+                    ?? []
+                )
+            )
+        );
+    }
+
+
+    private function normalizeIdentifier(
+        string $value
+    ): string {
+        return Str::upper(
+            preg_replace(
+                '/[^A-Z0-9]+/i',
+                '',
+                $value
+            )
+            ?? ''
+        );
     }
 
     /*
