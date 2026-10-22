@@ -308,6 +308,44 @@ class StaffAppointmentController extends Controller
         }
 
 
+        /*
+         * Không cho STAFF tự đóng lịch hẹn khi phiếu bảo dưỡng
+         * chưa hoàn thành.
+         *
+         * Luồng chuẩn:
+         * Technician hoàn thành ServiceOrder
+         * -> hệ thống tự đồng bộ Appointment = COMPLETED.
+         *
+         * Guard này ngăn trạng thái lệch:
+         * Appointment = COMPLETED
+         * nhưng ServiceOrder vẫn RECEIVED / IN_PROGRESS.
+         */
+        if (
+            $appointment->status
+            === 'IN_PROGRESS'
+            &&
+            $validated['status']
+            === 'COMPLETED'
+            &&
+            (
+                !$appointment->serviceOrder
+                ||
+                $appointment->serviceOrder->status
+                !== 'COMPLETED'
+            )
+        ) {
+            return redirect()
+                ->route(
+                    'staff.appointments.show',
+                    $appointment->id
+                )
+                ->with(
+                    'error',
+                    'Chỉ có thể hoàn thành lịch hẹn sau khi phiếu bảo dưỡng đã được kỹ thuật viên hoàn thành.'
+                );
+        }
+
+
         DB::transaction(
             function () use (
                 $appointment,
@@ -367,6 +405,31 @@ class StaffAppointmentController extends Controller
                     throw ValidationException::withMessages([
                         'status' =>
                             'Vui lòng tạo phiếu bảo dưỡng trước khi bắt đầu thực hiện.',
+                    ]);
+                }
+
+
+                /*
+                 * Recheck sau lock để tránh race condition:
+                 * Appointment không được COMPLETED trước ServiceOrder.
+                 */
+                if (
+                    $lockedAppointment->status
+                    === 'IN_PROGRESS'
+                    &&
+                    $validated['status']
+                    === 'COMPLETED'
+                    &&
+                    (
+                        !$lockedAppointment->serviceOrder
+                        ||
+                        $lockedAppointment->serviceOrder->status
+                        !== 'COMPLETED'
+                    )
+                ) {
+                    throw ValidationException::withMessages([
+                        'status' =>
+                            'Chỉ có thể hoàn thành lịch hẹn sau khi phiếu bảo dưỡng đã được kỹ thuật viên hoàn thành.',
                     ]);
                 }
 
