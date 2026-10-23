@@ -858,26 +858,70 @@ class AppointmentController extends Controller
         );
 
 
-        if (
-            $appointment->status
-            !== 'PENDING'
-        ) {
-            return redirect()
-                ->route(
-                    'appointments.show',
-                    $appointment->id
-                )
-                ->with(
-                    'error',
-                    'Chỉ lịch hẹn đang chờ xác nhận mới có thể tự hủy.'
-                );
-        }
+        $customerId =
+            (int)
+            Auth::user()
+                ->customer
+                ->id;
 
 
-        $appointment->update([
-            'status' =>
-                'CANCELLED',
-        ]);
+        DB::transaction(
+            function () use (
+                $appointment,
+                $customerId
+            ) {
+                /*
+                 * Lock bản ghi để tránh race condition:
+                 * CUSTOMER hủy lịch cùng lúc STAFF đang xác nhận.
+                 */
+                $lockedAppointment =
+                    Appointment::query()
+                        ->whereKey(
+                            $appointment->id
+                        )
+                        ->lockForUpdate()
+                        ->firstOrFail();
+
+
+                /*
+                 * Recheck ownership sau khi lock.
+                 */
+                if (
+                    (int)
+                    $lockedAppointment
+                        ->customer_id
+                    !==
+                    $customerId
+                ) {
+                    abort(
+                        403,
+                        'Bạn không có quyền truy cập lịch hẹn này.'
+                    );
+                }
+
+
+                /*
+                 * CUSTOMER chỉ được tự hủy
+                 * khi lịch vẫn còn PENDING.
+                 */
+                if (
+                    $lockedAppointment
+                        ->status
+                    !== 'PENDING'
+                ) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'appointment' =>
+                            'Chỉ lịch hẹn đang chờ xác nhận mới có thể tự hủy.',
+                    ]);
+                }
+
+
+                $lockedAppointment->update([
+                    'status' =>
+                        'CANCELLED',
+                ]);
+            }
+        );
 
 
         return redirect()
