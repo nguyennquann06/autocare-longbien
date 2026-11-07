@@ -78,6 +78,24 @@ php artisan config:cache
 
 
 # ============================================================
+# Demo data (first deployment only)
+# ============================================================
+
+if [ "${RUN_DEMO_SEED:-false}" = "true" ]; then
+    php artisan demo:seed
+
+    # Chạy nền để web không phải chờ Gemini.
+    # Lệnh chỉ xử lý document chưa có embedding.
+    if [ "${AI_MODE:-}" = "live" ] && [ -n "${GEMINI_API_KEY:-}" ]; then
+        (
+            php artisan knowledge:embed \
+                || echo "knowledge:embed failed" >&2
+        ) &
+    fi
+fi
+
+
+# ============================================================
 # Start PHP-FPM + Nginx
 # ============================================================
 
