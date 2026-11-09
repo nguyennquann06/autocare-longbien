@@ -57,6 +57,11 @@ php artisan migrate --force
 # Always ensure required user roles exist.
 php artisan db:seed --class=RoleSeeder --force
 
+# Create initial ADMIN account when explicitly enabled.
+if [ "${RUN_ADMIN_SEED:-false}" = "true" ]; then
+    php artisan db:seed --class=DemoAdminSeeder --force
+fi
+
 # ============================================================
 # Initialize all catalog seeders when enabled
 # ============================================================
