@@ -1,7 +1,7 @@
 
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -eu
 
 cd /var/www/html
 
