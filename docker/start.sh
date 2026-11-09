@@ -1,17 +1,15 @@
+
 #!/usr/bin/env bash
 
 set -euo pipefail
 
-
 cd /var/www/html
-
 
 # ============================================================
 # Render port
 # ============================================================
 
 export PORT="${PORT:-10000}"
-
 
 # ============================================================
 # Laravel writable directories
@@ -24,11 +22,9 @@ mkdir -p \
     storage/logs \
     bootstrap/cache
 
-
 chown -R www-data:www-data \
     storage \
     bootstrap/cache
-
 
 # ============================================================
 # Generate Nginx configuration with Render PORT
@@ -37,7 +33,6 @@ chown -R www-data:www-data \
 envsubst '${PORT}' \
     < /etc/nginx/templates/default.conf.template \
     > /etc/nginx/conf.d/default.conf
-
 
 # ============================================================
 # Laravel startup preparation
@@ -49,19 +44,31 @@ php artisan config:clear
 php artisan route:clear
 php artisan view:clear
 
-
 # ============================================================
 # Database migrations
 # ============================================================
 #
 # Never use migrate:fresh here.
-#
-# migrate --force is idempotent:
-# only migrations that have not yet been executed are applied.
+# Only migrations not yet executed are applied.
 #
 
 php artisan migrate --force
+
+# Always ensure required user roles exist.
 php artisan db:seed --class=RoleSeeder --force
+
+# ============================================================
+# Initialize all catalog seeders when enabled
+# ============================================================
+#
+# Set RUN_CATALOG_SEED=true only for initial setup.
+# Disable it after successful seeding to avoid overwriting
+# existing catalog values or inventory quantities.
+#
+
+if [ "${RUN_CATALOG_SEED:-false}" = "true" ]; then
+    php artisan db:seed --force
+fi
 
 # ============================================================
 # Public storage symlink
@@ -69,13 +76,11 @@ php artisan db:seed --class=RoleSeeder --force
 
 php artisan storage:link || true
 
-
 # ============================================================
 # Production config cache
 # ============================================================
 
 php artisan config:cache
-
 
 # ============================================================
 # Demo data (first deployment only)
@@ -84,8 +89,7 @@ php artisan config:cache
 if [ "${RUN_DEMO_SEED:-false}" = "true" ]; then
     php artisan demo:seed
 
-    # Chạy nền để web không phải chờ Gemini.
-    # Lệnh chỉ xử lý document chưa có embedding.
+    # Run embedding in background to avoid blocking startup.
     if [ "${AI_MODE:-}" = "live" ] && [ -n "${GEMINI_API_KEY:-}" ]; then
         (
             php artisan knowledge:embed \
@@ -93,7 +97,6 @@ if [ "${RUN_DEMO_SEED:-false}" = "true" ]; then
         ) &
     fi
 fi
-
 
 # ============================================================
 # Start PHP-FPM + Nginx
