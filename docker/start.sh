@@ -61,7 +61,7 @@ php artisan view:clear
 #
 
 php artisan migrate --force
-
+php artisan db:seed --class=RoleSeeder --force
 
 # ============================================================
 # Public storage symlink
