@@ -1,0 +1,98 @@
+# Chạy toàn bộ hệ thống trên một máy ảo:
+#
+#   docker compose up -d --build
+#
+# Biến môi trường lấy từ file .env, tạo từ .env.ec2.example.
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_NAME: "AutoCare Long Bien"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY:?Thieu APP_KEY}
+      APP_URL: https://${APP_DOMAIN:?Thieu APP_DOMAIN}
+      APP_LOCALE: vi
+      APP_FALLBACK_LOCALE: en
+
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: info
+
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: ${DB_DATABASE:-autocare_longbien}
+      DB_USERNAME: ${DB_USERNAME:-autocare}
+      DB_PASSWORD: ${DB_PASSWORD:?Thieu DB_PASSWORD}
+
+      SESSION_DRIVER: database
+      SESSION_SECURE_COOKIE: "true"
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+
+      RUN_DEMO_SEED: "true"
+      DEMO_ADMIN_EMAIL: ${DEMO_ADMIN_EMAIL:?Thieu DEMO_ADMIN_EMAIL}
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:?Thieu DEMO_ADMIN_PASSWORD}
+
+      AI_PROVIDER: gemini
+      AI_MODE: ${AI_MODE:-live}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_DAILY_REQUEST_LIMIT: ${GEMINI_DAILY_REQUEST_LIMIT:-100}
+
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: https://${APP_DOMAIN}/auth/google/callback
+
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-autocare_longbien}
+      MYSQL_USER: ${DB_USERNAME:-autocare}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Thieu DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Thieu DB_ROOT_PASSWORD}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      # Giảm RAM để chạy được trên máy 1 GB.
+      - --performance-schema=OFF
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mysqladmin ping -h 127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" --silent
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  # Cổng duy nhất mở ra Internet. Caddy tự xin chứng chỉ HTTPS cho APP_DOMAIN.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    command:
+      - caddy
+      - reverse-proxy
+      - --from
+      - ${APP_DOMAIN:?Thieu APP_DOMAIN}
+      - --to
+      - app:10000
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  db_data:
+  caddy_data:
+  caddy_config:

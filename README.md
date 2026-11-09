@@ -637,3 +637,47 @@ main
 **Nguyễn Đức Quân**
 
 Đồ án tốt nghiệp – Hệ thống AutoCare Long Biên.
+
+---
+
+## 25. Deploy lên một máy EC2 bằng Docker
+
+`docker-compose.yml` chạy app (FE + BE), MySQL và Caddy (HTTPS) trên cùng một máy.
+
+Chuẩn bị máy EC2:
+
+- Ubuntu, tối thiểu 1 GB RAM kèm 2 GB swap và 20 GB ổ đĩa.
+- Gắn Elastic IP để IP không đổi khi khởi động lại máy.
+- Security Group mở cổng 80 và 443 cho mọi nguồn, cổng 22 chỉ cho IP của bạn.
+
+Cài Docker trên máy EC2:
+
+```bash
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+```
+
+Đăng xuất rồi SSH lại, sau đó tạo cấu hình một lần:
+
+```bash
+git clone https://github.com/nguyennquann06/autocare-longbien.git
+cd autocare-longbien
+cp .env.ec2.example .env
+nano .env
+```
+
+Khởi động toàn bộ hệ thống:
+
+```bash
+docker compose up -d --build
+```
+
+Lần chạy đầu tiên tự động migrate, seed dữ liệu và tạo tài khoản ADMIN từ `DEMO_ADMIN_EMAIL` / `DEMO_ADMIN_PASSWORD`. Các lần sau không seed lại.
+
+Xem log:
+
+```bash
+docker compose logs -f app
+```
+
+Dữ liệu MySQL nằm trong volume `db_data`. Không chạy `docker compose down -v` nếu muốn giữ dữ liệu.
