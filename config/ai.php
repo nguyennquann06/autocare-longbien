@@ -221,22 +221,22 @@ return [
 
             'timeout' => (int) env(
                 'GEMINI_TIMEOUT',
-                15
+                30
             ),
 
             'connect_timeout' => (int) env(
                 'GEMINI_CONNECT_TIMEOUT',
-                5
+                10
             ),
 
             'retry_times' => (int) env(
                 'GEMINI_RETRY_TIMES',
-                2
+                1
             ),
 
             'daily_request_limit' => (int) env(
                 'GEMINI_DAILY_REQUEST_LIMIT',
-                100
+                20
             ),
 
         ],
